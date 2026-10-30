@@ -165,8 +165,9 @@ public:
 
         m_auth = new TelegramAuth(this);
         m_auth->statusChanged = [this](const QString &status) {
-            if (m_connectionState)
-                m_connectionState->setText(QString::fromUtf8("●  ") + status);
+            const QString label = QString::fromUtf8("●  ") + status;
+            if (m_connectionState) m_connectionState->setText(label);
+            if (m_statusText) m_statusText->setText(label);
         };
         m_auth->errorOccurred = [this](const QString &message) {
             QMessageBox::warning(this, "Telegram authorization", message);
@@ -202,8 +203,8 @@ public:
                 item = new QListWidgetItem(m_chatList);
                 item->setData(Qt::UserRole, QVariant::fromValue<qlonglong>(id));
             }
-            item->setText(preview.isEmpty() ? title : title + "\\n" + preview);
-            item->setToolTip(title + (preview.isEmpty() ? QString() : "\\n" + preview));
+            item->setText(preview.isEmpty() ? title : title + "\n" + preview);
+            item->setToolTip(title + (preview.isEmpty() ? QString() : "\n" + preview));
         };
         m_auth->messageReceived = [this](const QString &json) {
             if (!m_messageList) return;
@@ -285,6 +286,9 @@ private:
     QToolButton *m_callsNav = nullptr;
     QToolButton *m_settingsNav = nullptr;
     QLabel *m_connectionState = nullptr;
+    QLabel *m_statusText = nullptr;
+    QLabel *m_conversationTitle = nullptr;
+    QLabel *m_conversationSubtitle = nullptr;
     QLineEdit *m_search = nullptr;
     QLabel *m_windowTitleLabel = nullptr;
     QLabel *m_brandLabel = nullptr;
@@ -404,7 +408,15 @@ private:
         newMessage->setFixedSize(30, 28);
         newMessage->setToolTip("New message");
         toolbar->addWidget(newMessage);
+        QPushButton *settingsButton = new QPushButton("⚙");
+        settingsButton->setObjectName("secondaryButton");
+        settingsButton->setFixedSize(30, 28);
+        settingsButton->setToolTip("Settings");
+        toolbar->addWidget(settingsButton);
         topLayout->addLayout(toolbar);
+        connect(settingsButton, &QPushButton::clicked, this, [this]() {
+            if (m_pages) m_pages->setCurrentIndex(3);
+        });
 
         m_search = new QLineEdit(sidebar);
         m_search->setPlaceholderText("Search");
@@ -434,6 +446,9 @@ private:
             [this](QListWidgetItem *current, QListWidgetItem *) {
                 if (!current || !m_auth) return;
                 m_selectedChatId = current->data(Qt::UserRole).toLongLong();
+                const QString chatTitle = current->text().section('\n', 0, 0);
+                if (m_conversationTitle) m_conversationTitle->setText(chatTitle);
+                if (m_conversationSubtitle) m_conversationSubtitle->setText("Loading recent messages…");
                 if (m_messageList) m_messageList->clear();
                 m_auth->requestHistory(m_selectedChatId, 50);
             });
@@ -462,8 +477,10 @@ private:
         headerLayout->setContentsMargins(18, 10, 18, 10);
         QVBoxLayout *titles = new QVBoxLayout;
         titles->setSpacing(1);
-        titles->addWidget(makeLabel("Telegram", "conversationTitle"));
-        titles->addWidget(makeLabel("Select a chat to start messaging", "pageSubtitle"));
+        m_conversationTitle = makeLabel("Telegram", "conversationTitle");
+        m_conversationSubtitle = makeLabel("Select a chat to start messaging", "pageSubtitle");
+        titles->addWidget(m_conversationTitle);
+        titles->addWidget(m_conversationSubtitle);
         headerLayout->addLayout(titles);
         headerLayout->addStretch();
         QPushButton *refresh = new QPushButton("Refresh");
@@ -545,6 +562,15 @@ private:
         QVBoxLayout *layout = new QVBoxLayout(page);
         layout->setContentsMargins(34, 28, 34, 26);
         layout->setSpacing(14);
+        QHBoxLayout *settingsHeader = new QHBoxLayout;
+        QPushButton *backToChats = new QPushButton("←  Chats");
+        backToChats->setObjectName("secondaryButton");
+        settingsHeader->addWidget(backToChats, 0, Qt::AlignLeft);
+        settingsHeader->addStretch();
+        layout->addLayout(settingsHeader);
+        connect(backToChats, &QPushButton::clicked, this, [this]() {
+            if (m_pages) m_pages->setCurrentIndex(0);
+        });
         layout->addWidget(makeLabel("Settings", "pageTitle"));
         layout->addWidget(makeLabel("Application preferences and information.", "pageSubtitle"));
         layout->addSpacing(8);
@@ -647,9 +673,9 @@ private:
         bar->setFixedHeight(25);
         QHBoxLayout *layout = new QHBoxLayout(bar);
         layout->setContentsMargins(12, 0, 12, 0);
-        QLabel *left = makeLabel("●  Not connected", "statusText");
+        m_statusText = makeLabel("●  Not connected", "statusText");
         QLabel *right = makeLabel(QString("AERO7 GRAM  ·  %1").arg(QString::fromLatin1(kVersion)), "statusText");
-        layout->addWidget(left);
+        layout->addWidget(m_statusText);
         layout->addStretch();
         layout->addWidget(right);
         return bar;
