@@ -19,6 +19,8 @@
 #include <QStyle>
 #include <QFont>
 #include <QColor>
+#include <QColorDialog>
+#include <QComboBox>
 #include <QPixmap>
 #include <QIcon>
 #include <QSizePolicy>
@@ -251,7 +253,11 @@ private:
     QToolButton *m_settingsNav = nullptr;
     QLabel *m_connectionState = nullptr;
     QLineEdit *m_search = nullptr;
-    QLabel *m_pageTitle = nullptr;
+    QLabel *m_windowTitleLabel = nullptr;
+    QLabel *m_brandLabel = nullptr;
+    QComboBox *m_appNameChoice = nullptr;
+    QComboBox *m_themeChoice = nullptr;
+    QColor m_customAccent;
     TelegramAuth *m_auth = nullptr;
 
     void buildInterface()
@@ -299,7 +305,8 @@ private:
         icon->setFixedSize(24, 24);
         icon->setAttribute(Qt::WA_TransparentForMouseEvents, true);
 
-        QLabel *title = makeLabel(QString::fromLatin1(kAppName), "windowTitle");
+        m_windowTitleLabel = makeLabel(QString::fromLatin1(kAppName), "windowTitle");
+        QLabel *title = m_windowTitleLabel;
         title->setAttribute(Qt::WA_TransparentForMouseEvents, true);
         QLabel *version = makeLabel("PREVIEW 0.2", "versionTag");
         version->setAttribute(Qt::WA_TransparentForMouseEvents, true);
@@ -356,7 +363,8 @@ private:
         brandIcon->setFixedSize(38, 38);
         QVBoxLayout *brandText = new QVBoxLayout;
         brandText->setSpacing(1);
-        brandText->addWidget(makeLabel("AERO7 GRAM", "brand"));
+        m_brandLabel = makeLabel("AERO7 GRAM", "brand");
+        brandText->addWidget(m_brandLabel);
         brandText->addWidget(makeLabel("TELEGRAM DESKTOP", "subtitle"));
         brandRow->addWidget(brandIcon);
         brandRow->addLayout(brandText, 1);
@@ -520,6 +528,34 @@ private:
         QVBoxLayout *generalLayout = qobject_cast<QVBoxLayout *>(general->layout());
         addSettingRow(generalLayout, "Start with Windows", "Startup integration is not enabled in this build.");
         addSettingRow(generalLayout, "Minimize to tray", "Background mode will be added with notifications.");
+        QHBoxLayout *nameRow = new QHBoxLayout;
+        nameRow->addWidget(makeLabel("Application name", "settingTitle"));
+        m_appNameChoice = new QComboBox(page);
+        m_appNameChoice->addItem("AERO7 GRAM", "AERO7 GRAM");
+        m_appNameChoice->addItem("Telegram", "Telegram");
+        nameRow->addStretch(); nameRow->addWidget(m_appNameChoice);
+        generalLayout->addLayout(nameRow);
+
+        QHBoxLayout *themeRow = new QHBoxLayout;
+        themeRow->addWidget(makeLabel("Theme color", "settingTitle"));
+        m_themeChoice = new QComboBox(page);
+        m_themeChoice->addItem("Aero Blue", "#20a8e4");
+        m_themeChoice->addItem("Sky", "#36a9e1");
+        m_themeChoice->addItem("Emerald", "#159b78");
+        m_themeChoice->addItem("Violet", "#8064c8");
+        m_themeChoice->addItem("Rose", "#d45b78");
+        m_themeChoice->addItem("Graphite", "#607887");
+        themeRow->addStretch(); themeRow->addWidget(m_themeChoice);
+        QPushButton *customColor = new QPushButton("Custom…", page);
+        customColor->setObjectName("secondaryButton"); themeRow->addWidget(customColor);
+        generalLayout->addLayout(themeRow);
+        connect(m_appNameChoice, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int) { saveAppearance(); });
+        connect(m_themeChoice, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int) { saveAppearance(); });
+        connect(customColor, &QPushButton::clicked, this, [this]() {
+            const QColor color = QColorDialog::getColor(m_customAccent.isValid() ? m_customAccent : QColor("#20a8e4"), this, "Choose theme color");
+            if (!color.isValid()) return;
+            m_customAccent = color; QSettings s; s.setValue("appearance/theme", "custom"); s.setValue("appearance/customAccent", color.name()); applyTheme(color);
+        });
         layout->addWidget(general);
 
         QFrame *account = settingsGroup("TELEGRAM ACCOUNT");
@@ -762,16 +798,44 @@ private:
         )"));
     }
 
-    void restorePreferences()
-    {
-        QSettings settings;
-        const QByteArray geometry = settings.value("window/geometry").toByteArray();
-        if (!geometry.isEmpty())
-            restoreGeometry(geometry);
-        if (settings.value("window/maximized", false).toBool())
-            showMaximized();
+    void saveAppearance() {
+        QSettings s;
+        s.setValue("appearance/appName", m_appNameChoice->currentData().toString());
+        s.setValue("appearance/theme", m_themeChoice->currentData().toString());
+        updateApplicationName(); applyTheme(QColor(m_themeChoice->currentData().toString()));
     }
 
+    void updateApplicationName() {
+        const QString name = m_appNameChoice ? m_appNameChoice->currentData().toString() : QString::fromLatin1(kAppName);
+        setWindowTitle(name);
+        if (m_windowTitleLabel) m_windowTitleLabel->setText(name);
+        if (m_brandLabel) m_brandLabel->setText(name);
+    }
+
+    void applyTheme(const QColor &accent) {
+        if (!accent.isValid()) return;
+        QString css = styleSheet();
+        css.replace("#20a8e4", accent.name());
+        css.replace("#0873bd", accent.darker(145).name());
+        css.replace("#2499cf", accent.darker(112).name());
+        css.replace("#1476ad", accent.darker(145).name());
+        css.replace("#69c8ec", accent.lighter(155).name());
+        setStyleSheet(css);
+    }
+
+    void restorePreferences() {
+        QSettings s;
+        const QByteArray geometry = s.value("window/geometry").toByteArray();
+        if (!geometry.isEmpty()) restoreGeometry(geometry);
+        if (s.value("window/maximized", false).toBool()) showMaximized();
+        const QString appName = s.value("appearance/appName", "AERO7 GRAM").toString();
+        int ni = m_appNameChoice->findData(appName); if (ni >= 0) m_appNameChoice->setCurrentIndex(ni);
+        const QString theme = s.value("appearance/theme", "#20a8e4").toString();
+        int ti = m_themeChoice->findData(theme); if (ti >= 0) m_themeChoice->setCurrentIndex(ti);
+        if (theme == "custom") { m_customAccent = QColor(s.value("appearance/customAccent", "#20a8e4").toString()); applyTheme(m_customAccent); }
+        else applyTheme(QColor(theme));
+        updateApplicationName();
+    }
 #ifdef Q_OS_WIN
     void enableAeroGlass()
     {
