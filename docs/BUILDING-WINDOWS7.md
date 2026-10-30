@@ -62,6 +62,14 @@ Configure x86 using the x86 compiler prompt and x86 Qt/TDLib prefix:
 
 When TDLib is disabled (the default), the interface still builds but the Connect action explains that authorization support is not present in that binary. Do not distribute a build as login-capable unless it includes the matching TDLib runtime and has been tested on Windows 7.
 
+## Testing on Windows 10/11 during development
+
+A Windows 11 machine is useful for an early smoke test: launching the executable, checking the Qt interface, window controls, settings persistence and (when the matching TDLib build is present) exercising Telegram authorization. The application is still targeted at Windows 7; a successful Windows 11 run does not prove Windows 7 compatibility.
+
+The Windows compatibility-mode checkbox is not an emulator. It cannot replace missing Windows 7 APIs, DLLs, TLS behavior or compiler runtimes. You may try Windows 7 compatibility mode if an older dependency behaves differently, but test the actual target on a Windows 7 SP1 virtual machine or physical PC before release.
+
+For a Windows 11 smoke test, build with the same Qt/MSVC target toolchain and all runtime DLLs beside the executable. Start without compatibility mode first. If the application fails, record the exact error and test with Qt's platform plugin and required DLLs deployed correctly. Do not use a Windows 11-only build as the Windows 7 release artifact.
+
 ## Aero glass and fallback
 
 When Windows 7 Desktop Window Manager composition is enabled, the application extends the native glass frame into its title area. If DWM composition is unavailable, the regular blue interface remains usable.
