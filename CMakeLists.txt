@@ -17,6 +17,14 @@ if(NOT MSVC)
     message(FATAL_ERROR "Use the supported MSVC toolchain for Windows 7 builds.")
 endif()
 
+enable_language(RC)
+
+set(AERO7_ICON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/assets/aero7-gram.ico")
+if(NOT EXISTS "${AERO7_ICON_PATH}")
+    message(FATAL_ERROR "Missing generated Windows icon. Run: python tools/generate_icon.py")
+endif()
+configure_file(resources/app_icon.rc.in "${CMAKE_CURRENT_BINARY_DIR}/app_icon.rc" @ONLY)
+
 find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets Svg)
 
 option(AERO7_ENABLE_TDLIB "Enable real Telegram authorization through TDLib" ON)
@@ -41,6 +49,7 @@ add_executable(AERO7GRAM WIN32
     src/telegram_auth.cpp
     src/telegram_auth.h
     resources.qrc
+    "${CMAKE_CURRENT_BINARY_DIR}/app_icon.rc"
 )
 
 target_link_libraries(AERO7GRAM PRIVATE
