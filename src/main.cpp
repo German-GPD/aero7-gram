@@ -957,7 +957,7 @@ private:
                                              QString::fromLatin1(kVersion)));
         box.setInformativeText(
             "An independent Telegram desktop client project for Windows 7 SP1.\n\n"
-            "This is an early interface preview, not a connected Telegram client.\n"
+            "Telegram connectivity is provided by TDLib. Sign in with your own Telegram API credentials.\n"
             "Not affiliated with Telegram or Microsoft.");
         box.setStandardButtons(QMessageBox::Ok);
         box.exec();
