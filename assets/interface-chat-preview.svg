@@ -1,12 +1,48 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
-<defs><linearGradient id="glass" x2="0" y2="1"><stop stop-color="#f9fdff"/><stop offset=".48" stop-color="#c8e7f5"/><stop offset="1" stop-color="#8dbbd4"/></linearGradient><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#f8fbfd"/><stop offset="1" stop-color="#e8f1f6"/></linearGradient><linearGradient id="bubble" x2="0" y2="1"><stop stop-color="#eaf8ff"/><stop offset="1" stop-color="#c4e4f2"/></linearGradient><filter id="shadow"><feGaussianBlur stdDeviation="18"/></filter></defs>
-<rect width="1200" height="760" rx="14" fill="#102b42"/><rect x="22" y="22" width="1156" height="716" rx="10" fill="url(#bg)" stroke="#fff" stroke-width="2"/><path d="M32 32h1136v42H32z" fill="url(#glass)"/><circle cx="54" cy="53" r="12" fill="#fff" opacity=".7"/><path d="M46 53l8-8 8 8-8 8z" fill="#2789b8"/><text x="77" y="59" font-family="Segoe UI,Arial" font-size="19" fill="#254c65" font-weight="600">AERO7 GRAM</text><text x="1080" y="58" font-family="Segoe UI,Arial" font-size="18" fill="#315c73">−　□　×</text>
-<rect x="42" y="88" width="1116" height="1" fill="#c5d9e3"/><rect x="42" y="90" width="275" height="628" fill="#edf4f7"/><rect x="318" y="90" width="840" height="628" fill="#f8fbfd"/>
-<text x="66" y="126" font-family="Segoe UI,Arial" font-size="15" fill="#78909e">ДИАЛОГИ</text><rect x="62" y="143" width="234" height="36" rx="5" fill="#fff" stroke="#c6dce7"/><text x="78" y="166" font-family="Segoe UI,Arial" font-size="14" fill="#91a5b0">⌕  Поиск</text>
-<rect x="52" y="193" width="254" height="76" rx="5" fill="#d8edf6" stroke="#a9d2e3"/><circle cx="91" cy="231" r="22" fill="#8bbdd3"/><text x="83" y="237" font-family="Segoe UI,Arial" font-size="17" fill="#fff">G</text><text x="126" y="223" font-family="Segoe UI,Arial" font-size="16" fill="#315b73" font-weight="600">German</text><text x="126" y="246" font-family="Segoe UI,Arial" font-size="13" fill="#668391">Скоро буду дома</text><text x="269" y="220" font-family="Segoe UI,Arial" font-size="11" fill="#7897a5">14:32</text>
-<g font-family="Segoe UI,Arial"><circle cx="91" cy="312" r="22" fill="#b9c9b9"/><text x="126" y="306" font-size="15" fill="#426477">Design Team</text><text x="126" y="328" font-size="13" fill="#8297a2">Новый макет готов</text><circle cx="91" cy="392" r="22" fill="#c4b4d5"/><text x="126" y="386" font-size="15" fill="#426477">Project Updates</text><text x="126" y="408" font-size="13" fill="#8297a2">Обновление проекта</text><circle cx="91" cy="472" r="22" fill="#d9c5a7"/><text x="126" y="466" font-size="15" fill="#426477">Alex</text><text x="126" y="488" font-size="13" fill="#8297a2">Отлично, спасибо!</text></g>
-<text x="352" y="130" font-family="Segoe UI,Arial" font-size="20" fill="#315d75" font-weight="600">German</text><text x="352" y="153" font-family="Segoe UI,Arial" font-size="12" fill="#7e9aa8">был недавно</text><path d="M340 174h795" stroke="#dce7ec"/>
-<rect x="370" y="205" width="430" height="76" rx="9" fill="#fff" stroke="#dce8ed"/><text x="392" y="235" font-family="Segoe UI,Arial" font-size="15" fill="#496a7d">Привет! Посмотрел новый интерфейс.</text><text x="392" y="259" font-family="Segoe UI,Arial" font-size="15" fill="#496a7d">Стало намного аккуратнее 👌</text><text x="754" y="267" font-family="Segoe UI,Arial" font-size="11" fill="#91a5af">14:28</text>
-<rect x="635" y="315" width="460" height="78" rx="9" fill="url(#bubble)" stroke="#b5d8e7"/><text x="658" y="346" font-family="Segoe UI,Arial" font-size="15" fill="#315e77">Спасибо! Сейчас доделываю детали</text><text x="658" y="370" font-family="Segoe UI,Arial" font-size="15" fill="#315e77">и проверяю работу на Windows 7.</text><text x="1047" y="380" font-family="Segoe UI,Arial" font-size="11" fill="#7196a7">14:32 ✓✓</text>
-<rect x="370" y="428" width="340" height="59" rx="9" fill="#fff" stroke="#dce8ed"/><text x="392" y="463" font-family="Segoe UI,Arial" font-size="15" fill="#496a7d">Жду релиз, выглядит здорово.</text><text x="664" y="475" font-family="Segoe UI,Arial" font-size="11" fill="#91a5af">14:34</text>
-<rect x="350" y="648" width="780" height="48" rx="6" fill="#fff" stroke="#cbdde6"/><text x="372" y="678" font-family="Segoe UI,Arial" font-size="15" fill="#9aadb7">Написать сообщение…</text><rect x="1048" y="655" width="68" height="34" rx="4" fill="url(#glass)" stroke="#a6c9d9"/><text x="1065" y="677" font-family="Segoe UI,Arial" font-size="13" fill="#315e77">Отправить</text></svg>
+<defs>
+ <linearGradient id="frame" x2="0" y2="1"><stop stop-color="#f8fdff"/><stop offset=".12" stop-color="#cce9f7"/><stop offset=".48" stop-color="#75b6d8"/><stop offset=".52" stop-color="#4c91bb"/><stop offset="1" stop-color="#d9edf7"/></linearGradient>
+ <linearGradient id="caption" x2="0" y2="1"><stop stop-color="#eaf8ff" stop-opacity=".96"/><stop offset=".25" stop-color="#b8def1" stop-opacity=".92"/><stop offset=".7" stop-color="#75b5d7" stop-opacity=".94"/><stop offset="1" stop-color="#4b91b8" stop-opacity=".98"/></linearGradient>
+ <linearGradient id="pane" x2="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#edf4f8"/></linearGradient>
+ <linearGradient id="button" x2="0" y2="1"><stop stop-color="#fff"/><stop offset=".45" stop-color="#e5f5fc"/><stop offset=".5" stop-color="#c5e4f3"/><stop offset="1" stop-color="#8fc2dc"/></linearGradient>
+ <linearGradient id="bubble" x2="0" y2="1"><stop stop-color="#f5fcff"/><stop offset="1" stop-color="#d8edf7"/></linearGradient>
+ <filter id="shadow"><feGaussianBlur stdDeviation="14"/></filter>
+</defs>
+<rect width="1200" height="760" fill="#dcebf2"/>
+<ellipse cx="600" cy="730" rx="480" ry="22" fill="#64899d" opacity=".22" filter="url(#shadow)"/>
+<!-- Windows 7 glass frame -->
+<rect x="20" y="18" width="1160" height="724" fill="#6e9db8" opacity=".3"/>
+<rect x="24" y="20" width="1152" height="720" fill="url(#frame)" stroke="#f8fdff" stroke-width="2"/>
+<rect x="30" y="26" width="1140" height="708" fill="#f4f8fb" stroke="#477f9e"/>
+<rect x="31" y="27" width="1138" height="70" fill="url(#caption)"/>
+<path d="M34 30h1132v17H34z" fill="#fff" opacity=".32"/>
+<rect x="43" y="38" width="28" height="28" fill="#fff" opacity=".3" stroke="#fff"/>
+<path d="M48 52l9-8 9 8-9 8z" fill="#1689bd" stroke="#fff" stroke-width="1"/>
+<text x="82" y="57" font-family="Segoe UI,Arial" font-size="18" fill="#173d55" font-weight="600">AERO7 GRAM</text>
+<text x="82" y="76" font-family="Segoe UI,Arial" font-size="11" fill="#315f78">Telegram Desktop</text>
+<!-- native caption controls -->
+<g stroke="#477e9a" stroke-width="1">
+ <rect x="1032" y="29" width="42" height="27" rx="3" fill="url(#button)"/><path d="M1045 45h15" stroke-width="2"/>
+ <rect x="1074" y="29" width="42" height="27" rx="3" fill="url(#button)"/><rect x="1088" y="37" width="13" height="10" fill="none"/>
+ <rect x="1116" y="29" width="43" height="27" rx="3" fill="#d77b73"/><path d="M1131 37l13 12m0-12-13 12" stroke="#fff" stroke-width="2"/>
+</g>
+<!-- toolbar -->
+<rect x="31" y="97" width="1138" height="34" fill="url(#pane)"/>
+<path d="M31 130h1138" stroke="#b5cbd8"/>
+<text x="54" y="119" font-family="Segoe UI,Arial" font-size="13" fill="#31566d">Файл</text><text x="102" y="119" font-family="Segoe UI,Arial" font-size="13" fill="#31566d">Правка</text><text x="165" y="119" font-family="Segoe UI,Arial" font-size="13" fill="#31566d">Вид</text><text x="211" y="119" font-family="Segoe UI,Arial" font-size="13" fill="#31566d">Справка</text>
+<!-- application workspace -->
+<rect x="32" y="131" width="1136" height="570" fill="#f7fafc"/>
+<rect x="32" y="131" width="280" height="570" fill="#eaf1f5"/>
+<path d="M312 131v570" stroke="#b9cbd5"/>
+<text x="53" y="164" font-family="Segoe UI,Arial" font-size="12" fill="#678596" font-weight="700">ДИАЛОГИ</text>
+<rect x="50" y="178" width="242" height="34" fill="#fff" stroke="#a9bdc9"/><text x="63" y="200" font-family="Segoe UI,Arial" font-size="13" fill="#8b9faa">⌕  Поиск</text>
+<rect x="42" y="222" width="260" height="67" fill="#d6eaf5" stroke="#91bdd2"/>
+<circle cx="75" cy="255" r="20" fill="#79abc5"/><text x="69" y="261" font-family="Segoe UI,Arial" font-size="16" fill="#fff">G</text>
+<text x="107" y="248" font-family="Segoe UI,Arial" font-size="14" fill="#294f66" font-weight="600">German</text><text x="107" y="270" font-family="Segoe UI,Arial" font-size="12" fill="#678391">Скоро буду дома</text><text x="263" y="246" font-family="Segoe UI,Arial" font-size="10" fill="#7894a2">14:32</text>
+<g font-family="Segoe UI,Arial"><circle cx="75" cy="323" r="20" fill="#a8bfae"/><text x="107" y="318" font-size="14" fill="#365a70">Design Team</text><text x="107" y="339" font-size="12" fill="#8196a1">Новый макет готов</text><circle cx="75" cy="392" r="20" fill="#b9add0"/><text x="107" y="387" font-size="14" fill="#365a70">Project Updates</text><text x="107" y="408" font-size="12" fill="#8196a1">Обновление проекта</text><circle cx="75" cy="461" r="20" fill="#d3b991"/><text x="107" y="456" font-size="14" fill="#365a70">Alex</text><text x="107" y="477" font-size="12" fill="#8196a1">Отлично, спасибо!</text></g>
+<rect x="313" y="131" width="855" height="55" fill="url(#pane)"/><text x="340" y="157" font-family="Segoe UI,Arial" font-size="17" fill="#294f66" font-weight="600">German</text><text x="340" y="175" font-family="Segoe UI,Arial" font-size="11" fill="#8196a1">был недавно</text><path d="M313 186h855" stroke="#c7d6de"/>
+<rect x="350" y="213" width="420" height="69" fill="#fff" stroke="#d1dfe6"/><text x="370" y="241" font-family="Segoe UI,Arial" font-size="14" fill="#496779">Привет! Посмотрел новый интерфейс.</text><text x="370" y="262" font-family="Segoe UI,Arial" font-size="14" fill="#496779">Стало намного аккуратнее.</text><text x="728" y="272" font-family="Segoe UI,Arial" font-size="10" fill="#91a4ae">14:28</text>
+<path d="M625 316h500v75H625z" fill="url(#bubble)" stroke="#aacbdc"/><text x="646" y="345" font-family="Segoe UI,Arial" font-size="14" fill="#315e77">Спасибо! Сейчас доделываю детали</text><text x="646" y="367" font-family="Segoe UI,Arial" font-size="14" fill="#315e77">и проверяю работу на Windows 7.</text><text x="1071" y="381" font-family="Segoe UI,Arial" font-size="10" fill="#7196a7">14:32 ✓✓</text>
+<rect x="350" y="425" width="330" height="55" fill="#fff" stroke="#d1dfe6"/><text x="370" y="458" font-family="Segoe UI,Arial" font-size="14" fill="#496779">Жду релиз, выглядит здорово.</text>
+<rect x="340" y="640" width="795" height="42" fill="#fff" stroke="#aebfc9"/><text x="356" y="666" font-family="Segoe UI,Arial" font-size="13" fill="#91a4ae">Написать сообщение…</text><rect x="1041" y="645" width="82" height="32" fill="url(#button)" stroke="#91b6c9"/><text x="1060" y="666" font-family="Segoe UI,Arial" font-size="12" fill="#315e77">Отправить</text>
+<rect x="32" y="701" width="1136" height="32" fill="url(#pane)"/><path d="M32 701h1136" stroke="#b8cbd5"/><text x="49" y="722" font-family="Segoe UI,Arial" font-size="11" fill="#78919e">●  Не подключено</text><text x="1040" y="722" font-family="Segoe UI,Arial" font-size="11" fill="#78919e">AERO7 GRAM · 0.2.0</text>
+</svg>
