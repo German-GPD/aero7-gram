@@ -175,6 +175,11 @@ public:
                 connectButton->setEnabled(false);
                 connectButton->setToolTip("This test build was compiled without TDLib. Telegram sign-in is unavailable.");
             }
+            if (m_messageInput) { m_messageInput->setEnabled(false); m_messageInput->setPlaceholderText("Telegram engine is not included in this build"); }
+            if (m_sendButton) { m_sendButton->setEnabled(false); m_sendButton->setToolTip("Sending requires a connected Telegram account."); }
+        } else {
+            if (m_messageInput) { m_messageInput->setEnabled(false); m_messageInput->setPlaceholderText("Connect Telegram to send messages"); }
+            if (m_sendButton) { m_sendButton->setEnabled(false); m_sendButton->setToolTip("Connect your Telegram account first."); }
         }
         m_auth->statusChanged = [this](const QString &status) {
             const QString label = QString::fromUtf8("●  ") + status;
@@ -182,10 +187,13 @@ public:
             if (m_statusText) m_statusText->setText(label);
         };
         m_auth->errorOccurred = [this](const QString &message) {
-            QMessageBox::warning(this, "Telegram authorization", message);
+            if (m_statusText) m_statusText->setText(QString("●  Error: %1").arg(message));
+            QMessageBox::warning(this, "Telegram", message);
         };
         m_auth->authorized = [this](const QString &) {
             if (m_connectionState) m_connectionState->setText("●  Telegram account connected");
+            if (m_messageInput) { m_messageInput->setEnabled(true); m_messageInput->setPlaceholderText("Message"); }
+            if (m_sendButton) m_sendButton->setEnabled(true);
         };
         m_auth->chatReceived = [this](const QString &json) {
             const QJsonObject object = QJsonDocument::fromJson(json.toUtf8()).object();
@@ -221,7 +229,8 @@ public:
             item->setToolTip(title + (preview.isEmpty() ? QString() : "\n" + preview));
             refreshChatItem(item);
         };
-        m_auth->historyLoaded = [this]() {
+        m_auth->historyLoaded = [this](qint64 loadedChatId) {
+            if (loadedChatId != m_selectedChatId) return;
             if (m_conversationSubtitle && m_selectedChatId)
                 m_conversationSubtitle->setText("Telegram conversation");
             if (m_messageList && m_messageList->count() == 1
@@ -328,6 +337,7 @@ private:
     QListWidget *m_chatList = nullptr;
     QListWidget *m_messageList = nullptr;
     QLineEdit *m_messageInput = nullptr;
+    QPushButton *m_sendButton = nullptr;
     qint64 m_selectedChatId = 0;
     QSet<qint64> m_seenMessageIds;
 
@@ -649,11 +659,13 @@ private:
         attach->setObjectName("secondaryButton");
         attach->setToolTip("File attachments are not available in this preview build");
         attach->setEnabled(false);
-        QPushButton *send = new QPushButton("Send");
-        send->setObjectName("primaryButton");
+        m_sendButton = new QPushButton("Send");
+        m_sendButton->setObjectName("primaryButton");
+        m_sendButton->setEnabled(false);
+        m_sendButton->setToolTip("Connect your Telegram account first.");
         composerLayout->addWidget(attach);
         composerLayout->addWidget(m_messageInput, 1);
-        composerLayout->addWidget(send);
+        composerLayout->addWidget(m_sendButton);
         layout->addWidget(composer);
 
         connect(refresh, &QPushButton::clicked, this, [this]() {
@@ -661,12 +673,20 @@ private:
         });
         const auto sendMessage = [this]() {
             if (!m_auth || !m_selectedChatId || !m_messageInput) return;
+            if (!m_auth->isAuthorized()) {
+                QMessageBox::information(this, "Telegram", "Connect your Telegram account before sending messages.");
+                return;
+            }
             const QString value = m_messageInput->text().trimmed();
             if (value.isEmpty()) return;
+            if (value.size() > 4096) {
+                QMessageBox::warning(this, "Message too long", "Telegram text messages are limited to 4096 characters.");
+                return;
+            }
             m_auth->sendTextMessage(m_selectedChatId, value);
             m_messageInput->clear();
         };
-        connect(send, &QPushButton::clicked, this, sendMessage);
+        connect(m_sendButton, &QPushButton::clicked, this, sendMessage);
         connect(m_messageInput, &QLineEdit::returnPressed, this, sendMessage);
         return page;
     }
