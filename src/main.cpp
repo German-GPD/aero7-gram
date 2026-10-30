@@ -215,7 +215,9 @@ public:
                 item = new QListWidgetItem(m_chatList);
                 item->setData(Qt::UserRole, QVariant::fromValue<qlonglong>(id));
             }
-            item->setText(preview.isEmpty() ? title : title + "\n" + preview);
+            item->setData(Qt::UserRole + 1, title);
+            item->setData(Qt::UserRole + 2, preview);
+            item->setText(title + "\n" + preview);
             item->setToolTip(title + (preview.isEmpty() ? QString() : "\n" + preview));
         };
         m_auth->historyLoaded = [this]() {
@@ -244,11 +246,11 @@ public:
                 else if (contentType == "messagePoll") body = "[Poll]";
                 else body = QString("[%1]").arg(contentType.isEmpty() ? "Message" : contentType);
             }
-            const QString prefix = message.value("is_outgoing").toBool() ? "You" : "Them";
-            const QDateTime sentAt = QDateTime::fromTime_t(
-                static_cast<uint>(message.value("date").toInt()));
-            const QString timeLabel = sentAt.isValid() ? sentAt.toString("hh:mm") + "  " : QString();
-            m_messageList->addItem(timeLabel + prefix + ": " + body);
+            const bool outgoing = message.value("is_outgoing").toBool();
+            const QDateTime sentAt = QDateTime::fromTime_t(static_cast<uint>(message.value("date").toInt()));
+            QListWidgetItem *messageItem = new QListWidgetItem((outgoing ? "↗  " : "●  ") + body + (sentAt.isValid() ? "     " + sentAt.toString("hh:mm") : QString()));
+            messageItem->setTextAlignment(outgoing ? Qt::AlignRight : Qt::AlignLeft);
+            m_messageList->addItem(messageItem);
             m_messageList->scrollToBottom();
         };
     }
@@ -450,8 +452,10 @@ private:
 
         m_chatList = new QListWidget(sidebar);
         m_chatList->setObjectName("chatList");
-        m_chatList->setSpacing(0);
+        m_chatList->setSpacing(1);
         m_chatList->setFrameShape(QFrame::NoFrame);
+        m_chatList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        m_chatList->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
         layout->addWidget(m_chatList, 1);
 
         QWidget *bottom = new QWidget(sidebar);
@@ -516,8 +520,9 @@ private:
         m_messageList = new QListWidget(page);
         m_messageList->setObjectName("messageList");
         m_messageList->setFrameShape(QFrame::NoFrame);
-        m_messageList->setSpacing(5);
+        m_messageList->setSpacing(8);
         m_messageList->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+        m_messageList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         layout->addWidget(m_messageList, 1);
 
         QWidget *composer = new QWidget(page);
@@ -528,7 +533,8 @@ private:
         m_messageInput->setPlaceholderText("Message");
         QPushButton *attach = new QPushButton("＋");
         attach->setObjectName("secondaryButton");
-        attach->setToolTip("Attach file (not implemented yet)");
+        attach->setToolTip("File attachments are not available in this preview build");
+        attach->setEnabled(false);
         QPushButton *send = new QPushButton("Send");
         send->setObjectName("primaryButton");
         composerLayout->addWidget(attach);
@@ -863,8 +869,13 @@ private:
                 color: #303d43; background: rgba(255,255,255,225);
                 border: 1px solid #cbd3d6; outline: 0; padding: 3px;
             }
-            QListWidget::item { padding: 7px 6px; border-bottom: 1px solid #edf0f1; }
-            QListWidget::item:selected { color: #26343b; background: #e0e6e8; border: 1px solid #aebbc1; }
+            QListWidget::item { padding: 10px 9px; border-bottom: 1px solid rgba(190,201,207,150); }
+            QListWidget#chatList { background: rgba(247,249,250,245); border: 0; padding: 3px; }
+            QListWidget#chatList::item { min-height: 58px; }
+            QListWidget#chatList::item:selected { color: #26343b; background: qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #edf5f8,stop:1 #d4e2e8); border: 1px solid #9db3be; }
+            QListWidget#messageList { background: rgba(244,247,248,248); border: 0; padding: 12px; }
+            QListWidget#messageList::item { padding: 10px 14px; margin: 3px 8px; border: 1px solid #cbd5d9; background: #fff; }
+            QListWidget#messageList::item:selected { background: #e6f0f3; color: #26343b; }
             #settingsGroup {
                 border: 1px solid #d1d8db; background: #fff;
             }
