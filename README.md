@@ -26,9 +26,9 @@ Windows 10 and Windows 11 are not target platforms.
 
 **Version 0.2.0 — native interface preview.**
 
-The application now has a native Qt desktop shell with a custom title bar, window controls, resizing, DWM glass integration, a Telegram-inspired Aero icon, navigation for Chats / Contacts / Calls / Settings, first-run connection messaging and saved window geometry.
+The application has a native Qt desktop shell with a custom title bar, window controls, resizing, DWM glass integration, a Telegram-inspired Aero icon, navigation for Chats / Contacts / Calls / Settings and saved window geometry.
 
-**It is not a connected Telegram client yet.** It does not sign in, retrieve chats, send messages, transfer files or receive notifications. The connection screen clearly identifies these features as not implemented.
+**Telegram authorization flow is implemented behind an optional TDLib build.** It handles phone number, login code, two-step verification password, registration and email verification. A matching Windows 7-compatible TDLib library is required; no TDLib binaries are bundled. Real chat loading, message sending, file transfers and notifications are still pending.
 
 ## Build
 
@@ -41,8 +41,8 @@ The current source update has not yet been compiled or tested on a Windows 7 mac
 ## Roadmap
 
 1. Compile and stabilize the native interface on Windows 7 SP1, x86 and x64.
-2. Prepare and verify a Windows 7-compatible TDLib build for both architectures.
-3. Implement Telegram authorization and secure local session storage.
+2. Build and verify TDLib for Windows 7 SP1 in both architectures.
+3. Test the implemented Telegram authorization and DPAPI-protected local database key.
 4. Load chats, contacts and message history.
 5. Implement text messaging, media/files, notifications and settings.
 6. Package and test portable x86 and x64 builds on clean Windows 7 installations.
