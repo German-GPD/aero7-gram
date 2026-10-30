@@ -12,7 +12,9 @@ The repository contains a native Qt Widgets desktop interface with:
 - A first-run connection screen and honest disconnected/empty states
 - Local persistence of the window geometry
 
-**Telegram is not connected yet.** This preview does not authenticate, load real conversations, send messages, transfer media or receive notifications. The connect action explains this instead of pretending to sign in.
+The native UI now includes a TDLib authorization controller. It supports the phone-number, login-code, two-step password, account registration and email-verification states, and stores the TDLib database under the current Windows user profile. On Windows, the local database key is protected with DPAPI.
+
+**A working login still requires a separately built Windows 7-compatible TDLib library.** The repository does not bundle TDLib binaries. Chat loading and message sending are not implemented yet.
 
 ## Supported build environment
 
@@ -42,15 +44,33 @@ Open an x86 Native Tools Command Prompt for Visual Studio 2019:
 
 Replace the Qt paths with the actual locations of the matching Qt kits. Run each build from the matching compiler environment.
 
+## Enable Telegram authorization
+
+Obtain your own Telegram API ID and API hash from https://my.telegram.org. The application asks for these the first time you connect and stores them in the current user's application settings. Do not commit them to the repository.
+
+Build a TDLib JSON library that is compatible with Windows 7 SP1, the selected MSVC runtime and the target architecture. Install its header and import library under one prefix, with the matching `tdjson.dll` available beside the application executable.
+
+Configure x64:
+
+    cmake -S . -B build-x64 -A x64 -DAERO7_ENABLE_TDLIB=ON -DTDJSON_ROOT="C:/deps/tdlib-x64" -DCMAKE_PREFIX_PATH="C:/Qt/5.15.x/msvc2019_64"
+    cmake --build build-x64 --config Release
+
+Configure x86 using the x86 compiler prompt and x86 Qt/TDLib prefix:
+
+    cmake -S . -B build-x86 -A Win32 -DAERO7_ENABLE_TDLIB=ON -DTDJSON_ROOT="C:/deps/tdlib-x86" -DCMAKE_PREFIX_PATH="C:/Qt/5.15.x/msvc2019"
+    cmake --build build-x86 --config Release
+
+When TDLib is disabled (the default), the interface still builds but the Connect action explains that authorization support is not present in that binary. Do not distribute a build as login-capable unless it includes the matching TDLib runtime and has been tested on Windows 7.
+
 ## Aero glass and fallback
 
 When Windows 7 Desktop Window Manager composition is enabled, the application extends the native glass frame into its title area. If DWM composition is unavailable, the regular blue interface remains usable.
 
 ## Telegram integration plan
 
-The intended messaging backend is TDLib through its JSON C interface. Before integration, a Windows 7-compatible TDLib build must be prepared and tested separately for x86 and x64.
+The messaging backend is TDLib through its JSON C interface. Authorization is implemented behind the optional AERO7_ENABLE_TDLIB build flag. The current repository does not include a prebuilt TDLib binary, and Windows 7 compatibility of a TDLib build must be independently verified for x86 and x64.
 
-The developer must register an application at https://my.telegram.org to obtain an API ID and API hash. Keep credentials, account data and session databases out of source control. A secure local session-storage design is required before account login is released.
+Phone numbers, login codes and two-step passwords are passed directly to TDLib and are not written to application settings. TDLib's local database is stored in the user's application-data directory. Its database encryption key is protected using Windows DPAPI for the current Windows user. API ID and API hash are stored in the user's application settings; never put these values in source control.
 
 ## Compatibility and release policy
 
