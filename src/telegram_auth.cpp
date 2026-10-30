@@ -336,6 +336,7 @@ void TelegramAuth::handleUpdate(const QString &json)
             if (messageReceived)
                 messageReceived(QString::fromUtf8(QJsonDocument(message.toObject()).toJson(QJsonDocument::Compact)));
         }
+        if (historyLoaded) historyLoaded();
     } else if (type == "updateConnectionState") {
         const QString state = object.value("state").toObject().value("@type").toString();
         if (statusChanged) statusChanged(state == "connectionStateReady"
