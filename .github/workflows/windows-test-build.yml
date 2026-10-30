@@ -26,9 +26,11 @@ jobs:
           - label: x64
             qt_arch: win64_msvc2019_64
             cmake_arch: x64
+            vcpkg_triplet: x64-windows
           - label: x86
             qt_arch: win32_msvc2019
             cmake_arch: Win32
+            vcpkg_triplet: x86-windows
 
     steps:
       - name: Checkout
@@ -43,9 +45,33 @@ jobs:
           arch: ${{ matrix.qt_arch }}
           cache: true
 
-      - name: Configure
+      - name: Install TDLib build dependencies
         shell: pwsh
-        run: cmake -S . -B build -A ${{ matrix.cmake_arch }} -DCMAKE_BUILD_TYPE=Release
+        run: |
+          choco install gperf --no-progress -y
+          git clone --depth 1 --branch v1.8.52 https://github.com/tdlib/td.git td
+          git clone https://github.com/microsoft/vcpkg.git vcpkg
+          .\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+          .\vcpkg\vcpkg.exe install openssl:${{ matrix.vcpkg_triplet }} zlib:${{ matrix.vcpkg_triplet }}
+
+      - name: Build official TDLib
+        shell: pwsh
+        run: |
+          $toolchain = "$env:GITHUB_WORKSPACE\vcpkg\scripts\buildsystems\vcpkg.cmake"
+          cmake -S td -B td-build -A ${{ matrix.cmake_arch }} -DCMAKE_TOOLCHAIN_FILE="$toolchain" -DVCPKG_TARGET_TRIPLET=${{ matrix.vcpkg_triplet }} -DCMAKE_BUILD_TYPE=Release
+          if ($LASTEXITCODE -ne 0) { throw "TDLib configure failed" }
+          cmake --build td-build --config Release --target tdjson --parallel 2
+          if ($LASTEXITCODE -ne 0) { throw "TDLib build failed" }
+          $lib = Get-ChildItem td-build -Filter tdjson.lib -Recurse | Select-Object -First 1
+          $dll = Get-ChildItem td-build -Filter tdjson.dll -Recurse | Select-Object -First 1
+          if (!$lib -or !$dll) { throw "TDLib outputs were not found" }
+          "TDJSON_LIBRARY=$($lib.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "TDJSON_DLL=$($dll.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Configure application
+        shell: pwsh
+        run: |
+          cmake -S . -B build -A ${{ matrix.cmake_arch }} -DCMAKE_BUILD_TYPE=Release -DAERO7_ENABLE_TDLIB=ON -DTDJSON_INCLUDE_DIR="$env:GITHUB_WORKSPACE\td" -DTDJSON_LIBRARY="$env:TDJSON_LIBRARY"
 
       - name: Build
         run: cmake --build build --config Release --parallel
@@ -57,6 +83,9 @@ jobs:
           if (!(Test-Path $exe)) { throw "Executable not found: $exe" }
           & "$env:QT_ROOT_DIR/bin/windeployqt.exe" --release --no-translations --compiler-runtime "$exe"
           if ($LASTEXITCODE -ne 0) { throw "windeployqt failed with exit code $LASTEXITCODE" }
+          Copy-Item "$env:TDJSON_DLL" "build/Release/tdjson.dll"
+          $runtime = "vcpkg/installed/${{ matrix.vcpkg_triplet }}/bin"
+          Get-ChildItem $runtime -Filter "*.dll" | Copy-Item -Destination "build/Release" -Force
 
       - name: Install Inno Setup
         shell: pwsh
@@ -104,6 +133,6 @@ jobs:
           body: |
             Автоматически собранные установщики AERO7 GRAM. Запусти Setup.exe и следуй мастеру установки.
 
-            Это экспериментальная оболочка без TDLib. Вход в Telegram и сетевые функции недоступны.
-            Совместимость с Windows 7 SP1 ещё требует отдельной проверки.
+            В пакет включена TDLib, собранная из официального исходного кода. Это тестовая сборка: проверьте вход и сетевые функции самостоятельно.
+            Совместимость с Windows 7 SP1 не подтверждена; сборка выполняется на Windows Server 2022.
             Установщики обновляются после каждого успешного запуска Windows test builds.
