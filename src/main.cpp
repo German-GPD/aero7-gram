@@ -33,6 +33,7 @@
 #include <QResizeEvent>
 #include <QApplication>
 #include <QDateTime>
+#include <QDate>
 #include <QSet>
 #include <QFileInfo>
 #include <QDir>
@@ -264,6 +265,10 @@ public:
             if (m_messageList->count() == 1
                 && m_messageList->item(0)->data(Qt::UserRole).toString() == "empty-state")
                 m_messageList->clear();
+            if (sentAt.isValid() && sentAt.date() != m_lastMessageDate) {
+                appendDateSeparator(sentAt.date());
+                m_lastMessageDate = sentAt.date();
+            }
             appendMessageBubble(body, sentAt, outgoing);
             m_messageList->scrollToBottom();
         };
@@ -340,6 +345,7 @@ private:
     QPushButton *m_sendButton = nullptr;
     qint64 m_selectedChatId = 0;
     QSet<qint64> m_seenMessageIds;
+    QDate m_lastMessageDate;
 
     void buildInterface()
     {
@@ -442,6 +448,24 @@ private:
         layout->addStretch();
         item->setSizeHint(QSize(400, 170));
         m_messageList->setItemWidget(item, container);
+    }
+
+    void appendDateSeparator(const QDate &date)
+    {
+        if (!m_messageList || !date.isValid()) return;
+        QListWidgetItem *item = new QListWidgetItem(m_messageList);
+        QWidget *row = new QWidget(m_messageList);
+        QHBoxLayout *layout = new QHBoxLayout(row);
+        layout->setContentsMargins(0, 5, 0, 5);
+        QLabel *label = makeLabel(date == QDate::currentDate()
+            ? "Today" : date.toString("d MMMM yyyy"), "messageDateSeparator");
+        label->setAlignment(Qt::AlignCenter);
+        layout->addStretch();
+        layout->addWidget(label);
+        layout->addStretch();
+        item->setSizeHint(QSize(m_messageList->viewport()->width() - 8, 30));
+        m_messageList->setItemWidget(item, row);
+        item->setSizeHint(QSize(m_messageList->viewport()->width() - 8, row->sizeHint().height()));
     }
 
     void appendMessageBubble(const QString &body, const QDateTime &sentAt, bool outgoing)
@@ -598,6 +622,7 @@ private:
                     showMessagePlaceholder("Loading conversation…");
                 }
                 m_seenMessageIds.clear();
+                m_lastMessageDate = QDate();
                 m_auth->requestHistory(m_selectedChatId, 50);
             });
         connect(m_search, &QLineEdit::textChanged, this, [this](const QString &query) {
