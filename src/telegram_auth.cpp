@@ -143,11 +143,61 @@ void TelegramAuth::logOut()
 }
 
 #ifdef AERO7_WITH_TDLIB
+namespace {
+QByteArray protectLocalSecret(const QByteArray &plain)
+{
+#ifdef Q_OS_WIN
+    if (plain.isEmpty()) return QByteArray();
+    DATA_BLOB input = {};
+    input.pbData = reinterpret_cast<BYTE *>(const_cast<char *>(plain.constData()));
+    input.cbData = static_cast<DWORD>(plain.size());
+    DATA_BLOB output = {};
+    if (!CryptProtectData(&input, L"AERO7 GRAM Telegram API hash", nullptr,
+                          nullptr, nullptr, CRYPTPROTECT_UI_FORBIDDEN, &output))
+        return QByteArray();
+    QByteArray encrypted(reinterpret_cast<const char *>(output.pbData),
+                         static_cast<int>(output.cbData));
+    SecureZeroMemory(output.pbData, output.cbData);
+    LocalFree(output.pbData);
+    return encrypted.toBase64();
+#else
+    Q_UNUSED(plain);
+    return QByteArray();
+#endif
+}
+
+QByteArray unprotectLocalSecret(const QByteArray &encoded)
+{
+#ifdef Q_OS_WIN
+    const QByteArray encrypted = QByteArray::fromBase64(encoded);
+    if (encrypted.isEmpty()) return QByteArray();
+    DATA_BLOB input = {};
+    input.pbData = reinterpret_cast<BYTE *>(const_cast<char *>(encrypted.constData()));
+    input.cbData = static_cast<DWORD>(encrypted.size());
+    DATA_BLOB output = {};
+    if (!CryptUnprotectData(&input, nullptr, nullptr, nullptr, nullptr, 0, &output))
+        return QByteArray();
+    QByteArray plain(reinterpret_cast<const char *>(output.pbData),
+                     static_cast<int>(output.cbData));
+    SecureZeroMemory(output.pbData, output.cbData);
+    LocalFree(output.pbData);
+    return plain;
+#else
+    Q_UNUSED(encoded);
+    return QByteArray();
+#endif
+}
+}
+
 bool TelegramAuth::loadCredentials()
 {
     QSettings settings;
     m_apiId = settings.value("telegram/api_id").toString();
-    m_apiHash = settings.value("telegram/api_hash").toString();
+    QByteArray protectedHash = settings.value("telegram/protected_api_hash").toByteArray();
+    if (!protectedHash.isEmpty())
+        m_apiHash = QString::fromUtf8(unprotectLocalSecret(protectedHash));
+    else
+        m_apiHash = settings.value("telegram/api_hash").toString();
 
     if (m_apiId.isEmpty() || m_apiHash.isEmpty()) {
         bool ok = false;
@@ -170,7 +220,18 @@ bool TelegramAuth::loadCredentials()
         m_apiId = id.trimmed();
         m_apiHash = hash.trimmed();
         settings.setValue("telegram/api_id", m_apiId);
-        settings.setValue("telegram/api_hash", m_apiHash);
+    }
+
+    // Migrate legacy plaintext hashes to Windows DPAPI and never write new
+    // API hashes as ordinary QSettings strings.
+    if (settings.value("telegram/protected_api_hash").toByteArray().isEmpty()) {
+        const QByteArray encrypted = protectLocalSecret(m_apiHash.toUtf8());
+        if (encrypted.isEmpty()) {
+            if (errorOccurred) errorOccurred("Windows could not protect the Telegram API hash with DPAPI.");
+            return false;
+        }
+        settings.setValue("telegram/protected_api_hash", encrypted);
+        settings.remove("telegram/api_hash");
     }
     return true;
 }
