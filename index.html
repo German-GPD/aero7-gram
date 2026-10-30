@@ -1,131 +1,34 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#1d6594">
-  <meta name="description" content="AERO7 GRAM — независимый нативный Telegram-клиент в стиле Windows 7 Aero.">
-  <title>AERO7 GRAM — Telegram в стиле Windows 7</title>
-  <link rel="icon" href="assets/aero7-icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
-  <script src="app.js" defer></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#102b40">
+<meta name="description" content="AERO7 GRAM — независимый Telegram-клиент с эстетикой Windows 7 Aero.">
+<title>AERO7 GRAM — классика в новом исполнении</title>
+<link rel="icon" href="assets/aero7-icon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"><script src="app.js" defer></script>
 </head>
 <body>
-  <div class="desktop">
-    <div class="desktop-icons" aria-hidden="true">
-      <div class="desktop-icon"><img src="assets/aero7-icon.svg" alt=""><span>AERO7 GRAM</span></div>
-      <div class="desktop-icon"><span class="computer-icon">▣</span><span>Компьютер</span></div>
-    </div>
-    <main class="window">
-      <header class="titlebar">
-        <div class="caption"><img src="assets/aero7-icon.svg" alt=""><span>AERO7 GRAM</span><small> — Telegram для Windows 7</small></div>
-        <div class="window-controls" aria-hidden="true"><i class="minimize">−</i><i class="maximize">□</i><i class="close">×</i></div>
-      </header>
-      <nav class="menu-bar" aria-label="Главное меню">
-        <a href="#home">Файл</a><a href="#features">Возможности</a><a href="#design">Интерфейс</a><a href="#download">Загрузка</a><a href="#about">О проекте</a>
-      </nav>
-      <div class="toolbar">
-        <div class="nav-arrows"><span>‹</span><span>›</span></div>
-        <div class="breadcrumb"><span class="folder">★</span><span>Проекты</span><b>›</b><strong>AERO7 GRAM</strong></div>
-        <div class="toolbar-search">Поиск по проекту <span>⌕</span></div>
-      </div>
-      <div class="content-layout">
-        <aside class="navigation">
-          <div class="nav-caption">Быстрый доступ</div>
-          <a class="nav-item active" href="#home"><span>⌂</span>Главная</a>
-          <a class="nav-item" href="#features"><span>✉</span>Возможности</a>
-          <a class="nav-item" href="#design"><span>▧</span>Дизайн Aero</a>
-          <a class="nav-item" href="#security"><span>♢</span>Безопасность</a>
-          <a class="nav-item" href="#download"><span>↓</span>Скачать</a>
-          <a class="nav-item" href="#about"><span>ⓘ</span>О проекте</a>
-          <div class="nav-divider"></div>
-          <div class="nav-caption">Ссылки</div>
-          <a class="nav-item" href="https://github.com/German-GPD/aero7-gram" target="_blank" rel="noopener"><span>⌘</span>GitHub</a>
-          <a class="nav-item" href="https://telegram.org" target="_blank" rel="noopener"><span>↗</span>Telegram</a>
-          <div class="sidebar-status"><i></i><div><b>Ранняя разработка</b><small>Не готов к ежедневному использованию</small></div></div>
-        </aside>
-        <div class="main-content">
-          <section class="hero" id="home">
-            <div class="hero-text">
-              <div class="overline"><i></i> НЕЗАВИСИМЫЙ OPEN-SOURCE ПРОЕКТ</div>
-              <h1>Знакомый Telegram.<br><em>Настоящий дух Aero.</em></h1>
-              <p>Нативный настольный клиент Telegram, который должен выглядеть так, будто всегда был частью Windows 7.</p>
-              <div class="hero-buttons">
-                <a class="win-button primary" href="#download"><span class="button-icon">↓</span><span><b>Скачать AERO7 GRAM</b><small>Версии x64 и x86</small></span></a>
-                <a class="win-button" href="https://github.com/German-GPD/aero7-gram" target="_blank" rel="noopener"><span class="button-icon">⌘</span><span><b>Исходный код</b><small>GitHub · MIT</small></span></a>
-              </div>
-            </div>
-            <div class="hero-visual" aria-hidden="true">
-              <div class="orb orb-a"></div><div class="orb orb-b"></div>
-              <div class="glass-icon"><img src="assets/aero7-icon.svg" alt=""></div>
-              <div class="reflection"></div>
-              <span class="visual-caption">AERO7 GRAM</span>
-            </div>
-          </section>
-
-          <section class="section" id="features">
-            <div class="section-title"><div><small>01 / ВОЗМОЖНОСТИ</small><h2>Мессенджер без компромиссов</h2></div><span></span></div>
-            <p class="lead">Цель проекта — не просто нарисовать оболочку, а постепенно реализовать полноценный Telegram-клиент на базе TDLib.</p>
-            <div class="feature-grid">
-              <article class="feature"><span>▤</span><div><h3>Чаты и группы</h3><p>Личные переписки, групповые обсуждения и удобная работа с диалогами.</p></div></article>
-              <article class="feature"><span>◉</span><div><h3>Каналы</h3><p>Чтение каналов, публикации и сообщества Telegram.</p></div></article>
-              <article class="feature"><span>⌁</span><div><h3>Файлы и медиа</h3><p>Отправка и получение документов, изображений и других вложений.</p></div></article>
-              <article class="feature"><span>♧</span><div><h3>Контакты</h3><p>Список контактов и быстрый переход к личным диалогам.</p></div></article>
-              <article class="feature"><span>⌕</span><div><h3>Поиск</h3><p>Поиск по диалогам и сообщениям — в планах развития.</p></div></article>
-              <article class="feature"><span>⚙</span><div><h3>Настройки</h3><p>Управление внешним видом, аккаунтом и локальными данными.</p></div></article>
-            </div>
-            <div class="notice"><span>i</span><p><b>Текущий статус:</b> реализован начальный путь авторизации и текстовой переписки через TDLib. Остальные функции находятся в разработке — полный список смотри в README.</p></div>
-          </section>
-
-          <section class="section aero-section" id="design">
-            <div class="section-title"><div><small>02 / ВИЗУАЛЬНЫЙ СТИЛЬ</small><h2>Не «похоже на Windows 7». Windows 7.</h2></div><span></span></div>
-            <div class="design-grid">
-              <div><p class="lead">В основе интерфейса — визуальный язык Windows 7: стекло, световые блики, тонкие границы, системная типографика и привычные элементы управления.</p>
-                <ul class="ticks"><li>Стеклянная рамка Aero Glass и DWM</li><li>Градиенты, отражения и характерные кнопки</li><li>Segoe UI и плотность классического интерфейса</li><li>Нативное поведение окон и системные диалоги</li><li>Адаптация под Windows 7 SP1</li></ul>
-              </div>
-              <div class="mockup-wrap"><div class="mockup"><div class="mock-title"><img src="assets/aero7-icon.svg" alt="">AERO7 GRAM <span>−　□　×</span></div><div class="mock-toolbar">‹　›　　★　Проект　›　AERO7 GRAM</div><div class="mock-body"><div class="mock-side"><i></i><i></i><i></i><i></i></div><div class="mock-chat"><b></b><i></i><i></i><i></i><span></span></div></div><div class="mock-status">Готово</div></div><small>Концепт визуального направления, не скриншот приложения</small></div>
-            </div>
-          </section>
-
-          <section class="section" id="security">
-            <div class="section-title"><div><small>03 / ПРИВАТНОСТЬ</small><h2>Без скрытой телеметрии</h2></div><span></span></div>
-            <div class="security-grid">
-              <article><span>▣</span><h3>Локальные данные</h3><p>Локальная база TDLib хранится в профиле пользователя. Ключ базы на Windows защищается DPAPI.</p></article>
-              <article><span>◇</span><h3>Открытый код</h3><p>Исходники доступны на GitHub. Сторонние библиотеки сохраняют собственные лицензии.</p></article>
-              <article><span>⌁</span><h3>Без рекламных вставок</h3><p>В проект не закладываются рекламные блоки, трекеры или собственная аналитика.</p></article>
-            </div>
-            <p class="fine-print">Обычные облачные чаты Telegram не имеют сквозного шифрования по умолчанию. Для этого предназначены Secret Chats. Подробнее — в <a href="https://telegram.org/faq#q-how-secure-is-telegram" target="_blank" rel="noopener">официальном FAQ Telegram</a>.</p>
-          </section>
-
-          <section class="section download-section" id="download">
-            <div class="section-title"><div><small>04 / ЗАГРУЗКА</small><h2>Выбери свою архитектуру</h2></div><span></span></div>
-            <p class="lead">Отдельные сборки для 64-битных и 32-битных систем Windows 7 SP1.</p>
-            <div class="download-grid">
-              <article class="download-card"><div class="arch">64</div><div><h3>Windows x64</h3><p>Для 64-битной Windows 7 SP1</p><small>64-bit · AMD64</small></div><a href="https://github.com/German-GPD/aero7-gram/releases/latest" target="_blank" rel="noopener">Скачать x64 <b>↓</b></a></article>
-              <article class="download-card"><div class="arch">32</div><div><h3>Windows x86</h3><p>Для 32-битной Windows 7 SP1</p><small>32-bit · Win32</small></div><a href="https://github.com/German-GPD/aero7-gram/releases/latest" target="_blank" rel="noopener">Скачать x86 <b>↓</b></a></article>
-            </div>
-            <div class="download-note"><span>!</span><p><b>Сборки пока не опубликованы.</b> Ссылки откроют страницу релизов GitHub. Файлы появятся после сборки и проверки обеих архитектур на Windows 7 SP1. Не скачивай случайные сторонние сборки.</p></div>
-            <a class="source-link" href="docs/BUILDING-WINDOWS7.md">Как собрать самостоятельно <b>›</b></a>
-          </section>
-
-          <section class="section" id="about">
-            <div class="section-title"><div><small>05 / РАЗРАБОТКА</small><h2>Проект в процессе</h2></div><span></span></div>
-            <div class="status-list">
-              <div class="status-row done"><i>✓</i><div><b>Основа приложения</b><small>Qt Widgets, окно, навигация, настройки и Aero-интеграция</small></div><em>ГОТОВО</em></div>
-              <div class="status-row done"><i>✓</i><div><b>Авторизация и текстовые чаты</b><small>Начальная интеграция TDLib: вход, список диалогов, история и отправка текста</small></div><em>НАЧАЛЬНАЯ ВЕРСИЯ</em></div>
-              <div class="status-row current"><i>3</i><div><b>Стабилизация интерфейса и синхронизации</b><small>Обработка ошибок, обновления, состояние диалогов</small></div><em>В РАБОТЕ</em></div>
-              <div class="status-row"><i>4</i><div><b>Контакты, медиа, поиск и уведомления</b><small>Расширение возможностей клиента</small></div><em>ПЛАНЫ</em></div>
-              <div class="status-row"><i>5</i><div><b>Релизы x86 / x64</b><small>Сборка, тестирование и проверка на чистой Windows 7 SP1</small></div><em>ПЛАНЫ</em></div>
-            </div>
-            <div class="system-info"><div><small>ЦЕЛЕВАЯ ОС</small><b>Windows 7 SP1</b></div><div><small>АРХИТЕКТУРЫ</small><b>x86 · x64</b></div><div><small>ТЕХНОЛОГИИ</small><b>C++ · Qt 5 · TDLib</b></div><div><small>ЛИЦЕНЗИЯ</small><b>MIT</b></div></div>
-            <div class="disclaimer">AERO7 GRAM — независимый проект. Он не связан с Telegram или Microsoft и не является официальным клиентом Telegram. Названия и товарные знаки принадлежат их владельцам.</div>
-          </section>
-          <footer class="footer"><span>© <span id="year"></span> AERO7 GRAM</span><span>Создано с уважением к Windows 7.</span><a href="https://github.com/German-GPD/aero7-gram" target="_blank" rel="noopener">GitHub ↗</a></footer>
-        </div>
-      </div>
-      <footer class="statusbar"><span><i></i> Информация о проекте</span><span>Windows 7 SP1</span><b>AERO7 GRAM</b></footer>
-    </main>
-  </div>
-  <footer class="taskbar"><button class="start-orb" aria-label="Пуск"><span></span></button><div class="task-app"><img src="assets/aero7-icon.svg" alt="">AERO7 GRAM</div><div class="tray"><span>RU</span><span>⌃</span><span>◖</span><span>▣</span><div class="clock"><b id="clock">--:--</b><small id="date">--.--.----</small></div><i></i></div></footer>
-</body>
-</html>
+<header class="topbar"><a class="brand" href="#top"><img src="assets/aero7-icon.svg" alt=""><span>AERO7 <b>GRAM</b></span></a><nav><a href="#features">Возможности</a><a href="#preview">Интерфейс</a><a href="#security">Приватность</a><a href="#download">Загрузка</a></nav><a class="top-github" href="https://github.com/German-GPD/aero7-gram" target="_blank" rel="noopener">GitHub <span>↗</span></a></header>
+<main id="top">
+<section class="hero">
+<div class="hero-glow"></div><div class="hero-copy"><div class="eyebrow"><i></i> НЕЗАВИСИМЫЙ OPEN-SOURCE ПРОЕКТ</div>
+<h1>Telegram.<br><span>С оттенком Aero.</span></h1>
+<p class="hero-lead">Знакомый мессенджер в эстетике Windows 7 — стекло, свет, чистые линии и внимание к деталям. Нативное приложение для тех, кто скучает по настоящему Aero.</p>
+<div class="hero-actions"><a class="button button-primary" href="#download"><span>↓</span> Скачать приложение</a><a class="button button-ghost" href="https://github.com/German-GPD/aero7-gram" target="_blank" rel="noopener">Изучить исходный код <span>↗</span></a></div>
+<div class="hero-meta"><span><i class="dot"></i> Windows 7 SP1</span><span>·</span><span>C++ / Qt / TDLib</span><span>·</span><span>Open source</span></div></div>
+<div class="hero-art"><div class="art-halo"></div><div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div><div class="app-emblem"><img src="assets/aero7-icon.svg" alt="AERO7 GRAM"></div><div class="art-label">A LITTLE NOSTALGIA. A LOT OF DETAIL.</div></div>
+<div class="hero-bottom"><span>01 — DESKTOP MESSAGING</span><span>BUILT AROUND THE AERO SPIRIT</span></div>
+</section>
+<section class="intro section-shell" id="features"><div class="section-kicker">01 / ИДЕЯ ПРОЕКТА</div><div class="intro-grid"><h2>Современный мессенджер.<br><em>Знакомая атмосфера.</em></h2><div><p>Мы не пытаемся превратить весь сайт или приложение в копию системного окна. Вместо этого берём лучшее из визуального языка Aero — прозрачность, мягкий свет, прохладные оттенки и аккуратные детали — и соединяем с удобным современным интерфейсом.</p><p class="muted">AERO7 GRAM создаётся как нативный Telegram-клиент на C++ и Qt Widgets. За подключение к Telegram отвечает TDLib.</p></div></div>
+<div class="feature-grid"><article><span class="feature-icon">▤</span><h3>Диалоги и сообщения</h3><p>Основа переписки: список чатов, история и отправка текстовых сообщений.</p></article><article><span class="feature-icon">◉</span><h3>Telegram изнутри</h3><p>Интеграция с официальной библиотекой TDLib, а не имитация мессенджера.</p></article><article><span class="feature-icon">✧</span><h3>Эстетика Aero</h3><p>Стеклянные акценты, светлые поверхности и характерная палитра Windows 7.</p></article><article><span class="feature-icon">⚙</span><h3>Настраиваемый вид</h3><p>Название приложения и акцентные темы с сохранением настроек.</p></article><article><span class="feature-icon">⌂</span><h3>Нативное приложение</h3><p>Qt Widgets, системное окно и интеграция с Windows, без браузерной оболочки.</p></article><article><span class="feature-icon">◇</span><h3>Открытая разработка</h3><p>Исходный код доступен публично. Без встроенной рекламы и собственной аналитики.</p></article></div>
+<div class="status-callout"><span class="status-mark">i</span><div><b>Проект пока в ранней разработке.</b><p>Сейчас реализован начальный путь авторизации и текстовой переписки через TDLib. Медиа, контакты, поиск, уведомления и другие функции ещё предстоит довести до рабочего состояния.</p></div></div>
+</section>
+<section class="preview-section" id="preview"><div class="section-shell"><div class="section-kicker">02 / ВИЗУАЛЬНОЕ НАПРАВЛЕНИЕ</div><div class="preview-heading"><h2>Интерфейс, который хочется<br><em>рассматривать.</em></h2><p>Первые концепты экранов AERO7 GRAM. Это визуальные примеры направления, а не скриншоты уже готовой программы.</p></div>
+<figure class="preview-card preview-main"><img src="assets/interface-chat-preview.svg" alt="Концепт окна переписки AERO7 GRAM в стиле Windows 7 Aero"><figcaption><span><b>01</b> / ОКНО ПЕРЕПИСКИ</span><small>Чаты · история · сообщения</small></figcaption></figure>
+<div class="preview-secondary"><figure class="preview-card"><img src="assets/interface-settings-preview.svg" alt="Концепт окна настроек AERO7 GRAM"><figcaption><span><b>02</b> / НАСТРОЙКИ</span><small>Темы · акцент · персонализация</small></figcaption></figure><div class="preview-note"><div class="note-symbol">✧</div><h3>Вдохновение — Windows 7 Aero.</h3><p>Не буквальная копия Windows, а собственный интерфейс с её узнаваемым характером: стеклянные акценты, мягкие градиенты, чистая типографика и деликатные блики.</p><div class="palette"><i></i><i></i><i></i><i></i><i></i></div><span class="palette-label">AERO BLUE / ICE / SILVER</span></div></div>
+</div></section>
+<section class="section-shell security-section" id="security"><div class="section-kicker">03 / ПРИВАТНОСТЬ И БЕЗОПАСНОСТЬ</div><div class="security-grid"><div><h2>Меньше лишнего.<br><em>Больше прозрачности.</em></h2><p class="muted">Проект не должен собирать данные о пользователе ради аналитики или рекламы.</p></div><div class="security-points"><article><b>Локальные данные</b><p>База TDLib хранится в профиле пользователя. Ключ базы на Windows защищается DPAPI.</p></article><article><b>Без рекламных вставок</b><p>В проект не закладываются рекламные блоки, скрытые трекеры и собственная аналитика.</p></article><article><b>Честный статус</b><p>Открыто указываем, что уже работает, что ещё разрабатывается и что не проверено.</p></article></div></div><p class="fine-print">Обычные облачные чаты Telegram не имеют сквозного шифрования по умолчанию. Для E2E-шифрования предназначены Secret Chats. <a href="https://telegram.org/faq#q-how-secure-is-telegram" target="_blank" rel="noopener">Подробнее в FAQ Telegram ↗</a></p></section>
+<section class="download-section" id="download"><div class="section-shell"><div class="section-kicker">04 / ЗАГРУЗКА</div><div class="download-head"><div><h2>Твоя версия.<br><em>Твоя система.</em></h2><p>Планируются отдельные сборки для Windows 7 SP1 x64 и x86.</p></div><span class="download-os">WINDOWS 7 SP1<br>32 / 64 BIT</span></div><div class="download-grid"><article class="download-card"><div class="arch">64</div><div class="download-info"><h3>Windows x64</h3><p>Для 64-битных систем · AMD64</p></div><a href="https://github.com/German-GPD/aero7-gram/releases/latest" target="_blank" rel="noopener">Скачать x64 <span>↓</span></a></article><article class="download-card"><div class="arch">32</div><div class="download-info"><h3>Windows x86</h3><p>Для 32-битных систем · Win32</p></div><a href="https://github.com/German-GPD/aero7-gram/releases/latest" target="_blank" rel="noopener">Скачать x86 <span>↓</span></a></article></div><div class="release-warning"><span>!</span><p><b>Готовые сборки ещё не опубликованы.</b> Кнопки ведут на GitHub Releases. Файлы появятся после сборки и проверки обеих архитектур на Windows 7 SP1. Не скачивай неофициальные сборки с посторонних сайтов.</p></div><a class="build-link" href="docs/BUILDING-WINDOWS7.md">Инструкция по самостоятельной сборке <span>↗</span></a></div></section>
+<section class="section-shell roadmap" id="about"><div class="section-kicker">05 / РАЗРАБОТКА</div><div class="roadmap-head"><h2>Путь к полноценному<br><em>Telegram-клиенту.</em></h2><p>Без обещаний того, чего ещё нет. Работа идёт постепенно — от основы к полноценным функциям.</p></div><div class="roadmap-list"><div class="roadmap-item complete"><span>✓</span><div><b>Нативная основа и Aero-оболочка</b><small>Qt Widgets, окно, навигация, настройки и интеграция с DWM</small></div><label>РЕАЛИЗОВАНО</label></div><div class="roadmap-item complete"><span>✓</span><div><b>Начальная работа с TDLib</b><small>Авторизация, список диалогов, история и отправка текста</small></div><label>НАЧАЛЬНАЯ ВЕРСИЯ</label></div><div class="roadmap-item active"><span>03</span><div><b>Стабилизация и синхронизация</b><small>Обработка ошибок, обновление диалогов и состояния сообщений</small></div><label>В РАБОТЕ</label></div><div class="roadmap-item"><span>04</span><div><b>Контакты, медиа, поиск и уведомления</b><small>Расширение базовых возможностей клиента</small></div><label>ДАЛЬШЕ</label></div><div class="roadmap-item"><span>05</span><div><b>Релизы x86 и x64</b><small>Сборка и проверка на чистых системах Windows 7 SP1</small></div><label>ДАЛЬШЕ</label></div></div></section>
+</main>
+<footer class="footer"><a class="brand" href="#top"><img src="assets/aero7-icon.svg" alt=""><span>AERO7 <b>GRAM</b></span></a><p>Независимый проект. Не связан с Telegram или Microsoft.</p><div><a href="https://github.com/German-GPD/aero7-gram" target="_blank" rel="noopener">GitHub ↗</a><a href="https://github.com/German-GPD/aero7-gram/blob/main/README.md">README ↗</a></div><small>© <span id="year"></span> AERO7 GRAM · Made with a little Aero spirit</small></footer>
+</body></html>
