@@ -20,7 +20,7 @@
 - **Window effects:** Windows 7 DWM Aero glass
 - **Planned Telegram backend:** TDLib
 
-Windows 10 and Windows 11 are not target platforms.
+Windows 10 and Windows 11 are not target platforms. They can still be used for preliminary development smoke tests; compatibility mode does not emulate Windows 7.
 
 ## Current status
 
