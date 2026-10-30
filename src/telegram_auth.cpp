@@ -222,17 +222,15 @@ bool TelegramAuth::loadCredentials()
         settings.setValue("telegram/api_id", m_apiId);
     }
 
-    // Migrate legacy plaintext hashes to Windows DPAPI and never write new
-    // API hashes as ordinary QSettings strings.
-    if (settings.value("telegram/protected_api_hash").toByteArray().isEmpty()) {
-        const QByteArray encrypted = protectLocalSecret(m_apiHash.toUtf8());
-        if (encrypted.isEmpty()) {
-            if (errorOccurred) errorOccurred("Windows could not protect the Telegram API hash with DPAPI.");
-            return false;
-        }
-        settings.setValue("telegram/protected_api_hash", encrypted);
-        settings.remove("telegram/api_hash");
+    // Store the hash only as a DPAPI-protected value. Rewriting also repairs
+    // a stale/corrupt protected value after the user re-enters credentials.
+    const QByteArray encrypted = protectLocalSecret(m_apiHash.toUtf8());
+    if (encrypted.isEmpty()) {
+        if (errorOccurred) errorOccurred("Windows could not protect the Telegram API hash with DPAPI.");
+        return false;
     }
+    settings.setValue("telegram/protected_api_hash", encrypted);
+    settings.remove("telegram/api_hash");
     return true;
 }
 
