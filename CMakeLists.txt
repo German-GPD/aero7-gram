@@ -19,14 +19,40 @@ endif()
 
 find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets)
 
+option(AERO7_ENABLE_TDLIB "Enable real Telegram authorization through TDLib" OFF)
+set(TDJSON_ROOT "" CACHE PATH "TDLib JSON installation prefix")
+
+if(AERO7_ENABLE_TDLIB)
+    find_path(TDJSON_INCLUDE_DIR
+        NAMES td/telegram/td_json_client.h
+        HINTS "${TDJSON_ROOT}/include"
+        REQUIRED
+    )
+    find_library(TDJSON_LIBRARY
+        NAMES tdjson
+        HINTS "${TDJSON_ROOT}/lib" "${TDJSON_ROOT}/lib/x64" "${TDJSON_ROOT}/lib/x86"
+        REQUIRED
+    )
+endif()
+
 add_executable(AERO7GRAM WIN32
     src/main.cpp
+    src/telegram_auth.cpp
+    src/telegram_auth.h
 )
 
 target_link_libraries(AERO7GRAM PRIVATE
     Qt5::Widgets
     dwmapi
+    crypt32
+    bcrypt
 )
+
+if(AERO7_ENABLE_TDLIB)
+    target_compile_definitions(AERO7GRAM PRIVATE AERO7_WITH_TDLIB)
+    target_include_directories(AERO7GRAM PRIVATE "${TDJSON_INCLUDE_DIR}")
+    target_link_libraries(AERO7GRAM PRIVATE "${TDJSON_LIBRARY}")
+endif()
 
 target_compile_definitions(AERO7GRAM PRIVATE
     UNICODE
