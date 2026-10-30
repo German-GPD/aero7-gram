@@ -1,38 +1,11 @@
 (() => {
   "use strict";
-  const year = document.getElementById("year");
-  const clock = document.getElementById("clock");
-  const date = document.getElementById("date");
-  if (year) year.textContent = String(new Date().getFullYear());
-
-  function updateClock() {
-    const now = new Date();
-    if (clock) clock.textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    if (date) date.textContent = now.toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" });
-  }
-  updateClock();
-  window.setInterval(updateClock, 30000);
-
-  const navLinks = [...document.querySelectorAll(".menubar a, .sidebar a.side-link[href^='#']")];
-  const sections = [...document.querySelectorAll(".main-pane section[id]")];
-  const setActive = (id) => {
-    navLinks.forEach((link) => {
-      const active = link.getAttribute("href") === "#" + id;
-      link.classList.toggle("selected", active && link.classList.contains("side-link"));
-      if (active && link.classList.contains("side-link")) link.setAttribute("aria-current", "page");
-      else link.removeAttribute("aria-current");
-    });
-  };
-  navLinks.forEach((link) => link.addEventListener("click", () => {
-    const id = link.getAttribute("href").slice(1);
-    setActive(id);
-  }));
-
-  if ("IntersectionObserver" in window) {
-    const observer = new IntersectionObserver((entries) => {
-      const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (visible) setActive(visible.target.id);
-    }, { rootMargin: "-15% 0px -65% 0px", threshold: [0, .15, .4] });
-    sections.forEach((section) => observer.observe(section));
-  }
+  const year=document.getElementById("year"),clock=document.getElementById("clock"),date=document.getElementById("date");
+  if(year)year.textContent=String(new Date().getFullYear());
+  function tick(){const n=new Date();if(clock)clock.textContent=n.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});if(date)date.textContent=n.toLocaleDateString([],{day:"2-digit",month:"2-digit",year:"numeric"});}
+  tick();window.setInterval(tick,30000);
+  const links=[...document.querySelectorAll(".menu-bar a,.nav-item[href^='#']")],sections=[...document.querySelectorAll(".main-content section[id]")];
+  function activate(id){links.forEach(a=>{const on=a.getAttribute("href")==="#"+id;if(a.classList.contains("nav-item"))a.classList.toggle("active",on);if(on&&a.classList.contains("nav-item"))a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});}
+  links.forEach(a=>a.addEventListener("click",()=>activate(a.getAttribute("href").slice(1))));
+  if("IntersectionObserver"in window){const observer=new IntersectionObserver(entries=>{const current=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];if(current)activate(current.target.id);},{rootMargin:"-15% 0px -65% 0px",threshold:[0,.15,.4]});sections.forEach(s=>observer.observe(s));}
 })();
