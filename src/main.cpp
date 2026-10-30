@@ -206,13 +206,6 @@ public:
 
             // TDLib sends updateChatTitle/updateChatLastMessage as update objects:
             // the title and chat_id are at the top level, not inside "chat".
-            const QString title = object.value("title").toString(
-                chat.value("title").toString("Telegram chat"));
-            const QJsonObject lastMessage = object.value("last_message").toObject();
-            const QJsonObject content = lastMessage.value("content").toObject();
-            QString preview = content.value("text").toObject().value("text").toString();
-            if (preview.isEmpty() && !content.isEmpty())
-                preview = content.value("@type").toString().mid(13);
             QListWidgetItem *item = nullptr;
             for (int i = 0; i < m_chatList->count(); ++i) {
                 if (m_chatList->item(i)->data(Qt::UserRole).toLongLong() == id) {
@@ -223,9 +216,32 @@ public:
             if (!item) {
                 item = new QListWidgetItem(m_chatList);
                 item->setData(Qt::UserRole, QVariant::fromValue<qlonglong>(id));
+                item->setData(Qt::UserRole + 1, "Telegram chat");
+                item->setData(Qt::UserRole + 2, QString());
+                item->setData(Qt::UserRole + 3, 0);
+                item->setData(Qt::UserRole + 4, 0);
             }
-            item->setData(Qt::UserRole + 1, title);
-            item->setData(Qt::UserRole + 2, preview);
+            const QString incomingTitle = object.value("title").toString(
+                chat.value("title").toString());
+            if (!incomingTitle.isEmpty())
+                item->setData(Qt::UserRole + 1, incomingTitle);
+
+            const QJsonObject lastMessage = object.value("last_message").toObject();
+            if (!lastMessage.isEmpty()) {
+                const QJsonObject content = lastMessage.value("content").toObject();
+                QString preview = content.value("text").toObject().value("text").toString();
+                if (preview.isEmpty() && !content.isEmpty())
+                    preview = content.value("@type").toString().mid(13);
+                item->setData(Qt::UserRole + 2, preview);
+                item->setData(Qt::UserRole + 4, lastMessage.value("date").toInt());
+            }
+            if (object.contains("unread_count"))
+                item->setData(Qt::UserRole + 3, object.value("unread_count").toInt());
+            else if (chat.contains("unread_count"))
+                item->setData(Qt::UserRole + 3, chat.value("unread_count").toInt());
+
+            const QString title = item->data(Qt::UserRole + 1).toString();
+            const QString preview = item->data(Qt::UserRole + 2).toString();
             item->setText(title + "\n" + preview);
             item->setToolTip(title + (preview.isEmpty() ? QString() : "\n" + preview));
             refreshChatItem(item);
