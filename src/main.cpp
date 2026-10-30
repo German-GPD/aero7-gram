@@ -4,14 +4,19 @@
 #include <QFrame>
 #include <QLabel>
 #include <QPushButton>
+#include <QToolButton>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QGridLayout>
 #include <QLineEdit>
 #include <QListWidget>
 #include <QListWidgetItem>
+#include <QStackedWidget>
+#include <QScrollArea>
 #include <QShowEvent>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QPainterPath>
 #include <QStyle>
 #include <QFont>
 #include <QColor>
@@ -19,6 +24,14 @@
 #include <QIcon>
 #include <QSizePolicy>
 #include <QPoint>
+#include <QSettings>
+#include <QMessageBox>
+#include <QCloseEvent>
+#include <QResizeEvent>
+#include <QApplication>
+#include <QDateTime>
+#include <QFileInfo>
+#include <QDir>
 
 #ifdef Q_OS_WIN
 #  include <windows.h>
@@ -26,62 +39,169 @@
 #  include <windowsx.h>
 #endif
 
-class DragTitleBar final : public QWidget {
+namespace {
+const char *kAppName = "AERO7 GRAM";
+const char *kOrganization = "German-GPD";
+const char *kVersion = "0.2.0";
+
+QIcon createTelegramAeroIcon()
+{
+    QPixmap pixmap(128, 128);
+    pixmap.fill(Qt::transparent);
+    QPainter p(&pixmap);
+    p.setRenderHint(QPainter::Antialiasing, true);
+
+    QLinearGradient orb(15, 8, 108, 122);
+    orb.setColorAt(0.0, QColor("#58d8ff"));
+    orb.setColorAt(0.48, QColor("#20a8e4"));
+    orb.setColorAt(1.0, QColor("#0873bd"));
+    p.setPen(QPen(QColor(230, 249, 255, 230), 2));
+    p.setBrush(orb);
+    p.drawEllipse(QRectF(2, 2, 124, 124));
+
+    QLinearGradient gloss(0, 3, 0, 68);
+    gloss.setColorAt(0.0, QColor(255, 255, 255, 105));
+    gloss.setColorAt(1.0, QColor(255, 255, 255, 0));
+    p.setPen(Qt::NoPen);
+    p.setBrush(gloss);
+    p.drawEllipse(QRectF(8, 5, 112, 82));
+
+    QPainterPath plane;
+    plane.moveTo(24, 57);
+    plane.lineTo(91, 30);
+    plane.cubicTo(101, 26, 105, 30, 102, 42);
+    plane.lineTo(91, 94);
+    plane.cubicTo(89, 104, 84, 107, 76, 101);
+    plane.lineTo(54, 84);
+    plane.cubicTo(47, 79, 48, 75, 54, 69);
+    plane.lineTo(78, 47);
+    plane.cubicTo(81, 44, 78, 42, 74, 45);
+    plane.lineTo(43, 67);
+    plane.cubicTo(37, 71, 32, 70, 25, 68);
+    plane.lineTo(17, 65);
+    plane.cubicTo(10, 62, 13, 60, 24, 57);
+    plane.closeSubpath();
+
+    p.setPen(QPen(QColor(255, 255, 255, 210), 1.0));
+    QLinearGradient paper(20, 32, 92, 101);
+    paper.setColorAt(0.0, QColor("#ffffff"));
+    paper.setColorAt(0.7, QColor("#f4fbff"));
+    paper.setColorAt(1.0, QColor("#ccecff"));
+    p.setBrush(paper);
+    p.drawPath(plane);
+    return QIcon(pixmap);
+}
+
+QLabel *makeLabel(const QString &text, const QString &objectName = QString())
+{
+    QLabel *label = new QLabel(text);
+    if (!objectName.isEmpty())
+        label->setObjectName(objectName);
+    return label;
+}
+
+QToolButton *makeNavButton(const QString &glyph, const QString &text, QWidget *parent)
+{
+    QToolButton *button = new QToolButton(parent);
+    button->setText(glyph + "   " + text);
+    button->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    button->setCursor(Qt::PointingHandCursor);
+    button->setCheckable(true);
+    button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    button->setFixedHeight(37);
+    button->setObjectName("navigationButton");
+    button->setProperty("navButton", true);
+    return button;
+}
+}
+
+class DragTitleBar final : public QWidget
+{
 public:
-    explicit DragTitleBar(QWidget *parent = nullptr) : QWidget(parent) {}
+    explicit DragTitleBar(QWidget *parent = nullptr) : QWidget(parent)
+    {
+        setAttribute(Qt::WA_StyledBackground, true);
+    }
 
 protected:
-    void mousePressEvent(QMouseEvent *event) override {
+    void mousePressEvent(QMouseEvent *event) override
+    {
         if (event->button() == Qt::LeftButton && window() && !window()->isMaximized()) {
-            offset = event->globalPos() - window()->frameGeometry().topLeft();
-            dragging = true;
+            m_dragOffset = event->globalPos() - window()->frameGeometry().topLeft();
+            m_dragging = true;
             event->accept();
             return;
         }
         QWidget::mousePressEvent(event);
     }
 
-    void mouseMoveEvent(QMouseEvent *event) override {
-        if (dragging && (event->buttons() & Qt::LeftButton) && window()) {
-            window()->move(event->globalPos() - offset);
+    void mouseMoveEvent(QMouseEvent *event) override
+    {
+        if (m_dragging && (event->buttons() & Qt::LeftButton) && window()) {
+            window()->move(event->globalPos() - m_dragOffset);
             event->accept();
             return;
         }
         QWidget::mouseMoveEvent(event);
     }
 
-    void mouseReleaseEvent(QMouseEvent *event) override {
-        dragging = false;
+    void mouseReleaseEvent(QMouseEvent *event) override
+    {
+        m_dragging = false;
         QWidget::mouseReleaseEvent(event);
     }
 
+    void mouseDoubleClickEvent(QMouseEvent *event) override
+    {
+        if (event->button() == Qt::LeftButton && window()) {
+            window()->isMaximized() ? window()->showNormal() : window()->showMaximized();
+            event->accept();
+            return;
+        }
+        QWidget::mouseDoubleClickEvent(event);
+    }
+
 private:
-    QPoint offset;
-    bool dragging = false;
+    QPoint m_dragOffset;
+    bool m_dragging = false;
 };
 
-class AeroWindow final : public QMainWindow {
+class AeroWindow final : public QMainWindow
+{
 public:
-    AeroWindow() {
-        setWindowTitle(QStringLiteral("AERO7 GRAM"));
-        setMinimumSize(900, 580);
+    AeroWindow()
+    {
+        setWindowTitle(QString::fromLatin1(kAppName));
+        setWindowIcon(createTelegramAeroIcon());
+        setMinimumSize(820, 540);
         resize(1120, 720);
         setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
         setAttribute(Qt::WA_TranslucentBackground, true);
 
         buildInterface();
-        applyFallbackStyle();
+        applyStyle();
+        restorePreferences();
     }
 
 protected:
-    void showEvent(QShowEvent *event) override {
+    void showEvent(QShowEvent *event) override
+    {
         QMainWindow::showEvent(event);
 #ifdef Q_OS_WIN
         enableAeroGlass();
 #endif
     }
 
-    bool nativeEvent(const QByteArray &eventType, void *message, long *result) override {
+    void closeEvent(QCloseEvent *event) override
+    {
+        QSettings settings;
+        settings.setValue("window/geometry", saveGeometry());
+        settings.setValue("window/maximized", isMaximized());
+        QMainWindow::closeEvent(event);
+    }
+
+    bool nativeEvent(const QByteArray &eventType, void *message, long *result) override
+    {
 #ifdef Q_OS_WIN
         Q_UNUSED(eventType);
         MSG *msg = static_cast<MSG *>(message);
@@ -111,147 +231,73 @@ protected:
     }
 
 private:
-    QWidget *surface = nullptr;
+    QWidget *m_surface = nullptr;
+    QStackedWidget *m_pages = nullptr;
+    QToolButton *m_chatsNav = nullptr;
+    QToolButton *m_contactsNav = nullptr;
+    QToolButton *m_callsNav = nullptr;
+    QToolButton *m_settingsNav = nullptr;
+    QLabel *m_connectionState = nullptr;
+    QLineEdit *m_search = nullptr;
+    QLabel *m_pageTitle = nullptr;
 
-    void buildInterface() {
-        surface = new QWidget(this);
-        surface->setObjectName(QStringLiteral("surface"));
-        setCentralWidget(surface);
+    void buildInterface()
+    {
+        m_surface = new QWidget(this);
+        m_surface->setObjectName("surface");
+        setCentralWidget(m_surface);
 
-        auto *root = new QVBoxLayout(surface);
+        QVBoxLayout *root = new QVBoxLayout(m_surface);
         root->setContentsMargins(1, 1, 1, 1);
         root->setSpacing(0);
-
         root->addWidget(createTitleBar());
 
-        auto *body = new QWidget(surface);
-        auto *bodyLayout = new QHBoxLayout(body);
+        QWidget *body = new QWidget(m_surface);
+        QHBoxLayout *bodyLayout = new QHBoxLayout(body);
         bodyLayout->setContentsMargins(0, 0, 0, 0);
         bodyLayout->setSpacing(0);
 
-        auto *sidebar = new QFrame(body);
-        sidebar->setObjectName(QStringLiteral("sidebar"));
-        sidebar->setFixedWidth(270);
-        auto *sideLayout = new QVBoxLayout(sidebar);
-        sideLayout->setContentsMargins(14, 18, 14, 14);
-        sideLayout->setSpacing(12);
+        bodyLayout->addWidget(createSidebar());
+        m_pages = new QStackedWidget(body);
+        m_pages->setObjectName("pageStack");
+        m_pages->addWidget(createChatsPage());
+        m_pages->addWidget(createContactsPage());
+        m_pages->addWidget(createCallsPage());
+        m_pages->addWidget(createSettingsPage());
+        bodyLayout->addWidget(m_pages, 1);
 
-        auto *brand = new QLabel(QStringLiteral("AERO7 GRAM"), sidebar);
-        brand->setObjectName(QStringLiteral("brand"));
-        auto *subtitle = new QLabel(QStringLiteral("TELEGRAM · WINDOWS 7 EDITION"), sidebar);
-        subtitle->setObjectName(QStringLiteral("subtitle"));
-
-        auto *search = new QLineEdit(sidebar);
-        search->setPlaceholderText(QStringLiteral("Search chats"));
-        search->setClearButtonEnabled(true);
-
-        auto *chatsLabel = new QLabel(QStringLiteral("MESSAGES"), sidebar);
-        chatsLabel->setObjectName(QStringLiteral("sectionLabel"));
-
-        auto *chatList = new QListWidget(sidebar);
-        chatList->setObjectName(QStringLiteral("chatList"));
-        chatList->setFrameShape(QFrame::NoFrame);
-        chatList->setFocusPolicy(Qt::NoFocus);
-        chatList->addItem(new QListWidgetItem(QStringLiteral("  ◉   Welcome to AERO7 GRAM")));
-        chatList->addItem(new QListWidgetItem(QStringLiteral("  ◉   Saved Messages")));
-        chatList->addItem(new QListWidgetItem(QStringLiteral("  ◉   Telegram")));
-        chatList->setCurrentRow(0);
-
-        sideLayout->addWidget(brand);
-        sideLayout->addWidget(subtitle);
-        sideLayout->addSpacing(10);
-        sideLayout->addWidget(search);
-        sideLayout->addWidget(chatsLabel);
-        sideLayout->addWidget(chatList, 1);
-
-        auto *conversation = new QWidget(body);
-        auto *conversationLayout = new QVBoxLayout(conversation);
-        conversationLayout->setContentsMargins(28, 26, 28, 24);
-        conversationLayout->setSpacing(14);
-
-        auto *conversationTitle = new QLabel(QStringLiteral("Welcome to AERO7 GRAM"), conversation);
-        conversationTitle->setObjectName(QStringLiteral("conversationTitle"));
-        auto *conversationSubtitle = new QLabel(
-            QStringLiteral("A classic desktop feeling. Your Telegram, reimagined."),
-            conversation);
-        conversationSubtitle->setObjectName(QStringLiteral("muted"));
-
-        auto *welcomeCard = new QFrame(conversation);
-        welcomeCard->setObjectName(QStringLiteral("welcomeCard"));
-        auto *welcomeLayout = new QVBoxLayout(welcomeCard);
-        welcomeLayout->setContentsMargins(24, 22, 24, 22);
-        welcomeLayout->setSpacing(10);
-
-        auto *welcomeTitle = new QLabel(QStringLiteral("Aero is back."), welcomeCard);
-        welcomeTitle->setObjectName(QStringLiteral("welcomeTitle"));
-        auto *welcomeText = new QLabel(
-            QStringLiteral("This is the first native application shell. The next milestone is "
-                           "connecting TDLib, adding secure sign-in and loading real Telegram chats."),
-            welcomeCard);
-        welcomeText->setObjectName(QStringLiteral("welcomeText"));
-        welcomeText->setWordWrap(true);
-
-        auto *status = new QLabel(QStringLiteral("●  APPLICATION SHELL · TELEGRAM CONNECTION NOT YET CONFIGURED"), welcomeCard);
-        status->setObjectName(QStringLiteral("status"));
-
-        welcomeLayout->addWidget(welcomeTitle);
-        welcomeLayout->addWidget(welcomeText);
-        welcomeLayout->addSpacing(8);
-        welcomeLayout->addWidget(status);
-
-        auto *spacer = new QWidget(conversation);
-        spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-        auto *composer = new QLineEdit(conversation);
-        composer->setPlaceholderText(QStringLiteral("Messaging will be available after Telegram integration"));
-        composer->setReadOnly(true);
-        composer->setObjectName(QStringLiteral("composer"));
-
-        conversationLayout->addWidget(conversationTitle);
-        conversationLayout->addWidget(conversationSubtitle);
-        conversationLayout->addSpacing(18);
-        conversationLayout->addWidget(welcomeCard);
-        conversationLayout->addWidget(spacer, 1);
-        conversationLayout->addWidget(composer);
-
-        bodyLayout->addWidget(sidebar);
-        bodyLayout->addWidget(conversation, 1);
         root->addWidget(body, 1);
+        root->addWidget(createStatusBar());
+        connectNavigation();
     }
 
-    QWidget *createTitleBar() {
-        auto *bar = new DragTitleBar(this);
-        bar->setObjectName(QStringLiteral("titleBar"));
-        bar->setFixedHeight(42);
+    QWidget *createTitleBar()
+    {
+        DragTitleBar *bar = new DragTitleBar(this);
+        bar->setObjectName("titleBar");
+        bar->setFixedHeight(38);
 
-        auto *layout = new QHBoxLayout(bar);
-        layout->setContentsMargins(14, 0, 8, 0);
-        layout->setSpacing(5);
+        QHBoxLayout *layout = new QHBoxLayout(bar);
+        layout->setContentsMargins(12, 0, 7, 0);
+        layout->setSpacing(7);
 
-        auto *appMark = new QLabel(QStringLiteral("✦"), bar);
-        appMark->setObjectName(QStringLiteral("appMark"));
-        appMark->setFixedSize(22, 22);
-        appMark->setAlignment(Qt::AlignCenter);
-        appMark->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+        QLabel *icon = new QLabel(bar);
+        icon->setPixmap(createTelegramAeroIcon().pixmap(24, 24));
+        icon->setFixedSize(24, 24);
+        icon->setAttribute(Qt::WA_TransparentForMouseEvents, true);
 
-        auto *title = new QLabel(QStringLiteral("AERO7 GRAM"), bar);
-        title->setObjectName(QStringLiteral("windowTitle"));
+        QLabel *title = makeLabel(QString::fromLatin1(kAppName), "windowTitle");
         title->setAttribute(Qt::WA_TransparentForMouseEvents, true);
-
-        auto *version = new QLabel(QStringLiteral("PREVIEW"), bar);
-        version->setObjectName(QStringLiteral("versionTag"));
+        QLabel *version = makeLabel("PREVIEW 0.2", "versionTag");
         version->setAttribute(Qt::WA_TransparentForMouseEvents, true);
 
-        auto *stretch = new QWidget(bar);
+        QWidget *stretch = new QWidget(bar);
         stretch->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
         stretch->setAttribute(Qt::WA_TransparentForMouseEvents, true);
 
-        auto *minimize = new QPushButton(QStringLiteral("—"), bar);
-        auto *maximize = new QPushButton(QStringLiteral("□"), bar);
-        auto *close = new QPushButton(QStringLiteral("×"), bar);
-        minimize->setObjectName(QStringLiteral("windowButton"));
-        maximize->setObjectName(QStringLiteral("windowButton"));
-        close->setObjectName(QStringLiteral("closeButton"));
+        QPushButton *minimize = windowButton("—", "windowButton");
+        QPushButton *maximize = windowButton("□", "windowButton");
+        QPushButton *close = windowButton("×", "closeButton");
         minimize->setFixedSize(34, 23);
         maximize->setFixedSize(34, 23);
         close->setFixedSize(46, 23);
@@ -262,7 +308,7 @@ private:
         });
         connect(close, &QPushButton::clicked, this, &QWidget::close);
 
-        layout->addWidget(appMark);
+        layout->addWidget(icon);
         layout->addWidget(title);
         layout->addWidget(version);
         layout->addWidget(stretch);
@@ -272,55 +318,461 @@ private:
         return bar;
     }
 
-    void applyFallbackStyle() {
-        setStyleSheet(QStringLiteral(R"(
-            QWidget { color: #173e59; font-family: "Segoe UI", Tahoma, sans-serif; font-size: 9pt; }
-            #surface { background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 rgba(220,246,255,72), stop:0.55 rgba(174,222,244,58), stop:1 rgba(190,244,220,68)); border: 1px solid rgba(255,255,255,245); }
-            #titleBar { background: qlineargradient(x1:0,y1:0,x2:0,y2:1, stop:0 rgba(255,255,255,220), stop:0.48 rgba(196,230,246,175), stop:1 rgba(132,193,224,120)); border-bottom: 1px solid rgba(255,255,255,220); }
-            #appMark { color: white; font-size: 14pt; font-weight: bold; border: 1px solid white; background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 #8ce8dc, stop:1 #1688bd); }
-            #windowTitle { font-weight: 600; color: #174f70; }
-            #versionTag { color: #46748d; font-size: 7pt; padding-left: 5px; }
-            QPushButton#windowButton, QPushButton#closeButton { color: #174c6b; border: 1px solid rgba(255,255,255,230); background: qlineargradient(x1:0,y1:0,x2:0,y2:1, stop:0 #faffff, stop:1 #a9d8ed); padding: 0; }
+    QPushButton *windowButton(const QString &text, const QString &name)
+    {
+        QPushButton *button = new QPushButton(text);
+        button->setObjectName(name);
+        button->setCursor(Qt::ArrowCursor);
+        button->setFocusPolicy(Qt::NoFocus);
+        return button;
+    }
+
+    QWidget *createSidebar()
+    {
+        QFrame *sidebar = new QFrame;
+        sidebar->setObjectName("sidebar");
+        sidebar->setFixedWidth(292);
+
+        QVBoxLayout *layout = new QVBoxLayout(sidebar);
+        layout->setContentsMargins(13, 15, 13, 13);
+        layout->setSpacing(8);
+
+        QHBoxLayout *brandRow = new QHBoxLayout;
+        QLabel *brandIcon = new QLabel(sidebar);
+        brandIcon->setPixmap(createTelegramAeroIcon().pixmap(38, 38));
+        brandIcon->setFixedSize(38, 38);
+        QVBoxLayout *brandText = new QVBoxLayout;
+        brandText->setSpacing(1);
+        brandText->addWidget(makeLabel("AERO7 GRAM", "brand"));
+        brandText->addWidget(makeLabel("TELEGRAM DESKTOP", "subtitle"));
+        brandRow->addWidget(brandIcon);
+        brandRow->addLayout(brandText, 1);
+        layout->addLayout(brandRow);
+        layout->addSpacing(9);
+
+        m_connectionState = makeLabel("●  Not connected", "connectionState");
+        layout->addWidget(m_connectionState);
+
+        m_search = new QLineEdit(sidebar);
+        m_search->setPlaceholderText("Search");
+        m_search->setClearButtonEnabled(true);
+        m_search->setObjectName("searchField");
+        layout->addWidget(m_search);
+        layout->addSpacing(4);
+
+        m_chatsNav = makeNavButton("▤", "All chats", sidebar);
+        m_contactsNav = makeNavButton("♙", "Contacts", sidebar);
+        m_callsNav = makeNavButton("☎", "Calls", sidebar);
+        m_settingsNav = makeNavButton("⚙", "Settings", sidebar);
+        layout->addWidget(m_chatsNav);
+        layout->addWidget(m_contactsNav);
+        layout->addWidget(m_callsNav);
+        layout->addWidget(m_settingsNav);
+        layout->addSpacing(9);
+
+        QFrame *line = new QFrame(sidebar);
+        line->setFrameShape(QFrame::HLine);
+        line->setObjectName("sidebarLine");
+        layout->addWidget(line);
+
+        QHBoxLayout *listHeader = new QHBoxLayout;
+        listHeader->addWidget(makeLabel("CONVERSATIONS", "sectionLabel"));
+        listHeader->addStretch();
+        QLabel *count = makeLabel("0", "countBadge");
+        listHeader->addWidget(count);
+        layout->addLayout(listHeader);
+
+        QLabel *empty = makeLabel("Your chats will appear here after you connect Telegram.", "sidebarEmpty");
+        empty->setWordWrap(true);
+        empty->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+        layout->addWidget(empty);
+        layout->addStretch();
+
+        QPushButton *connectButton = new QPushButton("Connect Telegram");
+        connectButton->setObjectName("connectButton");
+        connectButton->setCursor(Qt::PointingHandCursor);
+        layout->addWidget(connectButton);
+        connect(connectButton, &QPushButton::clicked, this, [this]() { showConnectionNotice(); });
+
+        return sidebar;
+    }
+
+    QWidget *createChatsPage()
+    {
+        QWidget *page = new QWidget;
+        page->setObjectName("contentPage");
+        QVBoxLayout *layout = new QVBoxLayout(page);
+        layout->setContentsMargins(34, 28, 34, 26);
+        layout->setSpacing(0);
+
+        QHBoxLayout *header = new QHBoxLayout;
+        QVBoxLayout *heading = new QVBoxLayout;
+        heading->setSpacing(3);
+        heading->addWidget(makeLabel("All chats", "pageTitle"));
+        heading->addWidget(makeLabel("Your Telegram conversations in one place.", "pageSubtitle"));
+        header->addLayout(heading);
+        header->addStretch();
+        QPushButton *newChat = new QPushButton("+  New message");
+        newChat->setObjectName("secondaryButton");
+        newChat->setCursor(Qt::PointingHandCursor);
+        header->addWidget(newChat, 0, Qt::AlignVCenter);
+        layout->addLayout(header);
+        layout->addSpacing(26);
+
+        QFrame *welcome = new QFrame(page);
+        welcome->setObjectName("welcomePanel");
+        QVBoxLayout *welcomeLayout = new QVBoxLayout(welcome);
+        welcomeLayout->setContentsMargins(30, 28, 30, 28);
+        welcomeLayout->setSpacing(11);
+
+        QLabel *plane = new QLabel(welcome);
+        plane->setPixmap(createTelegramAeroIcon().pixmap(76, 76));
+        plane->setFixedSize(76, 76);
+        welcomeLayout->addWidget(plane);
+        welcomeLayout->addWidget(makeLabel("Aero is ready. Telegram isn't connected yet.", "welcomeTitle"));
+
+        QLabel *description = makeLabel(
+            "Connect your Telegram account to load your real chats, contacts and message history. "
+            "Your account session will be stored locally on this computer.",
+            "welcomeText");
+        description->setWordWrap(true);
+        description->setMaximumWidth(560);
+        welcomeLayout->addWidget(description);
+        welcomeLayout->addSpacing(5);
+
+        QHBoxLayout *actions = new QHBoxLayout;
+        QPushButton *start = new QPushButton("Connect Telegram");
+        start->setObjectName("primaryButton");
+        start->setCursor(Qt::PointingHandCursor);
+        QPushButton *learn = new QPushButton("About this preview");
+        learn->setObjectName("linkButton");
+        learn->setCursor(Qt::PointingHandCursor);
+        actions->addWidget(start, 0, Qt::AlignLeft);
+        actions->addWidget(learn, 0, Qt::AlignLeft);
+        actions->addStretch();
+        welcomeLayout->addLayout(actions);
+        layout->addWidget(welcome);
+        layout->addStretch();
+
+        QLabel *footnote = makeLabel("AERO7 GRAM  ·  EARLY DEVELOPMENT BUILD", "footnote");
+        layout->addWidget(footnote);
+
+        connect(start, &QPushButton::clicked, this, [this]() { showConnectionNotice(); });
+        connect(newChat, &QPushButton::clicked, this, [this]() { showConnectionNotice(); });
+        connect(learn, &QPushButton::clicked, this, [this]() { showAbout(); });
+        return page;
+    }
+
+    QWidget *createContactsPage()
+    {
+        return createEmptyPage("Contacts", "Your contacts will appear here after Telegram is connected.",
+                               "Contacts are not loaded in this preview build.");
+    }
+
+    QWidget *createCallsPage()
+    {
+        return createEmptyPage("Calls", "Your call history will appear here after Telegram is connected.",
+                               "Calling is not available in this preview build.");
+    }
+
+    QWidget *createEmptyPage(const QString &title, const QString &subtitle, const QString &detail)
+    {
+        QWidget *page = new QWidget;
+        page->setObjectName("contentPage");
+        QVBoxLayout *layout = new QVBoxLayout(page);
+        layout->setContentsMargins(34, 28, 34, 26);
+        layout->setSpacing(10);
+        layout->addWidget(makeLabel(title, "pageTitle"));
+        layout->addWidget(makeLabel(subtitle, "pageSubtitle"));
+        layout->addStretch();
+        QLabel *empty = makeLabel(detail, "emptyPageText");
+        empty->setAlignment(Qt::AlignCenter);
+        layout->addWidget(empty, 1);
+        layout->addStretch();
+        return page;
+    }
+
+    QWidget *createSettingsPage()
+    {
+        QWidget *page = new QWidget;
+        page->setObjectName("contentPage");
+        QVBoxLayout *layout = new QVBoxLayout(page);
+        layout->setContentsMargins(34, 28, 34, 26);
+        layout->setSpacing(14);
+        layout->addWidget(makeLabel("Settings", "pageTitle"));
+        layout->addWidget(makeLabel("Application preferences and information.", "pageSubtitle"));
+        layout->addSpacing(8);
+
+        QFrame *general = settingsGroup("GENERAL");
+        QVBoxLayout *generalLayout = qobject_cast<QVBoxLayout *>(general->layout());
+        addSettingRow(generalLayout, "Start with Windows", "Startup integration is not enabled in this build.");
+        addSettingRow(generalLayout, "Minimize to tray", "Background mode will be added with notifications.");
+        layout->addWidget(general);
+
+        QFrame *account = settingsGroup("TELEGRAM ACCOUNT");
+        QVBoxLayout *accountLayout = qobject_cast<QVBoxLayout *>(account->layout());
+        addSettingRow(accountLayout, "Connection", "Not connected");
+        addSettingRow(accountLayout, "Session storage", "Local application data · encrypted storage planned");
+        layout->addWidget(account);
+
+        QFrame *about = settingsGroup("ABOUT");
+        QVBoxLayout *aboutLayout = qobject_cast<QVBoxLayout *>(about->layout());
+        addSettingRow(aboutLayout, "Version", QString::fromLatin1(kVersion));
+        addSettingRow(aboutLayout, "Platform", "Windows 7 SP1 · x86 / x64");
+        QPushButton *aboutButton = new QPushButton("License and project information");
+        aboutButton->setObjectName("linkButton");
+        aboutButton->setCursor(Qt::PointingHandCursor);
+        aboutLayout->addWidget(aboutButton, 0, Qt::AlignLeft);
+        connect(aboutButton, &QPushButton::clicked, this, [this]() { showAbout(); });
+        layout->addWidget(about);
+        layout->addStretch();
+        return page;
+    }
+
+    QFrame *settingsGroup(const QString &title)
+    {
+        QFrame *frame = new QFrame;
+        frame->setObjectName("settingsGroup");
+        QVBoxLayout *layout = new QVBoxLayout(frame);
+        layout->setContentsMargins(16, 12, 16, 13);
+        layout->setSpacing(8);
+        layout->addWidget(makeLabel(title, "sectionLabel"));
+        return frame;
+    }
+
+    void addSettingRow(QVBoxLayout *layout, const QString &title, const QString &value)
+    {
+        QHBoxLayout *row = new QHBoxLayout;
+        QVBoxLayout *labels = new QVBoxLayout;
+        labels->setSpacing(2);
+        labels->addWidget(makeLabel(title, "settingTitle"));
+        QLabel *detail = makeLabel(value, "settingDetail");
+        detail->setWordWrap(true);
+        labels->addWidget(detail);
+        row->addLayout(labels, 1);
+        layout->addLayout(row);
+    }
+
+    QWidget *createStatusBar()
+    {
+        QFrame *bar = new QFrame;
+        bar->setObjectName("statusBar");
+        bar->setFixedHeight(25);
+        QHBoxLayout *layout = new QHBoxLayout(bar);
+        layout->setContentsMargins(12, 0, 12, 0);
+        QLabel *left = makeLabel("●  Not connected", "statusText");
+        QLabel *right = makeLabel(QString("AERO7 GRAM  ·  %1").arg(QString::fromLatin1(kVersion)), "statusText");
+        layout->addWidget(left);
+        layout->addStretch();
+        layout->addWidget(right);
+        return bar;
+    }
+
+    void connectNavigation()
+    {
+        connect(m_chatsNav, &QToolButton::clicked, this, [this]() { setPage(0); });
+        connect(m_contactsNav, &QToolButton::clicked, this, [this]() { setPage(1); });
+        connect(m_callsNav, &QToolButton::clicked, this, [this]() { setPage(2); });
+        connect(m_settingsNav, &QToolButton::clicked, this, [this]() { setPage(3); });
+        m_chatsNav->setChecked(true);
+    }
+
+    void setPage(int index)
+    {
+        m_pages->setCurrentIndex(index);
+        m_chatsNav->setChecked(index == 0);
+        m_contactsNav->setChecked(index == 1);
+        m_callsNav->setChecked(index == 2);
+        m_settingsNav->setChecked(index == 3);
+    }
+
+    void showConnectionNotice()
+    {
+        QMessageBox box(this);
+        box.setWindowTitle("Telegram connection");
+        box.setIcon(QMessageBox::Information);
+        box.setText("Telegram integration is the next development milestone.");
+        box.setInformativeText(
+            "This build contains the native Windows interface only. It does not yet sign in, "
+            "read messages or connect to Telegram. TDLib support will be added after a "
+            "Windows 7-compatible build is prepared for both x86 and x64.");
+        box.setStandardButtons(QMessageBox::Ok);
+        box.exec();
+    }
+
+    void showAbout()
+    {
+        QMessageBox box(this);
+        box.setWindowTitle("About AERO7 GRAM");
+        box.setIconPixmap(createTelegramAeroIcon().pixmap(48, 48));
+        box.setText(QString("%1  ·  %2").arg(QString::fromLatin1(kAppName),
+                                             QString::fromLatin1(kVersion)));
+        box.setInformativeText(
+            "An independent Telegram desktop client project for Windows 7 SP1.\n\n"
+            "This is an early interface preview, not a connected Telegram client.\n"
+            "Not affiliated with Telegram or Microsoft.");
+        box.setStandardButtons(QMessageBox::Ok);
+        box.exec();
+    }
+
+    void applyStyle()
+    {
+        setStyleSheet(QString::fromLatin1(R"(
+            QWidget {
+                color: #234b64;
+                font-family: "Segoe UI", Tahoma, sans-serif;
+                font-size: 9pt;
+            }
+            #surface {
+                background: rgba(221, 241, 249, 246);
+                border: 1px solid rgba(255,255,255,245);
+            }
+            #titleBar {
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+                    stop:0 rgba(255,255,255,235), stop:0.18 rgba(225,246,255,225),
+                    stop:0.52 rgba(139,197,228,205), stop:1 rgba(67,145,190,195));
+                border-bottom: 1px solid rgba(255,255,255,245);
+            }
+            #windowTitle { color: #174d6b; font-size: 9pt; font-weight: 600; }
+            #versionTag { color: #47758d; font-size: 7pt; padding-left: 5px; }
+            QPushButton#windowButton, QPushButton#closeButton {
+                color: #174c6b; border: 1px solid rgba(255,255,255,235);
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+                    stop:0 #faffff, stop:1 #a9d8ed);
+                padding: 0; font-size: 10pt;
+            }
             QPushButton#windowButton:hover { background: #e8fbff; }
-            QPushButton#closeButton { color: white; font-size: 13pt; font-weight: bold; background: qlineargradient(x1:0,y1:0,x2:0,y2:1, stop:0 #f5a99a, stop:1 #c92e22); }
-            #sidebar { background: rgba(224,246,252,115); border-right: 1px solid rgba(255,255,255,210); }
-            #brand { color: #155b83; font-size: 16pt; font-weight: 600; }
-            #subtitle, #sectionLabel { color: #578096; font-size: 7pt; font-weight: 700; letter-spacing: 1px; }
-            QLineEdit { min-height: 30px; padding: 0 9px; color: #204e68; border: 1px solid rgba(255,255,255,245); background: rgba(255,255,255,125); selection-background-color: #5db9df; }
-            QLineEdit:focus { border: 1px solid #76c9e7; background: rgba(255,255,255,190); }
-            #chatList { background: transparent; outline: 0; }
-            #chatList::item { min-height: 38px; padding: 5px; border: 1px solid transparent; }
-            #chatList::item:selected { color: #174e6d; border: 1px solid white; background: rgba(255,255,255,135); }
-            #conversationTitle { color: #15577d; font-size: 17pt; font-weight: 600; }
-            #muted { color: #5a7d91; }
-            #welcomeCard { border: 1px solid rgba(255,255,255,235); background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 rgba(255,255,255,170), stop:1 rgba(190,232,241,145)); }
-            #welcomeTitle { color: #14618a; font-size: 23pt; font-weight: 600; }
-            #welcomeText { color: #365f76; font-size: 10pt; line-height: 1.5; }
-            #status { color: #8a6537; font-size: 7pt; font-weight: 700; }
-            #composer { min-height: 38px; }
+            QPushButton#closeButton {
+                color: white; font-size: 13pt; font-weight: bold;
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+                    stop:0 #f5a99a, stop:1 #c92e22);
+            }
+            QPushButton#closeButton:hover {
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+                    stop:0 #ffb7a8, stop:1 #e53c2c);
+            }
+            #sidebar {
+                background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                    stop:0 rgba(235,249,253,250), stop:1 rgba(213,239,248,245));
+                border-right: 1px solid #b8d9e8;
+            }
+            #brand { color: #155b83; font-size: 14pt; font-weight: 600; }
+            #subtitle, #sectionLabel {
+                color: #6a8b9d; font-size: 7pt; font-weight: 700;
+                letter-spacing: 1px;
+            }
+            #connectionState { color: #8a7651; font-size: 8pt; padding: 4px 1px; }
+            QLineEdit {
+                min-height: 31px; padding: 0 9px; color: #204e68;
+                border: 1px solid #b5d2df; border-top-color: #91b6c9;
+                background: rgba(255,255,255,220);
+                selection-background-color: #5db9df;
+            }
+            QLineEdit:focus { border: 1px solid #66b9dc; background: #fff; }
+            #navigationButton {
+                text-align: left; padding-left: 11px; color: #416a80;
+                border: 1px solid transparent; background: transparent;
+                font-size: 9pt;
+            }
+            #navigationButton:hover {
+                border: 1px solid #c1e0ee;
+                background: rgba(255,255,255,145);
+            }
+            #navigationButton:checked {
+                color: #174f70; font-weight: 600;
+                border: 1px solid #a8d0e4;
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+                    stop:0 rgba(255,255,255,220), stop:1 rgba(190,225,241,210));
+            }
+            #sidebarLine { color: #c5dfe9; max-height: 1px; }
+            #countBadge {
+                color: #5d8195; background: #e8f5fa; border: 1px solid #c5e0eb;
+                padding: 1px 6px; font-size: 8pt;
+            }
+            #sidebarEmpty {
+                color: #7895a5; font-size: 8pt; padding: 7px 3px;
+            }
+            QPushButton#connectButton, QPushButton#primaryButton {
+                color: white; font-weight: 600; padding: 8px 16px;
+                border: 1px solid #237eae;
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+                    stop:0 #69c8ec, stop:0.48 #2499cf, stop:1 #1476ad);
+            }
+            QPushButton#connectButton:hover, QPushButton#primaryButton:hover {
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+                    stop:0 #8bdcff, stop:1 #1686bf);
+            }
+            #contentPage { background: rgba(247,252,254,248); }
+            #pageTitle { color: #1c5c7d; font-size: 20pt; font-weight: 600; }
+            #pageSubtitle { color: #6d8999; font-size: 9pt; }
+            #welcomePanel {
+                border: 1px solid #d2e5ed;
+                background: qlineargradient(x1:0,y1:0,x2:1,y2:1,
+                    stop:0 #ffffff, stop:1 #eaf6fb);
+            }
+            #welcomeTitle { color: #155b83; font-size: 17pt; font-weight: 600; }
+            #welcomeText { color: #527386; font-size: 9pt; }
+            QPushButton#secondaryButton {
+                color: #285f7d; padding: 7px 12px;
+                border: 1px solid #b6d3e0;
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+                    stop:0 #fff, stop:1 #e3f1f7);
+            }
+            QPushButton#secondaryButton:hover { background: #f4fcff; }
+            QPushButton#linkButton {
+                color: #287ca8; border: 0; background: transparent;
+                padding: 7px 9px; text-decoration: underline;
+            }
+            #footnote { color: #9aafb9; font-size: 7pt; letter-spacing: 1px; }
+            #emptyPageText {
+                color: #819aa8; font-size: 11pt; padding: 30px;
+                border: 1px dashed #c8dfe9; background: #f8fcfe;
+            }
+            #settingsGroup {
+                border: 1px solid #d2e4ec; background: #fff;
+            }
+            #settingTitle { color: #315d75; font-weight: 600; }
+            #settingDetail { color: #8299a6; font-size: 8pt; }
+            #statusBar {
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+                    stop:0 #f7fcfe, stop:1 #e0edf3);
+                border-top: 1px solid #c6dce6;
+            }
+            #statusText { color: #7792a1; font-size: 7pt; }
+            QMessageBox { background: #eff8fc; }
         )"));
     }
 
+    void restorePreferences()
+    {
+        QSettings settings;
+        const QByteArray geometry = settings.value("window/geometry").toByteArray();
+        if (!geometry.isEmpty())
+            restoreGeometry(geometry);
+        if (settings.value("window/maximized", false).toBool())
+            showMaximized();
+    }
+
 #ifdef Q_OS_WIN
-    void enableAeroGlass() {
+    void enableAeroGlass()
+    {
         BOOL composition = FALSE;
         if (SUCCEEDED(DwmIsCompositionEnabled(&composition)) && composition) {
-            const MARGINS margins = {-1, -1, -1, -1};
+            const MARGINS margins = {0, 0, 38, 0};
             DwmExtendFrameIntoClientArea(reinterpret_cast<HWND>(winId()), &margins);
-            DWM_BLURBEHIND blur = {};
-            blur.dwFlags = DWM_BB_ENABLE;
-            blur.fEnable = TRUE;
-            DwmEnableBlurBehindWindow(reinterpret_cast<HWND>(winId()), &blur);
         }
     }
 #endif
 };
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     QApplication app(argc, argv);
-    QApplication::setApplicationName(QStringLiteral("AERO7 GRAM"));
-    QApplication::setOrganizationName(QStringLiteral("German-GPD"));
-    QApplication::setApplicationVersion(QStringLiteral("0.1.0"));
+    QApplication::setApplicationName(QString::fromLatin1(kAppName));
+    QApplication::setOrganizationName(QString::fromLatin1(kOrganization));
+    QApplication::setApplicationVersion(QString::fromLatin1(kVersion));
+    QApplication::setWindowIcon(createTelegramAeroIcon());
+    app.setStyle("Fusion");
 
     AeroWindow window;
     window.show();
