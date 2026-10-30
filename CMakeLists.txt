@@ -70,6 +70,11 @@ target_compile_options(AERO7GRAM PRIVATE
     /permissive-
 )
 
+# Keep the PE subsystem version compatible with Windows 7 SP1.
+target_link_options(AERO7GRAM PRIVATE
+    /SUBSYSTEM:WINDOWS,6.01
+)
+
 set_target_properties(AERO7GRAM PROPERTIES
     OUTPUT_NAME "AERO7 GRAM"
 )
