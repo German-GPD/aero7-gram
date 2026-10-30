@@ -17,6 +17,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QStyle>
+#include <QStyleFactory>
 #include <QFont>
 #include <QColor>
 #include <QColorDialog>
@@ -153,8 +154,10 @@ public:
         setWindowIconText(QString::fromLatin1(kAppName));
         setMinimumSize(820, 540);
         resize(1120, 720);
-        setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
-        setAttribute(Qt::WA_TranslucentBackground, true);
+        // Keep the real Windows non-client frame: caption buttons, borders,
+        // resizing and system menu are drawn by Windows 7 itself.
+        setWindowFlags(Qt::Window);
+        setAttribute(Qt::WA_TranslucentBackground, false);
 
         buildInterface();
         applyStyle();
@@ -206,9 +209,6 @@ protected:
     void showEvent(QShowEvent *event) override
     {
         QMainWindow::showEvent(event);
-#ifdef Q_OS_WIN
-        enableAeroGlass();
-#endif
     }
 
     void closeEvent(QCloseEvent *event) override
@@ -278,8 +278,6 @@ private:
         QVBoxLayout *root = new QVBoxLayout(m_surface);
         root->setContentsMargins(1, 1, 1, 1);
         root->setSpacing(0);
-        root->addWidget(createTitleBar());
-
         QWidget *body = new QWidget(m_surface);
         QHBoxLayout *bodyLayout = new QHBoxLayout(body);
         bodyLayout->setContentsMargins(0, 0, 0, 0);
@@ -880,7 +878,7 @@ private:
     {
         BOOL composition = FALSE;
         if (SUCCEEDED(DwmIsCompositionEnabled(&composition)) && composition) {
-            const MARGINS margins = {0, 0, 38, 0};
+            const MARGINS margins = {0, 0, 0, 0};
             DwmExtendFrameIntoClientArea(reinterpret_cast<HWND>(winId()), &margins);
         }
     }
@@ -890,6 +888,11 @@ private:
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+    // Qt 5 ships the Windows Vista style plugin, which matches the native
+    // Windows 7 control metrics and interaction states when available.
+    QStyle *nativeWindowsStyle = QStyleFactory::create("windowsvista");
+    if (nativeWindowsStyle)
+        app.setStyle(nativeWindowsStyle);
     QApplication::setApplicationName(QString::fromLatin1(kAppName));
     QApplication::setOrganizationName(QString::fromLatin1(kOrganization));
     QApplication::setApplicationVersion(QString::fromLatin1(kVersion));
