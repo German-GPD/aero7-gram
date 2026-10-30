@@ -175,6 +175,7 @@ public:
     {
         setWindowTitle(QString::fromLatin1(kAppName));
         setWindowIcon(createTelegramAeroIcon());
+        setWindowIconText(QString::fromLatin1(kAppName));
         setMinimumSize(820, 540);
         resize(1120, 720);
         setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
@@ -545,6 +546,7 @@ private:
         m_themeChoice->addItem("Violet", "#8064c8");
         m_themeChoice->addItem("Rose", "#d45b78");
         m_themeChoice->addItem("Graphite", "#607887");
+        m_themeChoice->addItem("Custom", "custom");
         themeRow->addStretch(); themeRow->addWidget(m_themeChoice);
         QPushButton *customColor = new QPushButton("Custom…", page);
         customColor->setObjectName("secondaryButton"); themeRow->addWidget(customColor);
@@ -554,7 +556,11 @@ private:
         connect(customColor, &QPushButton::clicked, this, [this]() {
             const QColor color = QColorDialog::getColor(m_customAccent.isValid() ? m_customAccent : QColor("#20a8e4"), this, "Choose theme color");
             if (!color.isValid()) return;
-            m_customAccent = color; QSettings s; s.setValue("appearance/theme", "custom"); s.setValue("appearance/customAccent", color.name()); applyTheme(color);
+            m_customAccent = color;
+            const int customIndex = m_themeChoice->findData("custom");
+            if (customIndex >= 0) m_themeChoice->setCurrentIndex(customIndex);
+            QSettings s; s.setValue("appearance/theme", "custom"); s.setValue("appearance/customAccent", color.name());
+            applyTheme(color);
         });
         layout->addWidget(general);
 
@@ -801,8 +807,12 @@ private:
     void saveAppearance() {
         QSettings s;
         s.setValue("appearance/appName", m_appNameChoice->currentData().toString());
-        s.setValue("appearance/theme", m_themeChoice->currentData().toString());
-        updateApplicationName(); applyTheme(QColor(m_themeChoice->currentData().toString()));
+        const QString theme = m_themeChoice->currentData().toString();
+        s.setValue("appearance/theme", theme);
+        updateApplicationName();
+        if (theme == "custom") {
+            if (m_customAccent.isValid()) applyTheme(m_customAccent);
+        } else applyTheme(QColor(theme));
     }
 
     void updateApplicationName() {
