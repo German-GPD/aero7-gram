@@ -8,6 +8,7 @@ on:
       - "CMakeLists.txt"
       - "src/**"
       - "resources.qrc"
+      - "README-TEST.txt"
       - ".github/workflows/windows-test-build.yml"
 
 permissions:
