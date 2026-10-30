@@ -19,17 +19,17 @@ endif()
 
 find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets Svg)
 
-option(AERO7_ENABLE_TDLIB "Enable real Telegram authorization through TDLib" OFF)
+option(AERO7_ENABLE_TDLIB "Enable real Telegram authorization through TDLib" ON)
 set(TDJSON_ROOT "" CACHE PATH "TDLib JSON installation prefix")
 
 if(AERO7_ENABLE_TDLIB)
     find_path(TDJSON_INCLUDE_DIR
         NAMES td/telegram/td_json_client.h
-        HINTS "${TDJSON_ROOT}/include"
+        HINTS "${TDJSON_ROOT}/include" "${TDJSON_ROOT}"
     )
     find_library(TDJSON_LIBRARY
         NAMES tdjson
-        HINTS "${TDJSON_ROOT}/lib" "${TDJSON_ROOT}/lib/x64" "${TDJSON_ROOT}/lib/x86"
+        HINTS "${TDJSON_ROOT}/lib" "${TDJSON_ROOT}/lib/x64" "${TDJSON_ROOT}/lib/x86" "${TDJSON_ROOT}/lib/Release"
     )
     if(NOT TDJSON_INCLUDE_DIR OR NOT TDJSON_LIBRARY)
         message(FATAL_ERROR "TDLib JSON headers/library not found. Set TDJSON_ROOT to a compatible TDLib installation.")
