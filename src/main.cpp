@@ -224,6 +224,9 @@ public:
         m_auth->historyLoaded = [this]() {
             if (m_conversationSubtitle && m_selectedChatId)
                 m_conversationSubtitle->setText("Telegram conversation");
+            if (m_messageList && m_messageList->count() == 1
+                && m_messageList->item(0)->data(Qt::UserRole).toString() == "empty-state")
+                showMessagePlaceholder("No messages here yet");
         };
         m_auth->messageReceived = [this](const QString &json) {
             if (!m_messageList) return;
@@ -249,9 +252,10 @@ public:
             }
             const bool outgoing = message.value("is_outgoing").toBool();
             const QDateTime sentAt = QDateTime::fromTime_t(static_cast<uint>(message.value("date").toInt()));
-            QListWidgetItem *messageItem = new QListWidgetItem((outgoing ? "↗  " : "●  ") + body + (sentAt.isValid() ? "     " + sentAt.toString("hh:mm") : QString()));
-            messageItem->setTextAlignment(outgoing ? Qt::AlignRight : Qt::AlignLeft);
-            m_messageList->addItem(messageItem);
+            if (m_messageList->count() == 1
+                && m_messageList->item(0)->data(Qt::UserRole).toString() == "empty-state")
+                m_messageList->clear();
+            appendMessageBubble(body, sentAt, outgoing);
             m_messageList->scrollToBottom();
         };
     }
@@ -412,6 +416,68 @@ private:
         return button;
     }
 
+    void showMessagePlaceholder(const QString &text)
+    {
+        if (!m_messageList) return;
+        m_messageList->clear();
+        QListWidgetItem *item = new QListWidgetItem(m_messageList);
+        item->setData(Qt::UserRole, "empty-state");
+        QWidget *container = new QWidget(m_messageList);
+        QVBoxLayout *layout = new QVBoxLayout(container);
+        layout->setContentsMargins(12, 24, 12, 24);
+        QLabel *label = makeLabel(text, "messagePlaceholder");
+        label->setAlignment(Qt::AlignCenter);
+        layout->addStretch();
+        layout->addWidget(label);
+        layout->addStretch();
+        item->setSizeHint(QSize(400, 170));
+        m_messageList->setItemWidget(item, container);
+    }
+
+    void appendMessageBubble(const QString &body, const QDateTime &sentAt, bool outgoing)
+    {
+        if (!m_messageList) return;
+        QListWidgetItem *item = new QListWidgetItem(m_messageList);
+        QWidget *row = new QWidget(m_messageList);
+        QHBoxLayout *rowLayout = new QHBoxLayout(row);
+        rowLayout->setContentsMargins(12, 2, 12, 2);
+        rowLayout->setSpacing(0);
+
+        QFrame *bubble = new QFrame(row);
+        bubble->setObjectName(outgoing ? "outgoingBubble" : "incomingBubble");
+        bubble->setMaximumWidth(560);
+        QVBoxLayout *bubbleLayout = new QVBoxLayout(bubble);
+        bubbleLayout->setContentsMargins(12, 8, 12, 6);
+        bubbleLayout->setSpacing(4);
+
+        QLabel *messageText = makeLabel(body, "messageBubbleText");
+        messageText->setWordWrap(true);
+        messageText->setTextInteractionFlags(Qt::TextSelectableByMouse);
+        messageText->setMaximumWidth(520);
+        bubbleLayout->addWidget(messageText);
+
+        QHBoxLayout *meta = new QHBoxLayout;
+        meta->addStretch();
+        QLabel *time = makeLabel(sentAt.isValid() ? sentAt.toString("hh:mm") : QString(), "messageTime");
+        meta->addWidget(time);
+        bubbleLayout->addLayout(meta);
+
+        if (outgoing) {
+            rowLayout->addStretch(1);
+            rowLayout->addWidget(bubble, 0, Qt::AlignRight);
+        } else {
+            rowLayout->addWidget(bubble, 0, Qt::AlignLeft);
+            rowLayout->addStretch(1);
+        }
+        const int textWidth = qMin(520, qMax(180, messageText->fontMetrics().horizontalAdvance(body) + 4));
+        messageText->setMinimumWidth(qMin(260, textWidth));
+        item->setSizeHint(QSize(m_messageList->viewport()->width() - 8,
+                                qMax(48, bubble->sizeHint().height() + 8)));
+        m_messageList->setItemWidget(item, row);
+        item->setSizeHint(QSize(m_messageList->viewport()->width() - 8,
+                                qMax(48, row->sizeHint().height())));
+    }
+
     void refreshChatItem(QListWidgetItem *item)
     {
         if (!item || !m_chatList) return;
@@ -517,7 +583,10 @@ private:
                 const QString chatTitle = current->data(Qt::UserRole + 1).toString();
                 if (m_conversationTitle) m_conversationTitle->setText(chatTitle);
                 if (m_conversationSubtitle) m_conversationSubtitle->setText("Loading recent messages…");
-                if (m_messageList) m_messageList->clear();
+                if (m_messageList) {
+                    m_messageList->clear();
+                    showMessagePlaceholder("Loading conversation…");
+                }
                 m_seenMessageIds.clear();
                 m_auth->requestHistory(m_selectedChatId, 50);
             });
@@ -849,6 +918,19 @@ private:
             }
             #chatName { color: #26343b; font-size: 9pt; font-weight: 600; }
             #chatPreview { color: #77858b; font-size: 8pt; }
+            #messageList { background: #edf1f3; border: none; outline: none; }
+            #messageList::item { border: none; padding: 0; }
+            #incomingBubble {
+                background: #ffffff; border: 1px solid #d3dadd;
+                border-radius: 4px;
+            }
+            #outgoingBubble {
+                background: #e2f0d9; border: 1px solid #c4d8b9;
+                border-radius: 4px;
+            }
+            #messageBubbleText { color: #26343b; font-size: 9pt; }
+            #messageTime { color: #7b898e; font-size: 7pt; }
+            #messagePlaceholder { color: #7b898e; font-size: 9pt; }
             #subtitle, #sectionLabel {
                 color: #74838a; font-size: 7pt; font-weight: 700;
                 letter-spacing: 1px;
