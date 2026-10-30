@@ -598,7 +598,7 @@ private:
     {
         QFrame *sidebar = new QFrame;
         sidebar->setObjectName("sidebar");
-        sidebar->setFixedWidth(318);
+        sidebar->setFixedWidth(330);
         QVBoxLayout *layout = new QVBoxLayout(sidebar);
         layout->setContentsMargins(0, 0, 0, 0);
         layout->setSpacing(0);
@@ -963,7 +963,7 @@ private:
                 font-size: 9pt;
             }
             #surface {
-                background: rgba(238, 242, 244, 238);
+                background: rgba(235, 241, 244, 246);
                 border: 1px solid rgba(255,255,255,245);
             }
             #titleBar {
@@ -995,7 +995,7 @@ private:
                     stop:0 rgba(246,248,249,250), stop:1 rgba(222,228,231,245));
                 border-right: 1px solid #b8c2c7;
             }
-            #brand { color: #26343b; font-size: 14pt; font-weight: 600; }
+            #brand { color: #243d4d; font-size: 15pt; font-weight: 600; letter-spacing: -0.3px; }
             #chatList { background: rgba(245,247,248,245); border: none; outline: none; }
             #chatList::item { border: 1px solid transparent; padding: 0; }
             #chatList::item:hover { background: rgba(255,255,255,165); border-color: #d5dde0; }
@@ -1005,16 +1005,16 @@ private:
                 border: 1px solid #a8bdc9;
             }
             #chatName { color: #26343b; font-size: 9pt; font-weight: 600; }
-            #chatPreview { color: #77858b; font-size: 8pt; }
-            #messageList { background: #edf1f3; border: none; outline: none; }
+            #chatPreview { color: #687b86; font-size: 8pt; }
+            #messageList { background: #e9eef1; border: none; outline: none; }
             #messageList::item { border: none; padding: 0; }
             #incomingBubble {
-                background: #ffffff; border: 1px solid #d3dadd;
-                border-radius: 4px;
+                background: #ffffff; border: 1px solid #cbd6dc;
+                border-radius: 2px;
             }
             #outgoingBubble {
-                background: #e2f0d9; border: 1px solid #c4d8b9;
-                border-radius: 4px;
+                background: #dcecf7; border: 1px solid #b7d2e4;
+                border-radius: 2px;
             }
             #messageBubbleText { color: #26343b; font-size: 9pt; }
             #messageTime { color: #7b898e; font-size: 7pt; }
@@ -1023,7 +1023,7 @@ private:
                 color: #74838a; font-size: 7pt; font-weight: 700;
                 letter-spacing: 1px;
             }
-            #connectionState { color: #8a7651; font-size: 8pt; padding: 4px 1px; }
+            #connectionState { color: #426b83; font-size: 8pt; padding: 4px 1px; }
             QLineEdit {
                 min-height: 31px; padding: 0 9px; color: #27343b;
                 border: 1px solid #b7c1c6; border-top-color: #9ba8ae;
@@ -1055,14 +1055,14 @@ private:
                 color: #7b878d; font-size: 8pt; padding: 7px 3px;
             }
             QPushButton#connectButton, QPushButton#primaryButton {
-                color: white; font-weight: 600; padding: 8px 16px;
-                border: 1px solid #9eabb1;
+                color: #ffffff; font-weight: 600; padding: 7px 17px;
+                border: 1px solid #28658b;
                 background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
-                    stop:0 #ffffff, stop:0.48 #e4e9eb, stop:1 #c4cdd1);
+                    stop:0 #5e9fc5, stop:0.48 #397fa9, stop:1 #28658b);
             }
             QPushButton#connectButton:hover, QPushButton#primaryButton:hover {
                 background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
-                    stop:0 #ffffff, stop:1 #d4dde1);
+                    stop:0 #75b4d8, stop:1 #397fa9);
             }
             #contentPage { background: rgba(248,249,249,246); }
             #pageTitle { color: #26343b; font-size: 20pt; font-weight: 600; }
@@ -1095,11 +1095,11 @@ private:
                 border: 1px solid #cbd3d6; outline: 0; padding: 3px;
             }
             QListWidget::item { padding: 10px 9px; border-bottom: 1px solid rgba(190,201,207,150); }
-            QListWidget#chatList { background: rgba(247,249,250,245); border: 0; padding: 3px; }
+            QListWidget#chatList { background: #f7f9fa; border: 0; padding: 3px; }
             QListWidget#chatList::item { min-height: 58px; }
             QListWidget#chatList::item:selected { color: #26343b; background: qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #edf5f8,stop:1 #d4e2e8); border: 1px solid #9db3be; }
-            QListWidget#messageList { background: rgba(244,247,248,248); border: 0; padding: 12px; }
-            QListWidget#messageList::item { padding: 10px 14px; margin: 3px 8px; border: 1px solid #cbd5d9; background: #fff; }
+            QListWidget#messageList { background: #e9eef1; border: 0; padding: 12px; }
+            QListWidget#messageList::item { padding: 0; margin: 2px 0; border: 0; background: transparent; }
             QListWidget#messageList::item:selected { background: #e6f0f3; color: #26343b; }
             #settingsGroup {
                 border: 1px solid #d1d8db; background: #fff;
