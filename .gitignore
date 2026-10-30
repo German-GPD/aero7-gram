@@ -1,0 +1,28 @@
+# CMake
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.vcxproj
+*.vcxproj.filters
+*.sln
+*.slnx
+
+# Qt
+*.user
+*.qmlc
+*.jsc
+
+# Build outputs
+*.exe
+*.dll
+*.lib
+*.pdb
+*.ilk
+*.obj
+
+# Local Telegram API credentials and configuration
+config.local.h
+aero7gram.local.json
