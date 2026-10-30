@@ -181,24 +181,49 @@ public:
             qint64 id = static_cast<qint64>(chat.value("id").toDouble());
             if (!id) id = static_cast<qint64>(object.value("chat_id").toDouble());
             if (!id || !m_chatList) return;
-            const QString title = chat.value("title").toString("Telegram chat");
+
+            // TDLib sends updateChatTitle/updateChatLastMessage as update objects:
+            // the title and chat_id are at the top level, not inside "chat".
+            const QString title = object.value("title").toString(
+                chat.value("title").toString("Telegram chat"));
+            const QJsonObject lastMessage = object.value("last_message").toObject();
+            const QJsonObject content = lastMessage.value("content").toObject();
+            QString preview = content.value("text").toObject().value("text").toString();
+            if (preview.isEmpty() && !content.isEmpty())
+                preview = content.value("@type").toString().mid(13);
             QListWidgetItem *item = nullptr;
             for (int i = 0; i < m_chatList->count(); ++i) {
-                if (m_chatList->item(i)->data(Qt::UserRole).toLongLong() == id) { item = m_chatList->item(i); break; }
+                if (m_chatList->item(i)->data(Qt::UserRole).toLongLong() == id) {
+                    item = m_chatList->item(i);
+                    break;
+                }
             }
-            if (!item) { item = new QListWidgetItem(m_chatList); item->setData(Qt::UserRole, QVariant::fromValue<qlonglong>(id)); }
-            item->setText(title);
-            item->setToolTip(title);
+            if (!item) {
+                item = new QListWidgetItem(m_chatList);
+                item->setData(Qt::UserRole, QVariant::fromValue<qlonglong>(id));
+            }
+            item->setText(preview.isEmpty() ? title : title + "\\n" + preview);
+            item->setToolTip(title + (preview.isEmpty() ? QString() : "\\n" + preview));
         };
         m_auth->messageReceived = [this](const QString &json) {
             if (!m_messageList) return;
             const QJsonObject message = QJsonDocument::fromJson(json.toUtf8()).object();
             if (static_cast<qint64>(message.value("chat_id").toDouble()) != m_selectedChatId) return;
             const QJsonObject content = message.value("content").toObject();
+            const QString contentType = content.value("@type").toString();
             QString body = content.value("text").toObject().value("text").toString();
-            if (body.isEmpty()) body = QString("[%1]").arg(content.value("@type").toString("Message"));
-            const QJsonObject sender = message.value("sender_id").toObject();
-            const QString senderType = sender.value("@type").toString();
+            if (body.isEmpty()) {
+                if (contentType == "messagePhoto") body = "[Photo]";
+                else if (contentType == "messageDocument") body = "[File]";
+                else if (contentType == "messageVideo") body = "[Video]";
+                else if (contentType == "messageAudio" || contentType == "messageVoiceNote") body = "[Audio]";
+                else if (contentType == "messageSticker") body = "[Sticker]";
+                else if (contentType == "messageAnimation") body = "[GIF]";
+                else if (contentType == "messageLocation" || contentType == "messageVenue") body = "[Location]";
+                else if (contentType == "messageContact") body = "[Contact]";
+                else if (contentType == "messagePoll") body = "[Poll]";
+                else body = QString("[%1]").arg(contentType.isEmpty() ? "Message" : contentType);
+            }
             const QString prefix = message.value("is_outgoing").toBool() ? "You: " : "Them: ";
             m_messageList->addItem(prefix + body);
             m_messageList->scrollToBottom();
