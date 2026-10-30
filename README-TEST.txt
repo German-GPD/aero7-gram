@@ -12,3 +12,6 @@ IMPORTANT
 
 Please report crashes, missing DLL messages, visual glitches and your Windows version.
 Project: https://github.com/German-GPD/aero7-gram
+
+
+Installer note: the Windows test package is distributed as an Inno Setup installer. Default install path: C:\Program Files\German\G-Code-Team\Aero7Gram.
