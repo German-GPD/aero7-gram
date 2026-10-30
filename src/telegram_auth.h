@@ -19,6 +19,7 @@ public:
     ~TelegramAuth() override;
 
     bool isAvailable() const;
+    bool isAuthorized() const;
     void start();
     void logOut();
     void requestChats(int limit = 100);
@@ -31,7 +32,7 @@ public:
     std::function<void(const QString &)> chatReceived;
     std::function<void(const QString &)> messageReceived;
     std::function<void()> chatsLoaded;
-    std::function<void()> historyLoaded;
+    std::function<void(qint64)> historyLoaded;
 
 private:
 #ifdef AERO7_WITH_TDLIB
