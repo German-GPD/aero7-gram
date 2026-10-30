@@ -5,6 +5,8 @@
 #include <QString>
 #include <functional>
 
+class QJsonObject;
+
 #ifdef AERO7_WITH_TDLIB
 struct TdJsonClient;
 #endif
