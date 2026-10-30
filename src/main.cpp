@@ -31,6 +31,7 @@
 #include <QDateTime>
 #include <QFileInfo>
 #include <QDir>
+#include "telegram_auth.h"
 
 #ifdef Q_OS_WIN
 #  include <windows.h>
@@ -180,6 +181,18 @@ public:
         buildInterface();
         applyStyle();
         restorePreferences();
+
+        m_auth = new TelegramAuth(this);
+        m_auth->statusChanged = [this](const QString &status) {
+            if (m_connectionState)
+                m_connectionState->setText(QString::fromUtf8("●  ") + status);
+        };
+        m_auth->errorOccurred = [this](const QString &message) {
+            QMessageBox::warning(this, "Telegram authorization", message);
+        };
+        m_auth->authorized = [this](const QString &) {
+            QMessageBox::information(this, "Telegram", "Your Telegram account is now authorized. The chat list integration is the next step.");
+        };
     }
 
 protected:
@@ -239,6 +252,7 @@ private:
     QLabel *m_connectionState = nullptr;
     QLineEdit *m_search = nullptr;
     QLabel *m_pageTitle = nullptr;
+    TelegramAuth *m_auth = nullptr;
 
     void buildInterface()
     {
@@ -510,8 +524,18 @@ private:
 
         QFrame *account = settingsGroup("TELEGRAM ACCOUNT");
         QVBoxLayout *accountLayout = qobject_cast<QVBoxLayout *>(account->layout());
-        addSettingRow(accountLayout, "Connection", "Not connected");
-        addSettingRow(accountLayout, "Session storage", "Local application data · encrypted storage planned");
+        addSettingRow(accountLayout, "Connection", "Managed by TDLib");
+        addSettingRow(accountLayout, "Session storage", "Local TDLib database · Windows DPAPI-protected key");
+        QPushButton *signOut = new QPushButton("Sign out of Telegram");
+        signOut->setObjectName("secondaryButton");
+        signOut->setCursor(Qt::PointingHandCursor);
+        accountLayout->addWidget(signOut, 0, Qt::AlignLeft);
+        connect(signOut, &QPushButton::clicked, this, [this]() {
+            if (m_auth && m_auth->isAvailable())
+                m_auth->logOut();
+            else
+                showConnectionNotice();
+        });
         layout->addWidget(account);
 
         QFrame *about = settingsGroup("ABOUT");
@@ -587,16 +611,12 @@ private:
 
     void showConnectionNotice()
     {
-        QMessageBox box(this);
-        box.setWindowTitle("Telegram connection");
-        box.setIcon(QMessageBox::Information);
-        box.setText("Telegram integration is the next development milestone.");
-        box.setInformativeText(
-            "This build contains the native Windows interface only. It does not yet sign in, "
-            "read messages or connect to Telegram. TDLib support will be added after a "
-            "Windows 7-compatible build is prepared for both x86 and x64.");
-        box.setStandardButtons(QMessageBox::Ok);
-        box.exec();
+        if (m_auth) {
+            m_auth->start();
+            return;
+        }
+        QMessageBox::warning(this, "Telegram connection",
+            "The Telegram authorization component could not be initialized.");
     }
 
     void showAbout()
