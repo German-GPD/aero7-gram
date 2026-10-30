@@ -41,7 +41,6 @@ jobs:
           host: windows
           target: desktop
           arch: ${{ matrix.qt_arch }}
-          modules: qtsvg
           cache: true
 
       - name: Configure
