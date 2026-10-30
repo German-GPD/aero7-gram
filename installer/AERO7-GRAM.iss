@@ -22,6 +22,7 @@ OutputBaseFilename=AERO7-GRAM-{#AppArch}-Setup
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile=..\\assets\\aero7-gram.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 CloseApplications=yes
 RestartApplications=no
