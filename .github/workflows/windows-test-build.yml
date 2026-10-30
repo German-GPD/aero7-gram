@@ -10,6 +10,9 @@ on:
       - "resources.qrc"
       - "README-TEST.txt"
       - "installer/**"
+      - "resources/**"
+      - "tools/**"
+      - "assets/telegram-aero.svg"
       - ".github/workflows/windows-test-build.yml"
 
 permissions:
@@ -44,6 +47,17 @@ jobs:
           target: desktop
           arch: ${{ matrix.qt_arch }}
           cache: true
+
+      - name: Prepare application icon
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Render Windows icon from canonical SVG
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check cairosvg pillow
+          python tools/generate_icon.py
+          if ($LASTEXITCODE -ne 0) { throw "Icon generation failed" }
 
       - name: Install TDLib build dependencies
         shell: pwsh
