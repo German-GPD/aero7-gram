@@ -63,22 +63,51 @@ jobs:
           python tools/generate_icon.py
           if ($LASTEXITCODE -ne 0) { throw "Icon generation failed" }
 
+      - name: Restore TDLib dependency cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            vcpkg/downloads
+            vcpkg/installed
+            vcpkg/packages
+          key: ${{ runner.os }}-tdlib-deps-${{ matrix.vcpkg_triplet }}-openssl3-zlib1
+
+      - name: Restore TDLib build cache
+        uses: actions/cache@v4
+        with:
+          path: td-build
+          key: ${{ runner.os }}-tdlib-build-18f6c78-${{ matrix.vcpkg_triplet }}-v1
+
       - name: Install TDLib build dependencies
         shell: pwsh
         run: |
           choco install gperf --no-progress -y
-          git clone --depth 1 --branch v1.8.52 https://github.com/tdlib/td.git td
-          git clone https://github.com/microsoft/vcpkg.git vcpkg
-          .\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+          if (!(Test-Path "td/CMakeLists.txt")) {
+            Invoke-WebRequest -Uri "https://codeload.github.com/tdlib/td/tar.gz/18f6c78" -OutFile "tdlib-source.tar.gz"
+            tar -xzf tdlib-source.tar.gz
+            if (!(Test-Path "td-18f6c78/CMakeLists.txt")) { throw "TDLib source archive is invalid" }
+            Move-Item "td-18f6c78" "td"
+          }
+          if (!(Test-Path "td/CMakeLists.txt")) { throw "TDLib source directory is missing" }
+          if (!(Test-Path "vcpkg/vcpkg.exe")) {
+            if (!(Test-Path "vcpkg")) {
+              git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
+              if ($LASTEXITCODE -ne 0) { throw "vcpkg clone failed" }
+            }
+            .\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+            if ($LASTEXITCODE -ne 0) { throw "vcpkg bootstrap failed" }
+          }
           .\vcpkg\vcpkg.exe install openssl:${{ matrix.vcpkg_triplet }} zlib:${{ matrix.vcpkg_triplet }}
+          if ($LASTEXITCODE -ne 0) { throw "TDLib dependencies installation failed" }
 
       - name: Build official TDLib
         shell: pwsh
         run: |
           $toolchain = "$env:GITHUB_WORKSPACE\vcpkg\scripts\buildsystems\vcpkg.cmake"
-          cmake -S td -B td-build -A ${{ matrix.cmake_arch }} -DCMAKE_TOOLCHAIN_FILE="$toolchain" -DVCPKG_TARGET_TRIPLET=${{ matrix.vcpkg_triplet }} -DCMAKE_BUILD_TYPE=Release
+          if (!(Test-Path "td/CMakeLists.txt")) { throw "TDLib source directory is missing before configure" }
+          cmake -S td -B td-build -A ${{ matrix.cmake_arch }} -DCMAKE_TOOLCHAIN_FILE="$toolchain" -DVCPKG_TARGET_TRIPLET=${{ matrix.vcpkg_triplet }} -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DTD_ENABLE_DOTNET=OFF -DTD_ENABLE_TESTS=OFF
           if ($LASTEXITCODE -ne 0) { throw "TDLib configure failed" }
-          cmake --build td-build --config Release --target tdjson --parallel 2
+          cmake --build td-build --config Release --target tdjson --parallel 4
           if ($LASTEXITCODE -ne 0) { throw "TDLib build failed" }
           $lib = Get-ChildItem td-build -Filter tdjson.lib -Recurse | Select-Object -First 1
           $dll = Get-ChildItem td-build -Filter tdjson.dll -Recurse | Select-Object -First 1
