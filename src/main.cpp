@@ -814,6 +814,7 @@ private:
 
     void applyTheme(const QColor &accent) {
         if (!accent.isValid()) return;
+        applyStyle();
         QString css = styleSheet();
         css.replace("#20a8e4", accent.name());
         css.replace("#0873bd", accent.darker(145).name());
