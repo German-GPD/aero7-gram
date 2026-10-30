@@ -1,0 +1,75 @@
+name: Windows test builds
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "CMakeLists.txt"
+      - "src/**"
+      - "resources.qrc"
+      - ".github/workflows/windows-test-build.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.label }}
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: x64
+            qt_arch: win64_msvc2019_64
+            cmake_arch: x64
+          - label: x86
+            qt_arch: win32_msvc2019
+            cmake_arch: Win32
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt 5.15.2
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: 5.15.2
+          host: windows
+          target: desktop
+          arch: ${{ matrix.qt_arch }}
+          modules: qtsvg
+          cache: true
+
+      - name: Configure
+        shell: pwsh
+        run: cmake -S . -B build -A ${{ matrix.cmake_arch }} -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Deploy Qt runtime
+        shell: pwsh
+        run: |
+          $exe = "build/Release/AERO7 GRAM.exe"
+          if (!(Test-Path $exe)) { throw "Executable not found: $exe" }
+          & "$env:QT_ROOT_DIR/bin/windeployqt.exe" --release --no-translations --compiler-runtime "$exe"
+          if ($LASTEXITCODE -ne 0) { throw "windeployqt failed with exit code $LASTEXITCODE" }
+
+      - name: Package test build
+        shell: pwsh
+        run: |
+          $folder = "AERO7-GRAM-${{ matrix.label }}-TEST"
+          New-Item -ItemType Directory -Path $folder | Out-Null
+          Copy-Item "build/Release/*" $folder -Recurse
+          Copy-Item "README-TEST.txt" $folder
+          Compress-Archive -Path "$folder/*" -DestinationPath "$folder.zip"
+
+      - name: Upload test artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AERO7-GRAM-${{ matrix.label }}-TEST
+          path: AERO7-GRAM-${{ matrix.label }}-TEST.zip
+          if-no-files-found: error
+          retention-days: 14
