@@ -271,8 +271,12 @@ void TelegramAuth::handleUpdate(const QString &json)
         if (chatReceived) chatReceived(QString::fromUtf8(QJsonDocument(object).toJson(QJsonDocument::Compact)));
     } else if (type == "messages") {
         const QJsonArray messages = object.value("messages").toArray();
-        for (const QJsonValue &message : messages)
-            if (messageReceived) messageReceived(QString::fromUtf8(QJsonDocument(message.toObject()).toJson(QJsonDocument::Compact)));
+        // TDLib returns history newest-first; emit oldest-first for a natural timeline.
+        for (int i = messages.size() - 1; i >= 0; --i) {
+            const QJsonValue message = messages.at(i);
+            if (messageReceived)
+                messageReceived(QString::fromUtf8(QJsonDocument(message.toObject()).toJson(QJsonDocument::Compact)));
+        }
     } else if (type == "updateConnectionState") {
         const QString state = object.value("state").toObject().value("@type").toString();
         if (statusChanged) statusChanged(state == "connectionStateReady"
