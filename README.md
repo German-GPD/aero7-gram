@@ -1,60 +1,132 @@
-# AERO7 GRAM
-
 <p align="center">
-  <strong>Telegram, with an Aero soul.</strong><br>
-  An independent native desktop client project for Windows 7 SP1.
+  <img src="assets/aero7-icon.svg" width="104" alt="AERO7 GRAM icon">
 </p>
 
+<h1 align="center">AERO7 GRAM</h1>
+<p align="center"><b>Telegram с настоящим духом Windows 7 Aero.</b></p>
 <p align="center">
-  <a href="https://german-gpd.github.io/aero7-gram/">Project website</a> ·
-  <a href="https://github.com/German-GPD/aero7-gram">GitHub repository</a>
+  <a href="https://github.com/German-GPD/aero7-gram"><img src="https://img.shields.io/badge/platform-Windows%207%20SP1-2879a5?style=for-the-badge&logo=windows&logoColor=white" alt="Windows 7 SP1"></a>
+  <a href="https://github.com/German-GPD/aero7-gram/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-4c9b83?style=for-the-badge" alt="MIT License"></a>
+  <a href="https://github.com/German-GPD/aero7-gram/releases"><img src="https://img.shields.io/github/v/release/German-GPD/aero7-gram?display_name=tag&style=for-the-badge&color=3986a8" alt="Latest release"></a>
+</p>
+<p align="center">
+  <a href="https://german-gpd.github.io/aero7-gram/">🌐 Сайт проекта</a> ·
+  <a href="https://github.com/German-GPD/aero7-gram/releases">📦 Релизы</a> ·
+  <a href="docs/BUILDING-WINDOWS7.md">🛠 Сборка</a>
 </p>
 
 ---
 
-## Platform
+> [!IMPORTANT]
+> **Проект находится в ранней разработке.** Проверенных готовых установщиков для Windows x64 и x86 пока нет. Не скачивайте неофициальные сборки с посторонних сайтов. Кнопки загрузки ведут на страницу GitHub Releases; файлы будут опубликованы после сборки и проверки.
 
-- **Operating system:** Windows 7 SP1 only
-- **Architectures:** x86 (32-bit) and x64 (64-bit)
-- **UI framework:** Qt 5.15 Widgets / C++14
-- **Window effects:** Windows 7 DWM Aero glass
-- **Planned Telegram backend:** TDLib
+## ✨ Что такое AERO7 GRAM?
 
-Windows 10 and Windows 11 are not target platforms. They can still be used for preliminary development smoke tests; compatibility mode does not emulate Windows 7.
+AERO7 GRAM — независимый проект нативного Telegram-клиента для **Windows 7 SP1**. Задача — объединить Telegram с визуальным языком Windows 7: Aero Glass, характерными градиентами, системными элементами управления и привычным поведением окон.
 
-## Current status
+Это не просто веб-страница в синей теме: приложение написано на C++ и Qt Widgets, а Telegram-интеграция строится на TDLib.
 
-**Version 0.2.0 — early development build.**
+<p align="center">
+  <a href="https://german-gpd.github.io/aero7-gram/">
+    <img src="https://img.shields.io/badge/ОТКРЫТЬ-САЙТ%20ПРОЕКТА-237ca5?style=for-the-badge" alt="Открыть сайт проекта">
+  </a>
+</p>
 
-The application has a native Qt desktop shell with a custom title bar, window controls, resizing, DWM glass integration, a Telegram-inspired Aero icon, navigation for Chats / Contacts / Calls / Settings and saved window geometry.
+## 📥 Скачать
 
-**Telegram authorization and an initial text-chat path are implemented behind an optional TDLib build.** It can request the main chat list, fetch recent message history and send plain text messages. It handles phone number, login code, two-step verification password, registration and email verification. A matching Windows 7-compatible TDLib library is required; no TDLib binaries are bundled. Contacts, groups/channel management, media transfer, message editing/deletion, search, notifications, calls and polished non-modal authorization are not implemented yet. This is not a feature-complete daily-use client.
+| Система | Архитектура | Загрузка |
+|:--|:--:|:--|
+| Windows 7 SP1 64-bit | **x64** | [Открыть релизы](https://github.com/German-GPD/aero7-gram/releases/latest) |
+| Windows 7 SP1 32-bit | **x86** | [Открыть релизы](https://github.com/German-GPD/aero7-gram/releases/latest) |
 
-## Build
+**Сборки ещё не опубликованы.** Не следует считать ссылку на Releases готовым установщиком. Для самостоятельной сборки см. [инструкцию](docs/BUILDING-WINDOWS7.md).
 
-See [docs/BUILDING-WINDOWS7.md](docs/BUILDING-WINDOWS7.md) for x86 and x64 build instructions.
+## 🧩 Текущее состояние
 
-Use a Windows 7-compatible Qt 5.15 kit and the matching Visual Studio 2019 toolchain. Do not mix architectures or compiler runtimes.
+| Компонент | Состояние |
+|:--|:--|
+| Нативная оболочка Qt Widgets | ✅ Реализована |
+| Заголовок окна и управление окном | ✅ Реализовано |
+| Интеграция DWM Aero Glass | ✅ Начальная реализация |
+| Настройки названия и акцентной темы | ✅ Реализованы |
+| Авторизация через TDLib | 🧪 Начальная реализация |
+| Список диалогов и история | 🧪 Начальный путь |
+| Отправка текстовых сообщений | 🧪 Начальный путь |
+| Контакты и управление группами/каналами | 🕓 В планах |
+| Фото, файлы и загрузки | 🕓 В планах |
+| Поиск, уведомления и звонки | 🕓 В планах |
+| Проверенные сборки Windows 7 x86/x64 | 🕓 В планах |
 
-The current source update has not yet been compiled or tested on a Windows 7 machine. No ready-to-install .exe is claimed.
+### Уже реализовано
 
-## Roadmap
+- Нативное окно на Qt Widgets с Aero-оформлением и управлением размером.
+- Навигация по разделам, настройки и сохранение геометрии окна.
+- Опциональная интеграция TDLib.
+- Начальные состояния авторизации: номер телефона, код, пароль двухэтапной проверки, регистрация и подтверждение email.
+- Запрос основного списка чатов, загрузка истории и отправка обычного текста.
+- Локальная база TDLib в профиле пользователя; ключ шифрования базы на Windows защищается DPAPI.
 
-1. Compile and stabilize the native interface on Windows 7 SP1, x86 and x64.
-2. Build and verify TDLib for Windows 7 SP1 in both architectures.
-3. Test the implemented Telegram authorization and DPAPI-protected local database key.
-4. Complete chat synchronization, pagination, unread state and robust message rendering.
-5. Implement contacts, global search, media/file transfer, notifications and account/session controls.
-6. Add automated tests, build x86/x64 packages and test on clean Windows 7 SP1 installations.
+> [!NOTE]
+> TDLib не включена в репозиторий. Для реального входа требуется отдельно собранная версия TDLib, совместимая с Windows 7 SP1 и архитектурой приложения. Текущий исходный код ещё не прошёл сборку и проверку на Windows 7.
 
-## Website
+## 🪟 Визуальная идея
 
-https://german-gpd.github.io/aero7-gram/
+<p align="center">
+  <img src="assets/aero7-icon.svg" width="120" alt="AERO7 GRAM">
+</p>
+<p align="center"><i>Aero Glass · Segoe UI · системные градиенты · классические контролы</i></p>
 
-## Disclaimer
+Цель — интерфейс, который ощущается частью Windows 7, а не современным приложением с декоративным синим фоном. Визуальные материалы сайта показывают направление дизайна и не являются скриншотами готового приложения.
 
-AERO7 GRAM is an independent community project and is not affiliated with, endorsed by, or officially connected to Telegram or Microsoft. Telegram, Windows and Aero are trademarks of their respective owners.
+## 🔐 Приватность и безопасность
 
-## License
+- В проект не закладываются рекламные блоки, скрытые трекеры и собственная аналитика.
+- Коды входа и пароль двухэтапной проверки передаются TDLib и не должны сохраняться в настройках приложения.
+- База TDLib хранится локально в профиле пользователя.
+- На Windows ключ базы защищается DPAPI.
+- API ID и API hash Telegram нельзя публиковать в репозитории или передавать другим людям.
+- Сторонние зависимости сохраняют собственные лицензии и правила обработки данных.
 
-Original project materials are distributed under the MIT License. Third-party libraries retain their own licenses and notices. See [LICENSE](LICENSE).
+Обычные облачные чаты Telegram **не зашифрованы сквозным шифрованием по умолчанию**. Для E2E-шифрования предназначены Secret Chats. Подробнее — [FAQ Telegram](https://telegram.org/faq#q-how-secure-is-telegram).
+
+## 🛠 Технологии
+
+- **C++14**
+- **Qt 5.15 Widgets / Qt SVG**
+- **TDLib** — опциональный Telegram backend
+- **CMake**
+- **Windows DWM / DPAPI**
+- **Visual Studio 2019 toolchain** для целевой сборки
+
+## 🧱 Сборка
+
+Подробные команды для x86 и x64, требования к Qt и TDLib собраны здесь:
+
+➡️ **[BUILDING-WINDOWS7.md](docs/BUILDING-WINDOWS7.md)**
+
+Кратко: нужны Windows 7 SP1-совместимые Qt 5.15, компилятор и зависимости одной архитектуры. Нельзя смешивать x86 и x64 библиотеки. Успешная сборка на Windows 10/11 не доказывает совместимость с Windows 7.
+
+## 🗺 Дорожная карта
+
+- [x] Основа нативного приложения
+- [x] Начальная авторизация и текстовые чаты через TDLib
+- [ ] Стабилизация синхронизации и обработки ошибок
+- [ ] Контакты и полноценная навигация по чатам
+- [ ] Медиа, файлы и загрузки
+- [ ] Поиск, уведомления и настройки аккаунта
+- [ ] Сборки x86 и x64
+- [ ] Проверка на чистых установках Windows 7 SP1
+
+## 📜 Лицензия и статус
+
+Оригинальные материалы проекта распространяются по лицензии **MIT**. Сторонние библиотеки и ресурсы регулируются собственными лицензиями.
+
+AERO7 GRAM — независимый неофициальный проект, не связанный с Telegram или Microsoft. Telegram, Windows и Aero — товарные знаки соответствующих владельцев.
+
+---
+
+<p align="center">
+  <b>Сделано для тех, кто всё ещё любит Windows 7.</b><br>
+  <a href="https://github.com/German-GPD/aero7-gram">GitHub</a> ·
+  <a href="https://german-gpd.github.io/aero7-gram/">Сайт</a>
+</p>
