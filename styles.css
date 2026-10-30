@@ -33,3 +33,7 @@
 .nostalgia-layout>div>p{font-size:13px}
 .nostalgia-layout .nostalgia-punch{margin-top:23px;padding:15px 18px;border-left:2px solid #68a9c3;background:#eaf5f8;color:#416d82;font-weight:600}
 @media(max-width:700px){.compat-layout,.nostalgia-layout{grid-template-columns:1fr;gap:24px}.compat-specs{gap:8px}.compat-specs>div{padding:13px}}
+
+.download-test-button{display:flex;align-items:center;justify-content:center;gap:12px;max-width:1092px;margin:18px auto 0;padding:15px 20px;border:1px solid rgba(183,224,238,.42);background:linear-gradient(180deg,#477f99,#28566f);box-shadow:inset 0 1px rgba(255,255,255,.24),0 8px 24px rgba(18,57,76,.18);color:#fff;font-size:11px;letter-spacing:.02em;transition:filter .2s,transform .2s}
+.download-test-button:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.download-test-button span{font-size:16px;color:#bce8f3}
