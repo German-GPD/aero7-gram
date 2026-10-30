@@ -82,7 +82,7 @@ jobs:
           retention-days: 14
 
   publish-test-release:
-    name: Publish downloadable test ZIPs
+    name: Publish downloadable Setup installers
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -107,4 +107,4 @@ jobs:
 
             Это экспериментальная оболочка без TDLib. Вход в Telegram и сетевые функции недоступны.
             Совместимость с Windows 7 SP1 ещё требует отдельной проверки.
-            Архивы обновляются после каждого успешного запуска Windows test builds.
+            Установщики обновляются после каждого успешного запуска Windows test builds.
