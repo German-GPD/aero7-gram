@@ -23,7 +23,42 @@
 #ifdef Q_OS_WIN
 #  include <windows.h>
 #  include <dwmapi.h>
+#  include <windowsx.h>
 #endif
+
+class DragTitleBar final : public QWidget {
+public:
+    explicit DragTitleBar(QWidget *parent = nullptr) : QWidget(parent) {}
+
+protected:
+    void mousePressEvent(QMouseEvent *event) override {
+        if (event->button() == Qt::LeftButton && window() && !window()->isMaximized()) {
+            offset = event->globalPos() - window()->frameGeometry().topLeft();
+            dragging = true;
+            event->accept();
+            return;
+        }
+        QWidget::mousePressEvent(event);
+    }
+
+    void mouseMoveEvent(QMouseEvent *event) override {
+        if (dragging && (event->buttons() & Qt::LeftButton) && window()) {
+            window()->move(event->globalPos() - offset);
+            event->accept();
+            return;
+        }
+        QWidget::mouseMoveEvent(event);
+    }
+
+    void mouseReleaseEvent(QMouseEvent *event) override {
+        dragging = false;
+        QWidget::mouseReleaseEvent(event);
+    }
+
+private:
+    QPoint offset;
+    bool dragging = false;
+};
 
 class AeroWindow final : public QMainWindow {
 public:
@@ -46,30 +81,37 @@ protected:
 #endif
     }
 
-    void mousePressEvent(QMouseEvent *event) override {
-        if (event->button() == Qt::LeftButton && event->pos().y() <= 42) {
-            dragOffset = event->globalPos() - frameGeometry().topLeft();
-            dragging = true;
-        }
-        QMainWindow::mousePressEvent(event);
-    }
+    bool nativeEvent(const QByteArray &eventType, void *message, long *result) override {
+#ifdef Q_OS_WIN
+        Q_UNUSED(eventType);
+        MSG *msg = static_cast<MSG *>(message);
+        if (msg->message == WM_NCHITTEST && !isMaximized()) {
+            const POINT point = { GET_X_LPARAM(msg->lParam), GET_Y_LPARAM(msg->lParam) };
+            RECT rect = {};
+            GetWindowRect(reinterpret_cast<HWND>(winId()), &rect);
+            const int border = 7;
+            const bool left = point.x < rect.left + border;
+            const bool right = point.x >= rect.right - border;
+            const bool top = point.y < rect.top + border;
+            const bool bottom = point.y >= rect.bottom - border;
 
-    void mouseMoveEvent(QMouseEvent *event) override {
-        if (dragging && (event->buttons() & Qt::LeftButton)) {
-            move(event->globalPos() - dragOffset);
+            if (top && left) *result = HTTOPLEFT;
+            else if (top && right) *result = HTTOPRIGHT;
+            else if (bottom && left) *result = HTBOTTOMLEFT;
+            else if (bottom && right) *result = HTBOTTOMRIGHT;
+            else if (left) *result = HTLEFT;
+            else if (right) *result = HTRIGHT;
+            else if (top) *result = HTTOP;
+            else if (bottom) *result = HTBOTTOM;
+            else return QMainWindow::nativeEvent(eventType, message, result);
+            return true;
         }
-        QMainWindow::mouseMoveEvent(event);
-    }
-
-    void mouseReleaseEvent(QMouseEvent *event) override {
-        dragging = false;
-        QMainWindow::mouseReleaseEvent(event);
+#endif
+        return QMainWindow::nativeEvent(eventType, message, result);
     }
 
 private:
     QWidget *surface = nullptr;
-    QPoint dragOffset;
-    bool dragging = false;
 
     void buildInterface() {
         surface = new QWidget(this);
@@ -178,7 +220,7 @@ private:
     }
 
     QWidget *createTitleBar() {
-        auto *bar = new QWidget(this);
+        auto *bar = new DragTitleBar(this);
         bar->setObjectName(QStringLiteral("titleBar"));
         bar->setFixedHeight(42);
 
@@ -190,15 +232,19 @@ private:
         appMark->setObjectName(QStringLiteral("appMark"));
         appMark->setFixedSize(22, 22);
         appMark->setAlignment(Qt::AlignCenter);
+        appMark->setAttribute(Qt::WA_TransparentForMouseEvents, true);
 
         auto *title = new QLabel(QStringLiteral("AERO7 GRAM"), bar);
         title->setObjectName(QStringLiteral("windowTitle"));
+        title->setAttribute(Qt::WA_TransparentForMouseEvents, true);
 
         auto *version = new QLabel(QStringLiteral("PREVIEW"), bar);
         version->setObjectName(QStringLiteral("versionTag"));
+        version->setAttribute(Qt::WA_TransparentForMouseEvents, true);
 
         auto *stretch = new QWidget(bar);
         stretch->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        stretch->setAttribute(Qt::WA_TransparentForMouseEvents, true);
 
         auto *minimize = new QPushButton(QStringLiteral("—"), bar);
         auto *maximize = new QPushButton(QStringLiteral("□"), bar);
