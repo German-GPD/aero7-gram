@@ -31,6 +31,7 @@ public:
     std::function<void(const QString &)> chatReceived;
     std::function<void(const QString &)> messageReceived;
     std::function<void()> chatsLoaded;
+    std::function<void()> historyLoaded;
 
 private:
 #ifdef AERO7_WITH_TDLIB
