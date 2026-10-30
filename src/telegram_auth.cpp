@@ -242,6 +242,8 @@ void TelegramAuth::handleAuthorizationState(const QJsonObject &state)
         askEmail();
     } else if (type == "authorizationStateWaitEmailCode") {
         askEmailCode();
+    } else if (type == "authorizationStateWaitPremiumPurchase") {
+        if (statusChanged) statusChanged("This Telegram account requires a Premium subscription to continue authorization.");
     } else if (type == "authorizationStateWaitOtherDeviceConfirmation") {
         const QString link = state.value("link").toString();
         if (!link.isEmpty()) QDesktopServices::openUrl(QUrl(link));
@@ -271,8 +273,8 @@ void TelegramAuth::askPhoneNumber()
     bool ok = false;
     const QString phone = QInputDialog::getText(nullptr, "Sign in to Telegram",
         "Phone number (international format):", QLineEdit::Normal, "+", &ok);
-    if (!ok) return;
-    if (phone.trimmed().isEmpty()) return;
+    if (!ok) { send("{\\"@type\\":\\"close\\"}"); return; }
+    if (phone.trimmed().isEmpty()) { send("{\\"@type\\":\\"close\\"}"); return; }
     QJsonObject request;
     request["@type"] = "setAuthenticationPhoneNumber";
     request["phone_number"] = phone.trimmed();
@@ -285,7 +287,7 @@ void TelegramAuth::askCode()
     bool ok = false;
     const QString code = QInputDialog::getText(nullptr, "Telegram login code",
         "Enter the code sent by Telegram:", QLineEdit::Normal, QString(), &ok);
-    if (!ok) return;
+    if (!ok) { send("{\\"@type\\":\\"close\\"}"); return; }
     QJsonObject request;
     request["@type"] = "checkAuthenticationCode";
     request["code"] = code.trimmed();
@@ -297,7 +299,7 @@ void TelegramAuth::askPassword()
     bool ok = false;
     const QString password = QInputDialog::getText(nullptr, "Two-step verification",
         "Enter your Telegram cloud password:", QLineEdit::Password, QString(), &ok);
-    if (!ok) return;
+    if (!ok) { send("{\\"@type\\":\\"close\\"}"); return; }
     QJsonObject request;
     request["@type"] = "checkAuthenticationPassword";
     request["password"] = password;
@@ -309,10 +311,10 @@ void TelegramAuth::askRegistration()
     bool ok = false;
     const QString first = QInputDialog::getText(nullptr, "Create Telegram profile",
         "First name:", QLineEdit::Normal, QString(), &ok);
-    if (!ok || first.trimmed().isEmpty()) return;
+    if (!ok || first.trimmed().isEmpty()) { send("{\\"@type\\":\\"close\\"}"); return; }
     const QString last = QInputDialog::getText(nullptr, "Create Telegram profile",
         "Last name (optional):", QLineEdit::Normal, QString(), &ok);
-    if (!ok) return;
+    if (!ok) { send("{\\"@type\\":\\"close\\"}"); return; }
     QJsonObject request;
     request["@type"] = "registerUser";
     request["first_name"] = first.trimmed();
@@ -325,7 +327,7 @@ void TelegramAuth::askEmail()
     bool ok = false;
     const QString email = QInputDialog::getText(nullptr, "Telegram email verification",
         "Enter your email address:", QLineEdit::Normal, QString(), &ok);
-    if (!ok || email.trimmed().isEmpty()) return;
+    if (!ok || email.trimmed().isEmpty()) { send("{\\"@type\\":\\"close\\"}"); return; }
     QJsonObject request;
     request["@type"] = "setAuthenticationEmailAddress";
     request["email_address"] = email.trimmed();
@@ -337,7 +339,7 @@ void TelegramAuth::askEmailCode()
     bool ok = false;
     const QString code = QInputDialog::getText(nullptr, "Telegram email code",
         "Enter the verification code sent to your email:", QLineEdit::Normal, QString(), &ok);
-    if (!ok || code.trimmed().isEmpty()) return;
+    if (!ok || code.trimmed().isEmpty()) { send("{\\"@type\\":\\"close\\"}"); return; }
     QJsonObject request;
     request["@type"] = "checkAuthenticationEmailCode";
     QJsonObject emailCode;
