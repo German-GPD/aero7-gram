@@ -177,9 +177,16 @@ void TelegramAuth::send(const QString &json)
 void TelegramAuth::poll()
 {
     if (!m_client) return;
-    const char *result = td_json_client_receive(m_client, 0.0);
-    if (result)
-        handleUpdate(QString::fromUtf8(result));
+
+    // TDLib may queue several updates between timer ticks. Drain a bounded
+    // batch so authorization state transitions are not needlessly delayed.
+    for (int i = 0; i < 64 && m_client; ++i) {
+        const char *result = td_json_client_receive(m_client, 0.0);
+        if (!result)
+            break;
+        const QByteArray update(result);
+        handleUpdate(QString::fromUtf8(update));
+    }
 }
 
 void TelegramAuth::handleUpdate(const QString &json)
@@ -287,7 +294,7 @@ void TelegramAuth::askCode()
     bool ok = false;
     const QString code = QInputDialog::getText(nullptr, "Telegram login code",
         "Enter the code sent by Telegram:", QLineEdit::Normal, QString(), &ok);
-    if (!ok) { send(R"({"@type":"close"})"); return; }
+    if (!ok || code.trimmed().isEmpty()) { send(R"({"@type":"close"})"); return; }
     QJsonObject request;
     request["@type"] = "checkAuthenticationCode";
     request["code"] = code.trimmed();
@@ -299,7 +306,7 @@ void TelegramAuth::askPassword()
     bool ok = false;
     const QString password = QInputDialog::getText(nullptr, "Two-step verification",
         "Enter your Telegram cloud password:", QLineEdit::Password, QString(), &ok);
-    if (!ok) { send(R"({"@type":"close"})"); return; }
+    if (!ok || password.isEmpty()) { send(R"({"@type":"close"})"); return; }
     QJsonObject request;
     request["@type"] = "checkAuthenticationPassword";
     request["password"] = password;
