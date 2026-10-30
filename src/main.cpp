@@ -175,7 +175,8 @@ public:
             const QJsonObject object = QJsonDocument::fromJson(json.toUtf8()).object();
             QJsonObject chat = object.value("chat").toObject();
             if (chat.isEmpty()) chat = object;
-            const qint64 id = static_cast<qint64>(chat.value("id").toDouble());
+            qint64 id = static_cast<qint64>(chat.value("id").toDouble());
+            if (!id) id = static_cast<qint64>(object.value("chat_id").toDouble());
             if (!id || !m_chatList) return;
             const QString title = chat.value("title").toString("Telegram chat");
             QListWidgetItem *item = nullptr;
@@ -195,7 +196,7 @@ public:
             if (body.isEmpty()) body = QString("[%1]").arg(content.value("@type").toString("Message"));
             const QJsonObject sender = message.value("sender_id").toObject();
             const QString senderType = sender.value("@type").toString();
-            const QString prefix = senderType == "messageSenderUser" ? "You / user: " : "Message: ";
+            const QString prefix = message.value("is_outgoing").toBool() ? "You: " : "Them: ";
             m_messageList->addItem(prefix + body);
             m_messageList->scrollToBottom();
         };
