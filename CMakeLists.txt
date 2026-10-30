@@ -17,7 +17,7 @@ if(NOT MSVC)
     message(FATAL_ERROR "Use the supported MSVC toolchain for Windows 7 builds.")
 endif()
 
-find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets)
+find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets Svg)
 
 option(AERO7_ENABLE_TDLIB "Enable real Telegram authorization through TDLib" OFF)
 set(TDJSON_ROOT "" CACHE PATH "TDLib JSON installation prefix")
@@ -40,10 +40,12 @@ add_executable(AERO7GRAM WIN32
     src/main.cpp
     src/telegram_auth.cpp
     src/telegram_auth.h
+    resources.qrc
 )
 
 target_link_libraries(AERO7GRAM PRIVATE
     Qt5::Widgets
+    Qt5::Svg
     dwmapi
     crypt32
     bcrypt
