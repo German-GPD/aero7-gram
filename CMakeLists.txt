@@ -26,13 +26,14 @@ if(AERO7_ENABLE_TDLIB)
     find_path(TDJSON_INCLUDE_DIR
         NAMES td/telegram/td_json_client.h
         HINTS "${TDJSON_ROOT}/include"
-        REQUIRED
     )
     find_library(TDJSON_LIBRARY
         NAMES tdjson
         HINTS "${TDJSON_ROOT}/lib" "${TDJSON_ROOT}/lib/x64" "${TDJSON_ROOT}/lib/x86"
-        REQUIRED
     )
+    if(NOT TDJSON_INCLUDE_DIR OR NOT TDJSON_LIBRARY)
+        message(FATAL_ERROR "TDLib JSON headers/library not found. Set TDJSON_ROOT to a compatible TDLib installation.")
+    endif()
 endif()
 
 add_executable(AERO7GRAM WIN32
