@@ -1,100 +1,145 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#78c8e8">
-<meta name="description" content="AERO7 GRAM — a Windows 7 SP1 Telegram desktop client in early development, inspired by the original Aero interface.">
-<title>AERO7 GRAM — Windows 7 Aero Edition</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#78bde0">
+<meta name="description" content="AERO7 GRAM — an independent Telegram desktop client concept for Windows 7 SP1. Discover Telegram, its features, privacy model and the Aero-inspired project vision.">
+<title>AERO7 GRAM — Telegram, the Aero way</title>
 <style>
-:root{--blue:#1476ad;--deep:#07517f;--aqua:#7be3e4;--green:#9ce9c1;--glass:rgba(211,239,255,.43);--glass2:rgba(230,249,255,.68);--edge:rgba(255,255,255,.88);--text:#173d56;--muted:#456b82}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;min-height:100vh;font:14px/1.5 "Segoe UI",Tahoma,Arial,sans-serif;color:var(--text);background:#8bcbe9;overflow-x:hidden}
-.wallpaper{position:fixed;inset:0;z-index:-2;background:radial-gradient(ellipse at 78% 26%,rgba(255,255,255,.94) 0 2%,rgba(255,255,255,.55) 8%,transparent 24%),radial-gradient(ellipse at 12% 90%,rgba(132,239,195,.85),transparent 35%),radial-gradient(ellipse at 88% 88%,rgba(40,167,206,.8),transparent 38%),linear-gradient(155deg,#d4f4ff 0%,#8bd3ef 42%,#54b4d2 72%,#a3e8c2 100%)}
-.wallpaper:before,.wallpaper:after{content:"";position:absolute;inset:0;pointer-events:none}
-.wallpaper:before{background:linear-gradient(118deg,transparent 0 43%,rgba(255,255,255,.2) 44%,transparent 48%),linear-gradient(20deg,transparent 0 72%,rgba(255,255,255,.2) 73%,transparent 77%);filter:blur(2px)}
-.wallpaper:after{background:radial-gradient(ellipse at 50% 110%,rgba(15,94,134,.35),transparent 55%)}
-a{color:inherit}
-.desktop{min-height:100vh;padding:26px 24px 76px;display:flex;flex-direction:column}
-.desktop-icons{position:absolute;top:26px;left:22px;display:flex;gap:14px;opacity:.92}
-.desktop-icon{width:68px;text-align:center;color:#fff;text-shadow:0 1px 3px #174e69;font-size:11px}
-.desktop-icon .glyph{font-size:27px;display:block;margin-bottom:3px;filter:drop-shadow(0 2px 2px #2c7692)}
-.shell{width:min(1050px,100%);margin:62px auto 35px;border:1px solid rgba(255,255,255,.95);border-radius:8px 8px 5px 5px;background:linear-gradient(115deg,rgba(226,249,255,.65),rgba(147,215,244,.37) 42%,rgba(219,255,239,.55));box-shadow:0 0 0 1px rgba(33,108,151,.42),0 0 0 3px rgba(255,255,255,.35),0 18px 55px rgba(11,66,105,.42),inset 0 1px 0 #fff;backdrop-filter:blur(22px) saturate(145%);overflow:hidden;position:relative}
-.shell:before{content:"";position:absolute;inset:0 0 auto;height:110px;background:linear-gradient(180deg,rgba(255,255,255,.48),rgba(255,255,255,.12) 48%,transparent);pointer-events:none}
-.titlebar{height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 7px 0 16px;border-bottom:1px solid rgba(255,255,255,.76);background:linear-gradient(180deg,rgba(246,253,255,.82),rgba(173,222,245,.48) 48%,rgba(106,183,222,.27));box-shadow:inset 0 1px 0 white;position:relative}
-.caption{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:600;color:#174d70;text-shadow:0 1px 0 #fff}
-.appicon{width:21px;height:21px;border-radius:5px;display:grid;place-items:center;color:#fff;font-weight:bold;background:linear-gradient(145deg,#67d5ef,#1682bd 58%,#75dfbf);border:1px solid #e8ffff;box-shadow:0 1px 3px #245c7c88}
-.window-controls{display:flex;align-items:flex-start;gap:2px;height:29px}
-.winbtn{width:29px;height:21px;display:grid;place-items:center;font-size:12px;color:#164a68;border:1px solid rgba(255,255,255,.8);background:linear-gradient(#f7fdffb8,#a9d7ecb8);box-shadow:inset 0 1px 0 #fff,0 1px 2px #27608044;text-shadow:0 1px #fff}
-.winbtn:first-child{border-radius:0 0 0 4px}.winbtn:last-child{width:47px;border-radius:0 0 5px 5px;color:#fff;font-size:15px;font-weight:bold;background:linear-gradient(#f7b7a9,#e65a42 48%,#c82c20);border-color:#fff;box-shadow:inset 0 1px 0 #ffe5df,0 1px 3px #79332866;text-shadow:0 -1px #8f1b12}
-.winbtn:hover{filter:brightness(1.08)}
-.content{padding:48px clamp(24px,6vw,68px) 52px;position:relative}
-.ribbon{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border:1px solid rgba(255,255,255,.92);border-radius:3px;background:linear-gradient(#ffffffa8,#cceeff75);box-shadow:inset 0 1px 0 white,0 1px 3px #2e719333;color:#245f7e;font-size:11px;font-weight:700;text-shadow:0 1px #fff}
-.led{width:7px;height:7px;border-radius:50%;background:#45c779;box-shadow:0 0 5px #4cff91}
-.hero{display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:40px}
-h1{font-size:clamp(42px,6.4vw,72px);line-height:.98;letter-spacing:-.065em;font-weight:600;margin:20px 0 17px;color:#124f78;text-shadow:0 1px 0 #fff,0 2px 7px #fff8}
-h1 span{display:block;color:#1684a8;text-shadow:0 1px 0 #fff,0 2px 7px #fff9}
-.lead{max-width:510px;font-size:17px;line-height:1.7;color:#285c78;text-shadow:0 1px 0 #ffffffa8}
-.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:25px}
-.button{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:10px 18px;border:1px solid rgba(255,255,255,.98);border-radius:4px;text-decoration:none;font-weight:600;font-size:13px;color:#164d70;text-shadow:0 1px #fff;background:linear-gradient(180deg,#ffffffd9 0%,#e6f8ffd1 48%,#a9ddf2d9 51%,#d6f2ffd9 100%);box-shadow:inset 0 1px 0 #fff,0 1px 3px #286b8b55,0 0 0 1px #5ba6cb55;transition:filter .15s,transform .15s}
-.button:hover{filter:brightness(1.08);transform:translateY(-1px)}.button.primary{background:linear-gradient(180deg,#eaffff 0%,#aeeafa 46%,#4ab9e3 51%,#9be5f5 100%);color:#064e77;box-shadow:inset 0 1px 0 #fff,0 1px 4px #1c658d77,0 0 0 1px #fff}
-.preview-wrap{min-height:330px;display:grid;place-items:center;position:relative}
-.aero-orb{position:absolute;width:270px;height:270px;border-radius:50%;background:radial-gradient(circle at 32% 24%,#fff 0 2%,#ffffffa6 4%,#a8f0e4a8 28%,#4dbde5a8 68%,#1685b7a8 100%);box-shadow:inset -12px -18px 35px #126b9b35,0 0 40px #e9ffffaa;filter:blur(.3px)}
-.messenger{position:relative;width:min(365px,100%);border:1px solid #fff;border-radius:7px;background:linear-gradient(130deg,#f1fdffdf,#c7e9f4c9 55%,#d8f7e8d9);box-shadow:0 10px 32px #124e7580,inset 0 1px 0 #fff;backdrop-filter:blur(20px);overflow:hidden;transform:perspective(900px) rotateY(-5deg) rotateX(2deg)}
-.messenger-head{height:35px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:linear-gradient(#ffffffed,#cceafaeb 48%,#a1d3ebeb);border-bottom:1px solid #fff;font-size:11px;font-weight:600;color:#225a7a;text-shadow:0 1px white}
-.mini-controls{display:flex;gap:3px}.mini-controls i{width:19px;height:15px;border:1px solid #fff;background:linear-gradient(#faffff,#9bcde6);box-shadow:0 1px 2px #2d668255}.mini-controls i:last-child{background:linear-gradient(#ffded5,#df4e37);width:28px}
-.messenger-body{display:grid;grid-template-columns:112px 1fr;min-height:218px;background:linear-gradient(115deg,#e9f8ffad,#c7f1e1a8)}
-.side{padding:12px 8px;border-right:1px solid #fff;background:linear-gradient(90deg,#d8f0f8b8,#effbff85)}
-.contact{padding:8px 7px;border:1px solid transparent;border-radius:3px;font-size:10px;color:#345d75;margin-bottom:4px}.contact.active{border-color:#fff;background:linear-gradient(#f4ffffdb,#a6e0f3bb);box-shadow:inset 0 1px 0 #fff,0 1px 2px #4a8cad55}
-.messages{padding:15px 12px}.person{font-size:11px;font-weight:700;color:#255b78;border-bottom:1px solid #ffffffc9;padding-bottom:9px;margin-bottom:11px}
-.msg{font-size:10px;padding:8px 9px;margin:8px 0;width:86%;border:1px solid #fff;border-radius:4px;background:linear-gradient(#ffffffd9,#dff5f9c9);box-shadow:0 1px 2px #528da533;color:#365e72}.msg.out{margin-left:auto;background:linear-gradient(#edfff5e8,#b6e8d2d9);text-align:right}
-.feature-area{border-top:1px solid #ffffffb8;background:linear-gradient(180deg,#ffffff35,transparent);padding-top:34px;margin-top:42px}
-.section-title{font-size:25px;font-weight:600;color:#15567e;text-shadow:0 1px #fff;margin:0 0 6px}.section-sub{color:#3f6c83;margin:0 0 20px}
-.features{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
-.feature{padding:17px 16px;border:1px solid #ffffffeb;border-radius:4px;background:linear-gradient(135deg,#ffffff9e,#c9edfa82 48%,#d9f9e5a1);box-shadow:inset 0 1px 0 #fff,0 2px 6px #2c77942e;backdrop-filter:blur(12px)}
-.feature-icon{width:32px;height:32px;display:grid;place-items:center;margin-bottom:11px;border:1px solid white;border-radius:4px;background:linear-gradient(#fff,#b8e7f4);color:#147eaa;box-shadow:inset 0 1px #fff,0 1px 2px #347b9844;font-size:17px}
-.feature h3{margin:0 0 5px;font-size:14px;color:#1c5a7c}.feature p{margin:0;font-size:12px;color:#456d82;line-height:1.55}
-.notice{display:flex;gap:10px;align-items:center;margin-top:18px;padding:11px 14px;border:1px solid #ffffffd9;border-radius:3px;background:linear-gradient(90deg,#eaffff9c,#d6f7e5a1);box-shadow:inset 0 1px #fff,0 1px 3px #327c9633;color:#3a687e;font-size:12px}
-.taskbar{position:fixed;z-index:5;bottom:0;left:0;right:0;height:48px;padding:5px 12px;display:flex;align-items:center;gap:12px;border-top:1px solid #ffffffd9;background:linear-gradient(180deg,#d8f6ff9c 0%,#6bb7d5a8 42%,#276f9bba 100%);box-shadow:0 -3px 15px #174c6d40;backdrop-filter:blur(18px) saturate(150%)}
-.start{width:38px;height:38px;border:1px solid #eaffff;border-radius:50%;display:grid;place-items:center;color:white;font-size:20px;font-weight:800;text-shadow:0 1px 2px #07517f;background:radial-gradient(circle at 35% 25%,#f3ffff 0 5%,#8ce4f1 14%,#28a6d5 48%,#07558d 78%,#063d6c 100%);box-shadow:inset 0 1px 3px #fff,0 0 0 1px #175c8a,0 0 9px #bffaff}
-.task-item{height:34px;min-width:175px;padding:5px 12px;border:1px solid #ffffff9c;border-radius:3px;background:linear-gradient(#e7faff80,#4d9bc28c);box-shadow:inset 0 1px #fff,0 1px 2px #124c7044;color:white;text-shadow:0 1px 2px #164c6b;font-size:12px}
-.tray{margin-left:auto;color:#fff;text-shadow:0 1px 2px #164c6b;font-size:11px;padding:0 8px}
-footer{width:min(1050px,100%);margin:auto auto 0;display:flex;justify-content:space-between;gap:12px;color:#f5ffff;text-shadow:0 1px 3px #165575;font-size:11px;padding:0 3px}
-footer a{text-decoration:none}
-@media(max-width:760px){.desktop{padding:12px 12px 72px}.desktop-icons{display:none}.shell{margin:20px auto 25px}.content{padding:32px 20px 35px}.hero{grid-template-columns:1fr;gap:14px}.preview-wrap{min-height:275px}.aero-orb{width:225px;height:225px}.features{grid-template-columns:1fr}.task-item{min-width:0;flex:1}.tray{display:none}footer{flex-direction:column;text-align:center}.lead{font-size:15px}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
+:root{color-scheme:light;--ink:#183d56;--muted:#52748a;--blue:#176b9c;--blue2:#3a9acb;--line:#fff;--glass:rgba(224,246,255,.58);--shadow:rgba(13,62,93,.32)}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:88px}body{margin:0;min-height:100vh;font:13px/1.55 "Segoe UI",Tahoma,sans-serif;color:var(--ink);background:#77b9dc;overflow-x:hidden}
+.wallpaper{position:fixed;inset:0;z-index:-2;background:radial-gradient(ellipse at 72% 18%,#fff 0,rgba(255,255,255,.62) 3%,transparent 24%),radial-gradient(ellipse at 12% 92%,rgba(175,245,202,.95),transparent 36%),radial-gradient(ellipse at 90% 85%,rgba(39,150,205,.85),transparent 38%),linear-gradient(145deg,#dff8ff 0%,#9edaf1 35%,#59b2d8 70%,#b2edce 100%)}
+.wallpaper:before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 0 38%,rgba(255,255,255,.22) 39%,transparent 44%),linear-gradient(20deg,transparent 0 70%,rgba(255,255,255,.2) 71%,transparent 76%);filter:blur(3px)}
+.wallpaper:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 110%,rgba(9,57,96,.28),transparent 54%)}
+a{color:#075f91}a:hover{color:#003f69}.desktop{min-height:100vh;padding:26px 22px 70px}
+.desktop-icons{position:fixed;top:22px;left:18px;display:grid;gap:18px;color:white;text-shadow:0 1px 3px #174c69;font-size:11px;text-align:center;z-index:-1}.desktop-icons span{display:block;font-size:25px}
+.window{width:min(1220px,100%);margin:25px auto 24px;border:1px solid rgba(255,255,255,.98);border-radius:7px 7px 3px 3px;background:linear-gradient(125deg,rgba(238,251,255,.76),rgba(154,211,239,.58) 48%,rgba(220,255,237,.65));box-shadow:0 0 0 1px rgba(29,101,144,.55),0 0 0 3px rgba(255,255,255,.35),0 22px 65px rgba(9,54,87,.48),inset 0 1px 0 #fff;backdrop-filter:blur(24px) saturate(150%);overflow:hidden;position:relative}
+.window:before{content:"";position:absolute;inset:0 0 auto;height:150px;background:linear-gradient(#fff9,rgba(255,255,255,.15),transparent);pointer-events:none}
+.titlebar{height:39px;padding:0 7px 0 12px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(#f7fdffed,#d4effbe8 48%,#9ccbe3d9);border-bottom:1px solid #fff;box-shadow:inset 0 1px #fff;position:relative}
+.caption{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#174e70;text-shadow:0 1px white}.app-icon{width:21px;height:21px;display:grid;place-items:center;color:white;font-weight:700;border:1px solid white;background:linear-gradient(145deg,#9ce8ee,#1689c2 60%,#64d7ac);box-shadow:0 1px 3px #1c587b;border-radius:3px}
+.win-controls{display:flex;align-self:flex-start;gap:2px}.win-controls i{font-style:normal;width:30px;height:22px;text-align:center;padding-top:1px;border:1px solid #ffffff;background:linear-gradient(#f9ffff,#a9d8ed);box-shadow:inset 0 1px white,0 1px 2px #245b7b55;color:#164a6a}.win-controls i:first-child{border-radius:0 0 0 4px}.win-controls i:last-child{width:47px;border-radius:0 0 5px 5px;color:white;font-size:15px;font-weight:bold;background:linear-gradient(#f6b8a9,#e45b43 52%,#c72d20);text-shadow:0 -1px #8f2117}
+.menubar{height:29px;display:flex;align-items:center;gap:23px;padding:0 17px;background:linear-gradient(#ffffff9c,#d9f1fa77);border-bottom:1px solid #ffffffa8;color:#315f79;font-size:12px}.menubar a{text-decoration:none;color:inherit}.menubar a:hover{text-decoration:underline}
+.toolbar{min-height:51px;padding:7px 15px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #fff;background:linear-gradient(180deg,#f5fdff9c,#c5e6f2a1);box-shadow:inset 0 1px #fff}.toolbtn{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border:1px solid #fff;background:linear-gradient(#fffdf,#d5f0f8 48%,#addbed 52%,#e6f7fc);box-shadow:inset 0 1px white,0 1px 2px #2b688744;border-radius:2px;text-decoration:none;color:#245a76;font-size:12px}.toolbtn:hover{filter:brightness(1.06)}.toolbar-note{margin-left:auto;color:#52788d;font-size:11px}
+.workspace{display:grid;grid-template-columns:205px minmax(0,1fr);min-height:850px;position:relative}
+.sidebar{padding:16px 10px 20px;background:linear-gradient(90deg,rgba(201,232,245,.8),rgba(238,250,255,.42));border-right:1px solid #fff;box-shadow:inset -1px 0 rgba(75,143,174,.13)}
+.side-head{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#62869a;padding:7px 9px 8px;font-weight:700}.nav{display:grid;gap:3px}.nav a{display:flex;align-items:center;gap:10px;padding:8px 9px;text-decoration:none;color:#315e77;border:1px solid transparent;border-radius:2px;font-size:12px}.nav a span{width:18px;text-align:center;font-size:15px;color:#237ca8}.nav a:hover{border-color:#fff;background:linear-gradient(#ffffffa8,#b8e5f4a6);box-shadow:inset 0 1px #fff}.nav a.active{border-color:#fff;background:linear-gradient(#faffffed,#a8dff1c9);box-shadow:inset 0 1px white,0 1px 3px #387c9a55;color:#174f70;font-weight:600}
+.side-card{margin:22px 5px 0;padding:11px 10px;border:1px solid #fff;background:linear-gradient(135deg,#ffffffa6,#c9eff0a6);box-shadow:inset 0 1px white,0 1px 3px #39799430;font-size:11px;color:#52758a}.side-card strong{display:block;color:#225c7a;margin-bottom:4px}.side-card .status{display:inline-block;width:7px;height:7px;border-radius:50%;background:#e6a33d;box-shadow:0 0 5px #ffd47a;margin-right:5px}
+.main{padding:25px clamp(17px,3vw,38px) 35px;min-width:0}.crumb{font-size:11px;color:#64859a;margin-bottom:13px}.hero{display:grid;grid-template-columns:1.08fr .92fr;align-items:center;gap:25px;padding:17px 0 27px;border-bottom:1px solid #ffffffb5}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:4px 9px;border:1px solid white;background:linear-gradient(#ffffffb8,#c9eff2a8);box-shadow:inset 0 1px white,0 1px 2px #347a9533;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#356c86}.eyebrow b{width:7px;height:7px;border-radius:50%;background:#e4a23b;box-shadow:0 0 6px #ffd27a}
+h1{font-size:clamp(38px,5.2vw,64px);line-height:.98;letter-spacing:-.065em;font-weight:600;margin:17px 0 14px;color:#14567f;text-shadow:0 1px white,0 3px 8px #fff9}h1 em{display:block;font-style:normal;color:#1685a8}.hero-copy{font-size:15px;line-height:1.75;color:#315f79;max-width:570px}.hero-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:19px}.glass-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border:1px solid white;border-radius:3px;text-decoration:none;font-weight:600;font-size:12px;color:#174e70;text-shadow:0 1px white;background:linear-gradient(#fff 0%,#e7f9ff 46%,#b3e1f3 51%,#e4f7fd 100%);box-shadow:inset 0 1px white,0 1px 3px #225c7c55,0 0 0 1px #68a9c455}.glass-btn.primary{background:linear-gradient(#efffff,#b8effb 45%,#55bce2 52%,#a9e5f5);color:#064b73}.glass-btn:hover{filter:brightness(1.07)}
+.preview{min-height:270px;display:grid;place-items:center;position:relative}.orb{position:absolute;width:245px;height:245px;border-radius:50%;background:radial-gradient(circle at 31% 23%,#fff 0 3%,#ffffffa8 5%,#b7f5e5a8 30%,#5bc2e9a8 68%,#197daea8);box-shadow:inset -13px -17px 35px #126b9b30,0 0 45px #efffffbd}.mock-app{position:relative;width:min(380px,100%);border:1px solid #fff;border-radius:4px;background:linear-gradient(135deg,#f5fdffeb,#c5eaf4e8 60%,#d9f7e7ed);box-shadow:0 12px 34px #124e7580,inset 0 1px white;overflow:hidden;transform:perspective(900px) rotateY(-5deg) rotateX(2deg)}.mock-title{height:30px;padding:5px 9px;display:flex;justify-content:space-between;background:linear-gradient(#fff,#c8eaf7 55%,#a4d5eb);border-bottom:1px solid white;color:#245c78;font-size:10px;font-weight:600}.mock-body{display:grid;grid-template-columns:115px 1fr;min-height:190px}.mock-list{padding:9px 6px;border-right:1px solid white;background:#e4f5fa9c}.mock-contact{padding:7px 6px;margin-bottom:3px;font-size:9px;color:#456b80}.mock-contact.sel{background:linear-gradient(#fff,#b9e8f3);border:1px solid white}.mock-chat{padding:12px 10px}.mock-name{font-weight:700;color:#245c78;font-size:10px;border-bottom:1px solid white;padding-bottom:7px}.bubble{max-width:88%;padding:7px 8px;margin:9px 0;border:1px solid white;background:linear-gradient(#fff,#e1f5f8);font-size:9px;color:#456779;box-shadow:0 1px 2px #4b829533}.bubble.out{margin-left:auto;background:linear-gradient(#f0fff5,#b9e8d2);text-align:right}
+.section{padding:29px 0 7px;scroll-margin-top:78px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:15px}.section-kicker{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#64879b;font-weight:700}.section h2{font-size:24px;line-height:1.15;letter-spacing:-.035em;font-weight:600;color:#17587e;text-shadow:0 1px white;margin:3px 0 5px}.section-intro{color:#52768b;max-width:760px;margin:0 0 17px}
+.panel-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.panel{padding:14px 14px 15px;border:1px solid #fff;background:linear-gradient(135deg,#ffffffb9,#cdeefa94 55%,#d9f7e5a1);box-shadow:inset 0 1px white,0 2px 6px #2c77942a;min-width:0}.panel-icon{width:30px;height:30px;display:grid;place-items:center;margin-bottom:9px;border:1px solid white;background:linear-gradient(#fff,#b6e5f3);box-shadow:inset 0 1px white,0 1px 2px #347b9844;color:#147eaa;font-size:16px}.panel h3{font-size:13px;color:#1d5b7c;margin:0 0 5px}.panel p{font-size:11.5px;color:#4c7186;line-height:1.65;margin:0}
+.info-strip{display:grid;grid-template-columns:repeat(4,1fr);margin:17px 0 2px;border:1px solid white;background:linear-gradient(90deg,#ffffffa6,#c6ebf6a8);box-shadow:inset 0 1px white}.stat{padding:12px 14px;border-right:1px solid #fff}.stat:last-child{border:0}.stat strong{display:block;font-size:20px;line-height:1.2;color:#176b94;letter-spacing:-.04em}.stat span{font-size:10px;color:#52778b}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.info-box{padding:16px;border:1px solid white;background:linear-gradient(135deg,#ffffffb5,#c7eaf2a1);box-shadow:inset 0 1px white,0 2px 5px #2c779426}.info-box h3{font-size:14px;color:#1c5b7b;margin:0 0 8px}.info-box p{margin:0 0 8px;color:#4a7085;font-size:12px}.info-box p:last-child{margin-bottom:0}.clean-list{padding:0;margin:9px 0 0;list-style:none;display:grid;gap:7px}.clean-list li{padding-left:19px;position:relative;color:#456d82;font-size:11.5px}.clean-list li:before{content:"✓";position:absolute;left:0;color:#168c83;font-weight:700}
+.callout{margin:15px 0;padding:12px 14px;border:1px solid white;background:linear-gradient(90deg,#f5ffffbd,#d8f5e7ad);box-shadow:inset 0 1px white,0 1px 3px #397b9430;color:#426b80;font-size:11.5px}.callout strong{color:#1e5c7b}
+.table-wrap{overflow-x:auto;border:1px solid white;background:#e9f8f9a6;box-shadow:inset 0 1px white}.spec-table{width:100%;border-collapse:collapse;font-size:11.5px}.spec-table th{text-align:left;padding:9px 11px;background:linear-gradient(#faffff,#c6e8f5);color:#225b79;border-bottom:1px solid white}.spec-table td{padding:9px 11px;border-bottom:1px solid #ffffffb8;color:#4b7084;vertical-align:top}.spec-table tr:last-child td{border:0}.spec-table td:first-child{font-weight:600;color:#2b607a;white-space:nowrap}
+.timeline{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.step{padding:13px;border:1px solid white;background:linear-gradient(145deg,#ffffffb8,#c8eaf3a1);box-shadow:inset 0 1px white}.step-no{font-size:10px;color:#1681aa;font-weight:700;letter-spacing:.1em}.step h3{font-size:12px;color:#205c7a;margin:5px 0}.step p{font-size:10.5px;color:#55778a;margin:0;line-height:1.55}
+.sources{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.sources a{font-size:11px;text-decoration:none;padding:5px 9px;border:1px solid white;background:linear-gradient(#fff,#d5edf5);box-shadow:inset 0 1px white;color:#245d7a}.sources a:hover{text-decoration:underline}
+.statusbar{height:25px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-top:1px solid white;background:linear-gradient(#e5f6fc,#b8ddeb);font-size:10px;color:#4b7287}.status-left{display:flex;align-items:center;gap:8px}.status-dot{width:7px;height:7px;background:#dca23c;border-radius:50%;box-shadow:0 0 5px #ffd57c}
+.taskbar{position:fixed;z-index:10;bottom:0;left:0;right:0;height:47px;padding:4px 11px;display:flex;align-items:center;gap:10px;border-top:1px solid #ffffffd9;background:linear-gradient(#d9f6ffb5 0%,#69b7d6c9 44%,#226b98d9 100%);box-shadow:0 -3px 15px #174c6d45;backdrop-filter:blur(18px) saturate(150%)}.start{width:37px;height:37px;border:1px solid #efffff;border-radius:50%;display:grid;place-items:center;color:white;font-size:19px;font-weight:bold;text-shadow:0 1px 2px #07517f;background:radial-gradient(circle at 35% 25%,#fff 0 4%,#8ce4f1 15%,#28a6d5 49%,#07558d 80%);box-shadow:inset 0 1px 3px white,0 0 0 1px #175c8a,0 0 9px #bffaff}.task-app{height:34px;min-width:185px;padding:6px 12px;border:1px solid #ffffffad;background:linear-gradient(#e7faff9c,#4d9bc2a8);box-shadow:inset 0 1px white,0 1px 2px #124c7044;color:white;text-shadow:0 1px 2px #164c6b;font-size:11px}.tray{margin-left:auto;color:white;text-shadow:0 1px 2px #164c6b;font-size:11px;padding:0 9px}
+@media(max-width:900px){.workspace{grid-template-columns:170px minmax(0,1fr)}.panel-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.timeline{grid-template-columns:repeat(2,1fr)}.hero{grid-template-columns:1fr}.preview{min-height:250px}.orb{width:220px;height:220px}}
+@media(max-width:620px){.desktop{padding:8px 7px 62px}.window{margin:8px auto 15px}.menubar{gap:14px;padding:0 10px;font-size:11px}.toolbar{padding:7px 9px}.toolbar-note{display:none}.workspace{display:block;min-height:0}.sidebar{border-right:0;border-bottom:1px solid white;padding:7px 8px}.side-head,.side-card{display:none}.nav{display:flex;overflow-x:auto;gap:4px}.nav a{white-space:nowrap;padding:6px 8px;font-size:10px}.nav a span{font-size:13px;width:auto}.main{padding:18px 13px 24px}.hero{padding-top:7px}.hero-copy{font-size:13px}.preview{min-height:225px}.mock-app{max-width:340px}.panel-grid,.split{grid-template-columns:1fr}.info-strip{grid-template-columns:repeat(2,1fr)}.stat:nth-child(2){border-right:0}.stat:nth-child(-n+2){border-bottom:1px solid white}.timeline{grid-template-columns:1fr 1fr}.section h2{font-size:21px}.statusbar{font-size:9px}.tray{display:none}.task-app{min-width:0;flex:1}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
 </style>
 </head>
 <body>
 <div class="wallpaper" aria-hidden="true"></div>
+<div class="desktop-icons" aria-hidden="true"><div><span>▣</span>Computer</div><div><span>▤</span>Network</div><div><span>♧</span>Recycle Bin</div></div>
 <div class="desktop">
-  <div class="desktop-icons" aria-hidden="true"><div class="desktop-icon"><span class="glyph">▣</span>Computer</div><div class="desktop-icon"><span class="glyph">▤</span>Network</div></div>
-  <main class="shell">
-    <div class="titlebar"><div class="caption"><span class="appicon">A</span>AERO7 GRAM — Telegram Windows 7 Edition</div><div class="window-controls" aria-hidden="true"><span class="winbtn">−</span><span class="winbtn">□</span><span class="winbtn">×</span></div></div>
-    <div class="content">
-      <section class="hero" id="about">
-        <div>
-          <div class="ribbon"><span class="led"></span> Independent desktop project</div>
-          <h1>Telegram,<span>the Aero way.</span></h1>
-          <p class="lead">An independent Telegram desktop client for Windows 7 SP1, built around the unmistakable glass, glow and colour of Aero. Familiar messenger. A different atmosphere.</p>
-          <div class="actions"><a class="button primary" href="https://github.com/German-GPD/aero7-gram">⌘ &nbsp; Explore on GitHub</a><a class="button" href="#vision">Learn more</a></div>
-        </div>
-        <div class="preview-wrap" aria-label="Aero-style messenger interface preview"><div class="aero-orb"></div><div class="messenger"><div class="messenger-head"><span>✉ &nbsp; AERO7 GRAM</span><span class="mini-controls"><i></i><i></i><i></i></span></div><div class="messenger-body"><aside class="side"><div class="contact active">◉ &nbsp; Alex</div><div class="contact">◉ &nbsp; Design team</div><div class="contact">◉ &nbsp; Windows fans</div><div class="contact">◉ &nbsp; Saved messages</div></aside><div class="messages"><div class="person">Alex · online</div><div class="msg">Remember the Windows 7 glass?</div><div class="msg out">The glow. The transparency. All of it.</div><div class="msg">Bring that feeling back. ✨</div></div></div></div></div>
-      </section>
-      <section class="feature-area" id="vision"><h2 class="section-title">A familiar kind of magic.</h2><p class="section-sub">A visual direction built around the details that made Aero unmistakable.</p>
-        <div class="features">
-          <article class="feature"><div class="feature-icon">◇</div><h3>True glass aesthetic</h3><p>Layered translucent surfaces, luminous borders, reflections and depth inspired by Aero Glass.</p></article>
-          <article class="feature"><div class="feature-icon">✧</div><h3>Sky blue &amp; fresh green</h3><p>The bright blue, aqua and soft green palette gives the interface its own Windows 7 atmosphere.</p></article>
-          <article class="feature"><div class="feature-icon">▣</div><h3>Classic window details</h3><p>Familiar title bars, glossy controls, crisp Segoe-style typography and desktop-inspired framing.</p></article>
-        </div>
-        <div class="notice"><span class="led"></span><span><strong>Native application shell in development.</strong> The first Qt desktop scaffold is in the repository. Telegram sign-in, chats and messaging are the next milestones.</span></div>
-      </section>
-    </div>
-  </main>
-  <footer><span>© <span id="year">2026</span> AERO7 GRAM · Independent, unofficial project.</span><span><a href="https://github.com/German-GPD/aero7-gram">GitHub</a> &nbsp;·&nbsp; <a href="https://telegram.org/">Telegram</a></span></footer>
+<main class="window">
+<header class="titlebar"><div class="caption"><span class="app-icon">A</span>AERO7 GRAM <span style="font-weight:400;opacity:.72">— Project Explorer</span></div><div class="win-controls" aria-hidden="true"><i>−</i><i>□</i><i>×</i></div></header>
+<nav class="menubar" aria-label="Window menu"><a href="#overview">File</a><a href="#telegram">Telegram</a><a href="#privacy">Privacy</a><a href="#project">Project</a><a href="#links">Help</a></nav>
+<div class="toolbar"><a class="toolbtn" href="#overview">← &nbsp; Home</a><a class="toolbtn" href="#telegram">✉ &nbsp; Telegram features</a><a class="toolbtn" href="#project">⚙ &nbsp; About AERO7</a><span class="toolbar-note">Aero Glass · Windows 7 SP1 · Independent project</span></div>
+<div class="workspace">
+<aside class="sidebar">
+<div class="side-head">Project navigation</div>
+<nav class="nav" aria-label="Project sections">
+<a class="active" href="#overview"><span>⌂</span>Overview</a>
+<a href="#telegram"><span>✉</span>Telegram</a>
+<a href="#features"><span>✧</span>Features</a>
+<a href="#privacy"><span>♢</span>Privacy &amp; security</a>
+<a href="#ecosystem"><span>▦</span>Telegram ecosystem</a>
+<a href="#project"><span>◈</span>AERO7 GRAM</a>
+<a href="#roadmap"><span>▤</span>Development</a>
+<a href="#links"><span>ⓘ</span>Resources</a>
+</nav>
+<div class="side-card"><strong><span class="status"></span>Development status</strong>Early development<br>Native desktop shell planned for Windows 7 SP1.</div>
+<div class="side-card"><strong>Project target</strong>Windows 7 SP1<br>x86 · x64<br><br><strong>Visual direction</strong>Aero Glass · DWM · Segoe UI</div>
+</aside>
+<div class="main">
+<div class="crumb">AERO7 GRAM &nbsp;›&nbsp; Project Explorer &nbsp;›&nbsp; Overview</div>
+<section class="hero" id="overview">
+<div><div class="eyebrow"><b></b> Independent Telegram desktop client concept</div><h1>Telegram,<em>the Aero way.</em></h1><p class="hero-copy">AERO7 GRAM is a project to bring the Telegram experience to the Windows 7 desktop with the atmosphere that made Aero unforgettable. Glass surfaces, luminous edges, crisp typography and a classic desktop feel — with Telegram at the centre.</p><div class="hero-actions"><a class="glass-btn primary" href="https://github.com/German-GPD/aero7-gram">⌘ &nbsp; View source on GitHub</a><a class="glass-btn" href="#telegram">Explore Telegram &nbsp; →</a></div></div>
+<div class="preview" aria-label="Illustrative preview of an Aero-style messenger window"><div class="orb"></div><div class="mock-app"><div class="mock-title"><span>✉ &nbsp; AERO7 GRAM — Messenger</span><span>−　□　×</span></div><div class="mock-body"><div class="mock-list"><div class="mock-contact sel">● &nbsp; Alex</div><div class="mock-contact">● &nbsp; Design team</div><div class="mock-contact">● &nbsp; Windows fans</div><div class="mock-contact">● &nbsp; Saved Messages</div></div><div class="mock-chat"><div class="mock-name">Alex · online</div><div class="bubble">Remember the Windows 7 glass?</div><div class="bubble out">The glow. The transparency. All of it.</div><div class="bubble">Bring that feeling back. ✨</div></div></div></div></div>
+</section>
+<section class="section" id="telegram"><div class="section-head"><div><div class="section-kicker">First, the messenger itself</div><h2>What is Telegram?</h2></div></div><p class="section-intro">Telegram is a cloud-based messaging platform built around speed, synchronisation and large communities. It combines private conversations, group discussions, public broadcasting, media sharing and programmable tools in one ecosystem.</p>
+<div class="panel-grid">
+<article class="panel"><div class="panel-icon">↔</div><h3>Cloud-based messaging</h3><p>Regular cloud chats sync across your signed-in devices. Start a conversation on your phone and continue on a computer or tablet without manually transferring your history.</p></article>
+<article class="panel"><div class="panel-icon">⚡</div><h3>Speed &amp; accessibility</h3><p>Telegram is designed for quick message delivery and access from different networks and devices. Its desktop apps make conversations available beyond the phone.</p></article>
+<article class="panel"><div class="panel-icon">▤</div><h3>Files &amp; media</h3><p>Send documents, archives, music, photos and videos. Telegram supports large file transfers, with limits depending on account type and current platform rules.</p></article>
+<article class="panel"><div class="panel-icon">◎</div><h3>Groups &amp; communities</h3><p>Groups support up to 200,000 members, with replies, mentions, moderation tools, pinned messages, permissions and topic-based discussions.</p></article>
+<article class="panel"><div class="panel-icon">▰</div><h3>Channels &amp; publishing</h3><p>Channels let creators, organisations and communities broadcast updates to an unlimited number of subscribers. Posts appear under the channel identity.</p></article>
+<article class="panel"><div class="panel-icon">⌘</div><h3>Automation &amp; bots</h3><p>Bots can provide utilities, moderation, notifications, integrations, games and custom workflows. Developers can build them using Telegram's Bot API.</p></article>
 </div>
-<div class="taskbar" aria-hidden="true"><div class="start">✿</div><div class="task-item">AERO7 GRAM — Project home</div><div class="tray">ENG &nbsp; ◖◗ &nbsp; ◉ &nbsp; 17:00</div></div>
-<script>document.getElementById("year").textContent=new Date().getFullYear();</script>
-</body>
-</html>
+<div class="info-strip"><div class="stat"><strong>1B+</strong><span>Monthly active users, as stated in Telegram FAQ</span></div><div class="stat"><strong>200,000</strong><span>Maximum group size</span></div><div class="stat"><strong>∞</strong><span>Channel subscribers</span></div><div class="stat"><strong>2 / 4 GB</strong><span>File size limit: standard / Premium</span></div></div>
+<div class="callout"><strong>One important distinction:</strong> Telegram is the platform. AERO7 GRAM is an independent client project aiming to provide access to Telegram through a Windows 7-inspired desktop experience. The mock messenger shown on this page is a visual concept, not a working chat application.</div>
+</section>
+<section class="section" id="features"><div class="section-kicker">A lot more than text messages</div><h2>Inside the Telegram experience</h2><p class="section-intro">The platform has grown into a broad communication toolkit. These are some of the core capabilities that make Telegram more than a conventional messenger.</p>
+<div class="panel-grid">
+<article class="panel"><div class="panel-icon">☏</div><h3>Voice &amp; video calls</h3><p>Private voice and video calls use end-to-end encryption. Group calls and voice chats support live conversations for communities and teams.</p></article>
+<article class="panel"><div class="panel-icon">▧</div><h3>Stories</h3><p>Stories add short-lived photo and video updates, with visibility controls and interactive options. Availability and advanced tools can depend on account features.</p></article>
+<article class="panel"><div class="panel-icon">☺</div><h3>Stickers &amp; reactions</h3><p>Expressive sticker sets, animated emoji, reactions and custom emoji help make conversations feel personal rather than purely functional.</p></article>
+<article class="panel"><div class="panel-icon">⌕</div><h3>Search &amp; organisation</h3><p>Search messages, people and public content. Pin important conversations, archive chats, use folders and organise large chat lists.</p></article>
+<article class="panel"><div class="panel-icon">♧</div><h3>Multiple devices</h3><p>Use Telegram on phones, tablets and desktop computers at the same time. Cloud chat history follows your active sessions.</p></article>
+<article class="panel"><div class="panel-icon">★</div><h3>Premium &amp; Stars</h3><p>Telegram Premium adds optional extras such as higher limits and exclusive features. Stars support digital goods, paid content and other platform interactions.</p></article>
+</div>
+</section>
+<section class="section" id="privacy"><div class="section-kicker">Know what is protected — and how</div><h2>Privacy &amp; security, explained</h2><p class="section-intro">Telegram uses different chat types for different purposes. It is important not to confuse encrypted cloud storage with end-to-end encryption.</p>
+<div class="split">
+<div class="info-box"><h3>Cloud chats</h3><p>Private and group cloud chats are encrypted between your device and Telegram's servers, and stored in Telegram's cloud so they can sync across your devices.</p><ul class="clean-list"><li>Available across signed-in devices</li><li>Cloud history can be restored after signing in</li><li>Not end-to-end encrypted by default</li></ul></div>
+<div class="info-box"><h3>Secret chats</h3><p>Secret Chats use end-to-end encryption: only the participating devices hold the keys needed to read the conversation. They are not stored in Telegram's cloud.</p><ul class="clean-list"><li>Device-specific, not synced to other devices</li><li>Support self-destructing messages</li><li>Messages cannot be forwarded</li></ul></div>
+</div>
+<div class="callout"><strong>Security note:</strong> No messenger can make every risk disappear. Account security also depends on your device, active sessions, passcode, recovery options and the people you communicate with. Review Telegram's official privacy documentation for the exact details.</div>
+</section>
+<section class="section" id="ecosystem"><div class="section-kicker">More than a standalone app</div><h2>The Telegram ecosystem</h2><p class="section-intro">Telegram connects people, communities, creators and developers through a set of public tools and services.</p>
+<div class="panel-grid">
+<article class="panel"><div class="panel-icon">◉</div><h3>Public usernames &amp; links</h3><p>Find and contact people without sharing a phone number publicly. Public groups, channels and bots can use recognisable t.me links.</p></article>
+<article class="panel"><div class="panel-icon">▥</div><h3>Channels &amp; creators</h3><p>Publish news, tutorials, announcements and media. Channel owners can manage administrators, reactions, comments and audience tools.</p></article>
+<article class="panel"><div class="panel-icon">⚙</div><h3>Bot API</h3><p>Developers can connect bots to services, automate tasks, build interfaces and create interactive experiences inside Telegram.</p></article>
+<article class="panel"><div class="panel-icon">⌘</div><h3>Client API &amp; TDLib</h3><p>Telegram provides developer interfaces for building clients. TDLib is a library intended to handle much of the networking and data-management work for custom apps.</p></article>
+<article class="panel"><div class="panel-icon">▣</div><h3>Open client development</h3><p>Telegram publishes source code for official clients and documents its APIs. Independent clients can build different interfaces around the platform.</p></article>
+<article class="panel"><div class="panel-icon">✧</div><h3>Custom experiences</h3><p>The ecosystem supports themes, bots, mini apps, integrations and specialised clients — each with its own design and purpose.</p></article>
+</div>
+</section>
+<section class="section" id="project"><div class="section-kicker">The project behind this window</div><h2>So, what is AERO7 GRAM?</h2><p class="section-intro">AERO7 GRAM is an independent project with a very specific ambition: make a Telegram desktop client feel at home on Windows 7 instead of looking like a modern web app wearing an old theme.</p>
+<div class="split">
+<div class="info-box"><h3>The visual direction</h3><p>The goal is a coherent Windows 7-era interface, not a generic blue glass skin.</p><ul class="clean-list"><li>Aero Glass-inspired translucent window surfaces</li><li>Glossy title bars, borders and classic controls</li><li>Light reflections, depth and restrained glow</li><li>Segoe UI typography and Windows 7 proportions</li><li>Sharp, readable layouts with familiar desktop behaviour</li></ul></div>
+<div class="info-box"><h3>The platform target</h3><p>The current project target is deliberately narrow: Windows 7 SP1, with separate x86 and x64 support as a goal.</p><ul class="clean-list"><li>Windows 7 SP1 only</li><li>32-bit and 64-bit architecture targets</li><li>Native desktop application direction</li><li>Telegram integration planned through TDLib</li><li>No browser-based wrapper as the intended end product</li></ul></div>
+</div>
+<div class="callout"><strong>Current state:</strong> early development. The repository contains an initial native desktop scaffold and project documentation. Telegram authentication, real chat lists, message history, sending messages, media and the complete client experience are not implemented yet. This website is a project presentation, not a download page for a finished app.</div>
+</section>
+<section class="section" id="roadmap"><div class="section-kicker">A transparent development plan</div><h2>From concept to a real client</h2><p class="section-intro">The work is staged so that the visual shell, platform compatibility and Telegram functionality can be developed and verified separately.</p>
+<div class="timeline">
+<div class="step"><div class="step-no">01 · FOUNDATION</div><h3>Native shell</h3><p>Establish the desktop window, application structure, navigation and core UI foundation.</p></div>
+<div class="step"><div class="step-no">02 · WINDOWS 7</div><h3>Aero integration</h3><p>Refine DWM composition, glass effects, title-bar behaviour, scaling and compatibility.</p></div>
+<div class="step"><div class="step-no">03 · TELEGRAM</div><h3>TDLib integration</h3><p>Connect authentication, sessions, chat lists, message history and sending.</p></div>
+<div class="step"><div class="step-no">04 · EXPERIENCE</div><h3>Complete client</h3><p>Build media handling, notifications, settings, reliability, testing and release packaging.</p></div>
+</div>
+</section>
+<section class="section" id="links"><div class="section-kicker">Official reading &amp; project links</div><h2>Explore further</h2><p class="section-intro">For Telegram features and security details, prefer Telegram's own documentation. For AERO7 GRAM development, follow the source repository.</p>
+<div class="sources"><a href="https://github.com/German-GPD/aero7-gram" target="_blank" rel="noopener">AERO7 GRAM · GitHub ↗</a><a href="https://telegram.org/faq" target="_blank" rel="noopener">Telegram FAQ ↗</a><a href="https://telegram.org/privacy" target="_blank" rel="noopener">Telegram Privacy Policy ↗</a><a href="https://telegram.org/faq_premium" target="_blank" rel="noopener">Telegram Premium FAQ ↗</a><a href="https://core.telegram.org/tdlib" target="_blank" rel="noopener">TDLib documentation ↗</a><a href="https://core.telegram.org/bots" target="_blank" rel="noopener">Telegram Bot API ↗</a><a href="https://telegram.org/apps" target="_blank" rel="noopener">Official Telegram apps ↗</a></div>
+</section>
+</div>
+</div>
+<footer class="statusbar"><div class="status-left"><span class="status-dot"></span><span>Project status: early development</span></div><span>AERO7 GRAM · Independent &amp; unofficial</span><span>Windows 7 SP1</span></footer>
+</div>
+</main>
+</div>
+<div class="taskbar"><div class="start" aria-label="Start">✿</div><div class="task-app">AERO7 GRAM — Project Explorer</div><div class="tray">ENG &nbsp; ◖◗ &nbsp; ◉ &nbsp; <span id="clock">--:--</span></div></div>
+<script>
+(()=>{const clock=document.getElementById('clock');function tick(){const d=new Date();clock.textContent=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}tick();setInterval(tick,30000);
+const links=[...document.querySelectorAll('.nav a')];const sections=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);if('IntersectionObserver'in window){const io=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}})},{rootMargin:'-18% 0px -68% 0px'});sections.forEach(s=>io.observe(s));}
+})();
+</script>
+</body></html>
