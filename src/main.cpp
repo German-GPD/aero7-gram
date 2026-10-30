@@ -1,4 +1,3 @@
-#include <QApplication>
 #include <QMainWindow>
 #include <QWidget>
 #include <QFrame>
@@ -772,8 +771,6 @@ int main(int argc, char *argv[])
     QApplication::setOrganizationName(QString::fromLatin1(kOrganization));
     QApplication::setApplicationVersion(QString::fromLatin1(kVersion));
     QApplication::setWindowIcon(createTelegramAeroIcon());
-    app.setStyle("Fusion");
-
     AeroWindow window;
     window.show();
     return app.exec();
