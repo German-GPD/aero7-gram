@@ -400,8 +400,8 @@ private:
         topLayout->setContentsMargins(12, 12, 12, 10);
         topLayout->setSpacing(9);
         QHBoxLayout *toolbar = new QHBoxLayout;
-        QLabel *brand = makeLabel("Telegram", "brand");
-        toolbar->addWidget(brand);
+        m_brandLabel = makeLabel("Telegram", "brand");
+        toolbar->addWidget(m_brandLabel);
         toolbar->addStretch();
         QPushButton *newMessage = new QPushButton("+");
         newMessage->setObjectName("secondaryButton");
@@ -602,7 +602,7 @@ private:
         connect(m_appNameChoice, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int) { saveAppearance(); });
         connect(m_themeChoice, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int) { saveAppearance(); });
         connect(customColor, &QPushButton::clicked, this, [this]() {
-            const QColor color = QColorDialog::getColor(m_customAccent.isValid() ? m_customAccent : QColor("#20a8e4"), this, "Choose theme color");
+            const QColor color = QColorDialog::getColor(m_customAccent.isValid() ? m_customAccent : QColor("#8b9ba5"), this, "Choose theme color");
             if (!color.isValid()) return;
             m_customAccent = color;
             const int customIndex = m_themeChoice->findData("custom");
@@ -735,8 +735,8 @@ private:
             }
             #titleBar {
                 background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
-                    stop:0 rgba(255,255,255,235), stop:0.18 rgba(225,246,255,225),
-                    stop:0.52 rgba(139,197,228,205), stop:1 rgba(67,145,190,195));
+                    stop:0 rgba(255,255,255,235), stop:0.18 rgba(255,255,255,235),
+                    stop:0.52 rgba(215,222,225,205), stop:1 rgba(158,171,178,195));
                 border-bottom: 1px solid rgba(255,255,255,245);
             }
             #windowTitle { color: #26343b; font-size: 9pt; font-weight: 600; }
@@ -759,8 +759,8 @@ private:
             }
             #sidebar {
                 background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
-                    stop:0 rgba(235,249,253,250), stop:1 rgba(213,239,248,245));
-                border-right: 1px solid #b8d9e8;
+                    stop:0 rgba(246,248,249,250), stop:1 rgba(222,228,231,245));
+                border-right: 1px solid #b8c2c7;
             }
             #brand { color: #26343b; font-size: 14pt; font-weight: 600; }
             #subtitle, #sectionLabel {
@@ -770,8 +770,8 @@ private:
             #connectionState { color: #8a7651; font-size: 8pt; padding: 4px 1px; }
             QLineEdit {
                 min-height: 31px; padding: 0 9px; color: #27343b;
-                border: 1px solid #b5d2df; border-top-color: #91b6c9;
-                background: rgba(255,255,255,220);
+                border: 1px solid #b7c1c6; border-top-color: #9ba8ae;
+                background: rgba(255,255,255,238);
                 selection-background-color: #8b9ba5;
             }
             QLineEdit:focus { border: 1px solid #8399a5; background: #fff; }
@@ -782,21 +782,21 @@ private:
             }
             #navigationButton:hover {
                 border: 1px solid #c6d0d4;
-                background: rgba(255,255,255,145);
+                background: rgba(255,255,255,150);
             }
             #navigationButton:checked {
                 color: #26343b; font-weight: 600;
                 border: 1px solid #aebbc1;
                 background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
-                    stop:0 rgba(255,255,255,220), stop:1 rgba(190,225,241,210));
+                    stop:0 rgba(255,255,255,238), stop:1 rgba(205,215,220,215));
             }
-            #sidebarLine { color: #c5dfe9; max-height: 1px; }
+            #sidebarLine { color: #c5cdd1; max-height: 1px; }
             #countBadge {
-                color: #5d8195; background: #e8f5fa; border: 1px solid #c5e0eb;
+                color: #5d8195; background: #edf0f1; border: 1px solid #cbd2d5;
                 padding: 1px 6px; font-size: 8pt;
             }
             #sidebarEmpty {
-                color: #7895a5; font-size: 8pt; padding: 7px 3px;
+                color: #7b878d; font-size: 8pt; padding: 7px 3px;
             }
             QPushButton#connectButton, QPushButton#primaryButton {
                 color: white; font-weight: 600; padding: 8px 16px;
@@ -808,37 +808,37 @@ private:
                 background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
                     stop:0 #ffffff, stop:1 #d4dde1);
             }
-            #contentPage { background: rgba(247,252,254,248); }
+            #contentPage { background: rgba(248,249,249,246); }
             #pageTitle { color: #26343b; font-size: 20pt; font-weight: 600; }
             #pageSubtitle { color: #78858b; font-size: 9pt; }
             #welcomePanel {
                 border: 1px solid #d1d8db;
                 background: qlineargradient(x1:0,y1:0,x2:1,y2:1,
-                    stop:0 #ffffff, stop:1 rgba(255,255,255,220));
+                    stop:0 #ffffff, stop:1 rgba(255,255,255,238));
             }
             #welcomeTitle { color: #26343b; font-size: 17pt; font-weight: 600; }
-            #welcomeText { color: #527386; font-size: 9pt; }
+            #welcomeText { color: #637178; font-size: 9pt; }
             QPushButton#secondaryButton {
                 color: #35434a; padding: 7px 12px;
                 border: 1px solid #b9c3c7;
                 background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
                     stop:0 #fff, stop:1 #e2e7e9);
             }
-            QPushButton#secondaryButton:hover { background: #f4fcff; }
+            QPushButton#secondaryButton:hover { background: #ffffff; }
             QPushButton#linkButton {
                 color: #526e7c; border: 0; background: transparent;
                 padding: 7px 9px; text-decoration: underline;
             }
             #footnote { color: #929da2; font-size: 7pt; letter-spacing: 1px; }
             #emptyPageText {
-                color: #819aa8; font-size: 11pt; padding: 30px;
+                color: #78858b; font-size: 11pt; padding: 30px;
                 border: 1px dashed #cbd3d6; background: #fafbfb;
             }
             QListWidget {
                 color: #303d43; background: rgba(255,255,255,225);
                 border: 1px solid #cbd3d6; outline: 0; padding: 3px;
             }
-            QListWidget::item { padding: 7px 6px; border-bottom: 1px solid #edf4f7; }
+            QListWidget::item { padding: 7px 6px; border-bottom: 1px solid #edf0f1; }
             QListWidget::item:selected { color: #26343b; background: #e0e6e8; border: 1px solid #aebbc1; }
             #settingsGroup {
                 border: 1px solid #d1d8db; background: #fff;
@@ -847,8 +847,8 @@ private:
             #settingDetail { color: #828e93; font-size: 8pt; }
             #statusBar {
                 background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
-                    stop:0 #f7fcfe, stop:1 #e0edf3);
-                border-top: 1px solid #c6dce6;
+                    stop:0 #f5f7f8, stop:1 #dfe5e7);
+                border-top: 1px solid #c6cfd3;
             }
             #statusText { color: #77848a; font-size: 7pt; }
             QMessageBox { background: #f0f3f4; }
@@ -877,11 +877,12 @@ private:
         if (!accent.isValid()) return;
         applyStyle();
         QString css = styleSheet();
-        css.replace("#20a8e4", accent.name());
-        css.replace("#0873bd", accent.darker(145).name());
-        css.replace("#e4e9eb", accent.darker(112).name());
-        css.replace("#c4cdd1", accent.darker(145).name());
-        css.replace("#ffffff", accent.lighter(155).name());
+        css.replace("#8b9ba5", accent.name());
+        css.replace("#5688a8", accent.darker(115).name());
+        css.replace("#648b78", accent.darker(115).name());
+        css.replace("#68747c", accent.darker(115).name());
+        css.replace("#e4e9eb", accent.lighter(145).name());
+        css.replace("#c4cdd1", accent.darker(108).name());
         setStyleSheet(css);
     }
 
