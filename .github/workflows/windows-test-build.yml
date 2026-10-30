@@ -12,7 +12,7 @@ on:
       - ".github/workflows/windows-test-build.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -74,3 +74,31 @@ jobs:
           path: AERO7-GRAM-${{ matrix.label }}-TEST.zip
           if-no-files-found: error
           retention-days: 14
+
+  publish-test-release:
+    name: Publish downloadable test ZIPs
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download x86 and x64 packages
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publish or update latest test release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: test-latest
+          name: AERO7 GRAM — Latest test build
+          target_commitish: main
+          prerelease: true
+          make_latest: false
+          fail_on_unmatched_files: true
+          files: dist/*.zip
+          body: |
+            Автоматически собранные тестовые ZIP-архивы AERO7 GRAM.
+
+            Это экспериментальная оболочка без TDLib. Вход в Telegram и сетевые функции недоступны.
+            Совместимость с Windows 7 SP1 ещё требует отдельной проверки.
+            Архивы обновляются после каждого успешного запуска Windows test builds.
