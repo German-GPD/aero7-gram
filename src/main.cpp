@@ -33,6 +33,7 @@
 #include <QResizeEvent>
 #include <QApplication>
 #include <QDateTime>
+#include <QTimer>
 #include <QDate>
 #include <QSet>
 #include <QFileInfo>
@@ -187,6 +188,14 @@ public:
             if (m_connectionState) m_connectionState->setText(label);
             if (m_statusText) m_statusText->setText(label);
         };
+        // Begin first-run Telegram sign-in automatically after the UI is ready.
+        // TDLib requests API credentials, phone, code and optional 2FA password.
+        if (m_auth->isAvailable()) {
+            QTimer::singleShot(350, this, [this]() {
+                if (m_auth && !m_auth->isAuthorized())
+                    m_auth->start();
+            });
+        }
         m_auth->errorOccurred = [this](const QString &message) {
             if (m_statusText) m_statusText->setText(QString("●  Error: %1").arg(message));
             QMessageBox::warning(this, "Telegram", message);
