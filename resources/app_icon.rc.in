@@ -1,0 +1,2 @@
+// Windows executable icon resource. The ICO is generated from the canonical SVG before CMake configure.
+IDI_ICON1 ICON "@AERO7_ICON_PATH@"
