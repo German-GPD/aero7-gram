@@ -3,6 +3,9 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QInputDialog>
+#include <QLineEdit>
+#include <QLocale>
+#include <QJsonObject>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMessageBox>
