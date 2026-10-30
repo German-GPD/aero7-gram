@@ -7,6 +7,7 @@
 #include <QLocale>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QMessageBox>
 #include <QSettings>
 #include <QStandardPaths>
@@ -78,6 +79,56 @@ void TelegramAuth::start()
     m_pollTimer.start();
     if (statusChanged) statusChanged("Starting secure Telegram connection…");
     send("{\"@type\":\"getAuthorizationState\"}");
+#endif
+}
+
+void TelegramAuth::requestChats(int limit)
+{
+#ifdef AERO7_WITH_TDLIB
+    if (!m_client || !m_authorized) return;
+    QJsonObject request;
+    request["@type"] = "getChats";
+    request["chat_list"] = QJsonObject{{"@type", "chatListMain"}};
+    request["limit"] = qBound(1, limit, 200);
+    send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
+#endif
+}
+
+void TelegramAuth::requestHistory(qint64 chatId, int limit)
+{
+#ifdef AERO7_WITH_TDLIB
+    if (!m_client || !m_authorized || chatId == 0) return;
+    QJsonObject request;
+    request["@type"] = "getChatHistory";
+    request["chat_id"] = static_cast<double>(chatId);
+    request["from_message_id"] = 0;
+    request["offset"] = 0;
+    request["limit"] = qBound(1, limit, 100);
+    request["only_local"] = false;
+    send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
+#endif
+}
+
+void TelegramAuth::sendTextMessage(qint64 chatId, const QString &textValue)
+{
+#ifdef AERO7_WITH_TDLIB
+    const QString clean = textValue.trimmed();
+    if (!m_client || !m_authorized || chatId == 0 || clean.isEmpty() || clean.size() > 4096)
+        return;
+    QJsonObject formattedText;
+    formattedText["@type"] = "formattedText";
+    formattedText["text"] = clean;
+    QJsonObject inputContent;
+    inputContent["@type"] = "inputMessageText";
+    inputContent["text"] = formattedText;
+    QJsonObject request;
+    request["@type"] = "sendMessage";
+    request["chat_id"] = static_cast<double>(chatId);
+    request["input_message_content"] = inputContent;
+    send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
+#else
+    Q_UNUSED(chatId);
+    Q_UNUSED(textValue);
 #endif
 }
 
@@ -203,6 +254,23 @@ void TelegramAuth::handleUpdate(const QString &json)
     } else if (type == "error") {
         const QString message = object.value("message").toString("Unknown TDLib error");
         if (errorOccurred) errorOccurred(message);
+    } else if (type == "updateNewChat" || type == "updateChatLastMessage" || type == "updateChatTitle" || type == "updateChatReadInbox") {
+        if (chatReceived) chatReceived(QString::fromUtf8(QJsonDocument(object).toJson(QJsonDocument::Compact)));
+    } else if (type == "updateNewMessage") {
+        if (messageReceived) messageReceived(QString::fromUtf8(QJsonDocument(object.value("message").toObject()).toJson(QJsonDocument::Compact)));
+    } else if (type == "chats") {
+        const QJsonArray chats = object.value("chat_ids").toArray();
+        for (const QJsonValue &id : chats) {
+            QJsonObject request; request["@type"] = "getChat"; request["chat_id"] = id;
+            send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
+        }
+        if (chatsLoaded) chatsLoaded();
+    } else if (type == "chat") {
+        if (chatReceived) chatReceived(QString::fromUtf8(QJsonDocument(object).toJson(QJsonDocument::Compact)));
+    } else if (type == "messages") {
+        const QJsonArray messages = object.value("messages").toArray();
+        for (const QJsonValue &message : messages)
+            if (messageReceived) messageReceived(QString::fromUtf8(QJsonDocument(message.toObject()).toJson(QJsonDocument::Compact)));
     } else if (type == "updateConnectionState") {
         const QString state = object.value("state").toObject().value("@type").toString();
         if (statusChanged) statusChanged(state == "connectionStateReady"
@@ -260,6 +328,7 @@ void TelegramAuth::handleAuthorizationState(const QJsonObject &state)
         if (statusChanged) statusChanged("Telegram account connected");
         send("{\"@type\":\"getMe\"}");
         if (authorized) authorized("Telegram authorization completed.");
+        requestChats(100);
     } else if (type == "authorizationStateLoggingOut") {
         if (statusChanged) statusChanged("Signing out…");
     } else if (type == "authorizationStateClosing") {
