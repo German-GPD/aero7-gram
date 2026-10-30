@@ -24,11 +24,11 @@ Windows 10 and Windows 11 are not target platforms. They can still be used for p
 
 ## Current status
 
-**Version 0.2.0 — native interface preview.**
+**Version 0.2.0 — early development build.**
 
 The application has a native Qt desktop shell with a custom title bar, window controls, resizing, DWM glass integration, a Telegram-inspired Aero icon, navigation for Chats / Contacts / Calls / Settings and saved window geometry.
 
-**Telegram authorization flow is implemented behind an optional TDLib build.** It handles phone number, login code, two-step verification password, registration and email verification. A matching Windows 7-compatible TDLib library is required; no TDLib binaries are bundled. Real chat loading, message sending, file transfers and notifications are still pending.
+**Telegram authorization and an initial text-chat path are implemented behind an optional TDLib build.** It can request the main chat list, fetch recent message history and send plain text messages. It handles phone number, login code, two-step verification password, registration and email verification. A matching Windows 7-compatible TDLib library is required; no TDLib binaries are bundled. Contacts, groups/channel management, media transfer, message editing/deletion, search, notifications, calls and polished non-modal authorization are not implemented yet. This is not a feature-complete daily-use client.
 
 ## Build
 
@@ -43,9 +43,9 @@ The current source update has not yet been compiled or tested on a Windows 7 mac
 1. Compile and stabilize the native interface on Windows 7 SP1, x86 and x64.
 2. Build and verify TDLib for Windows 7 SP1 in both architectures.
 3. Test the implemented Telegram authorization and DPAPI-protected local database key.
-4. Load chats, contacts and message history.
-5. Implement text messaging, media/files, notifications and settings.
-6. Package and test portable x86 and x64 builds on clean Windows 7 installations.
+4. Complete chat synchronization, pagination, unread state and robust message rendering.
+5. Implement contacts, global search, media/file transfer, notifications and account/session controls.
+6. Add automated tests, build x86/x64 packages and test on clean Windows 7 SP1 installations.
 
 ## Website
 
