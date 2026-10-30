@@ -33,6 +33,7 @@
 #include <QResizeEvent>
 #include <QApplication>
 #include <QDateTime>
+#include <QSet>
 #include <QFileInfo>
 #include <QDir>
 #include <QJsonArray>
@@ -206,10 +207,17 @@ public:
             item->setText(preview.isEmpty() ? title : title + "\n" + preview);
             item->setToolTip(title + (preview.isEmpty() ? QString() : "\n" + preview));
         };
+        m_auth->historyLoaded = [this]() {
+            if (m_conversationSubtitle && m_selectedChatId)
+                m_conversationSubtitle->setText("Telegram conversation");
+        };
         m_auth->messageReceived = [this](const QString &json) {
             if (!m_messageList) return;
             const QJsonObject message = QJsonDocument::fromJson(json.toUtf8()).object();
             if (static_cast<qint64>(message.value("chat_id").toDouble()) != m_selectedChatId) return;
+            const qint64 messageId = static_cast<qint64>(message.value("id").toDouble());
+            if (messageId && m_seenMessageIds.contains(messageId)) return;
+            if (messageId) m_seenMessageIds.insert(messageId);
             const QJsonObject content = message.value("content").toObject();
             const QString contentType = content.value("@type").toString();
             QString body = content.value("text").toObject().value("text").toString();
@@ -225,8 +233,11 @@ public:
                 else if (contentType == "messagePoll") body = "[Poll]";
                 else body = QString("[%1]").arg(contentType.isEmpty() ? "Message" : contentType);
             }
-            const QString prefix = message.value("is_outgoing").toBool() ? "You: " : "Them: ";
-            m_messageList->addItem(prefix + body);
+            const QString prefix = message.value("is_outgoing").toBool() ? "You" : "Them";
+            const QDateTime sentAt = QDateTime::fromTime_t(
+                static_cast<uint>(message.value("date").toInt()));
+            const QString timeLabel = sentAt.isValid() ? sentAt.toString("hh:mm") + "  " : QString();
+            m_messageList->addItem(timeLabel + prefix + ": " + body);
             m_messageList->scrollToBottom();
         };
     }
@@ -300,6 +311,7 @@ private:
     QListWidget *m_messageList = nullptr;
     QLineEdit *m_messageInput = nullptr;
     qint64 m_selectedChatId = 0;
+    QSet<qint64> m_seenMessageIds;
 
     void buildInterface()
     {
@@ -450,6 +462,7 @@ private:
                 if (m_conversationTitle) m_conversationTitle->setText(chatTitle);
                 if (m_conversationSubtitle) m_conversationSubtitle->setText("Loading recent messages…");
                 if (m_messageList) m_messageList->clear();
+                m_seenMessageIds.clear();
                 m_auth->requestHistory(m_selectedChatId, 50);
             });
         connect(m_search, &QLineEdit::textChanged, this, [this](const QString &query) {
