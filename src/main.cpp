@@ -632,11 +632,8 @@ private:
 
     void connectNavigation()
     {
-        connect(m_chatsNav, &QToolButton::clicked, this, [this]() { setPage(0); });
-        connect(m_contactsNav, &QToolButton::clicked, this, [this]() { setPage(1); });
-        connect(m_callsNav, &QToolButton::clicked, this, [this]() { setPage(2); });
-        connect(m_settingsNav, &QToolButton::clicked, this, [this]() { setPage(3); });
-        m_chatsNav->setChecked(true);
+        // The primary screen is now the Telegram-style two-pane chat view.
+        // Secondary pages will be exposed through the native application menu.
     }
 
     void setPage(int index)
