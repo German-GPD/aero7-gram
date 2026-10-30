@@ -839,6 +839,16 @@ private:
                 border-right: 1px solid #b8c2c7;
             }
             #brand { color: #26343b; font-size: 14pt; font-weight: 600; }
+            #chatList { background: rgba(245,247,248,245); border: none; outline: none; }
+            #chatList::item { border: 1px solid transparent; padding: 0; }
+            #chatList::item:hover { background: rgba(255,255,255,165); border-color: #d5dde0; }
+            #chatList::item:selected {
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+                    stop:0 rgba(225,237,244,245), stop:1 rgba(202,220,231,245));
+                border: 1px solid #a8bdc9;
+            }
+            #chatName { color: #26343b; font-size: 9pt; font-weight: 600; }
+            #chatPreview { color: #77858b; font-size: 8pt; }
             #subtitle, #sectionLabel {
                 color: #74838a; font-size: 7pt; font-weight: 700;
                 letter-spacing: 1px;
