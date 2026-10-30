@@ -18,7 +18,7 @@
 ---
 
 > [!IMPORTANT]
-> **Проект находится в ранней разработке.** Тестовые ZIP-сборки оболочки автоматически публикуются в [GitHub Releases](https://github.com/German-GPD/aero7-gram/releases/tag/test-latest) после успешной сборки. Это не полноценный Telegram-клиент: TDLib пока не включена, авторизация и сетевые функции в этих архивах недоступны. Совместимость с Windows 7 SP1 ещё нужно проверить на реальном ПК или виртуальной машине.
+> **Проект находится в ранней разработке.** Тестовые установщики оболочки автоматически публикуются в [GitHub Releases](https://github.com/German-GPD/aero7-gram/releases/tag/test-latest) после успешной сборки. Это не полноценный Telegram-клиент: TDLib пока не включена, авторизация и сетевые функции в этих архивах недоступны. Совместимость с Windows 7 SP1 ещё нужно проверить на реальном ПК или виртуальной машине.
 
 ## ✨ Что такое AERO7 GRAM?
 
@@ -36,12 +36,12 @@ AERO7 GRAM — независимый проект нативного Telegram-�
 
 | Система | Архитектура | Загрузка |
 |:--|:--:|:--|
-| Windows 64-bit | **x64** | [Скачать ZIP](https://github.com/German-GPD/aero7-gram/releases/download/test-latest/AERO7-GRAM-x64-TEST.zip) |
-| Windows 32-bit | **x86** | [Скачать ZIP](https://github.com/German-GPD/aero7-gram/releases/download/test-latest/AERO7-GRAM-x86-TEST.zip) |
+| Windows 64-bit | **x64** | [Скачать Setup.exe](https://github.com/German-GPD/aero7-gram/releases/download/test-latest/AERO7-GRAM-x64-Setup.exe) |
+| Windows 32-bit | **x86** | [Скачать ZIP](https://github.com/German-GPD/aero7-gram/releases/download/test-latest/AERO7-GRAM-x86-Setup.exe) |
 
-Нажми на нужную архитектуру ниже — ZIP скачивается напрямую. Распакуй архив целиком и запусти `AERO7 GRAM.exe`.
+Скачай установщик нужной архитектуры, запусти его и следуй мастеру. По умолчанию приложение устанавливается в `C:\\Program Files\\German\\G-Code-Team\\Aero7Gram` (x64). Для установки нужны права администратора.
 
-> **Ограничения тестовой сборки:** это только проверка интерфейса и оболочки. TDLib не включена, поэтому вход в Telegram и обмен сообщениями не работают. Сборка на Windows runner не доказывает совместимость с Windows 7 SP1 — это отдельный этап тестирования. Артефакты хранятся 14 дней.
+> **Ограничения тестовой сборки:** это только проверка интерфейса и оболочки. TDLib не включена, поэтому вход в Telegram и обмен сообщениями не работают. Сборка на Windows runner не доказывает совместимость с Windows 7 SP1 — это отдельный этап тестирования. Установщик создаёт ярлык в меню «Пуск» и предлагает ярлык на рабочем столе.
 
 ## 🧩 Текущее состояние
 
