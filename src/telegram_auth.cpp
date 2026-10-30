@@ -52,6 +52,15 @@ bool TelegramAuth::isAvailable() const
 #endif
 }
 
+bool TelegramAuth::isAuthorized() const
+{
+#ifdef AERO7_WITH_TDLIB
+    return m_authorized;
+#else
+    return false;
+#endif
+}
+
 void TelegramAuth::start()
 {
 #ifndef AERO7_WITH_TDLIB
@@ -336,7 +345,7 @@ void TelegramAuth::handleUpdate(const QString &json)
             if (messageReceived)
                 messageReceived(QString::fromUtf8(QJsonDocument(message.toObject()).toJson(QJsonDocument::Compact)));
         }
-        if (historyLoaded) historyLoaded();
+        if (historyLoaded) historyLoaded(static_cast<qint64>(object.value("chat_id").toDouble()));
     } else if (type == "updateConnectionState") {
         const QString state = object.value("state").toObject().value("@type").toString();
         if (statusChanged) statusChanged(state == "connectionStateReady"
