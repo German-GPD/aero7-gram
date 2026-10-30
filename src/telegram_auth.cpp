@@ -140,6 +140,7 @@ QByteArray TelegramAuth::loadDatabaseKey()
             LocalFree(output.pbData);
             return key;
         }
+        return QByteArray();
     }
 
     QByteArray key(32, '\0');
