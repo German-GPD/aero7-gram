@@ -9,6 +9,7 @@ on:
       - "src/**"
       - "resources.qrc"
       - "README-TEST.txt"
+      - "installer/**"
       - ".github/workflows/windows-test-build.yml"
 
 permissions:
@@ -58,20 +59,25 @@ jobs:
           & "$env:QT_ROOT_DIR/bin/windeployqt.exe" --release --no-translations --compiler-runtime "$exe"
           if ($LASTEXITCODE -ne 0) { throw "windeployqt failed with exit code $LASTEXITCODE" }
 
-      - name: Package test build
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer
         shell: pwsh
         run: |
-          $folder = "AERO7-GRAM-${{ matrix.label }}-TEST"
-          New-Item -ItemType Directory -Path $folder | Out-Null
-          Copy-Item "build/Release/*" $folder -Recurse
-          Copy-Item "README-TEST.txt" $folder
-          Compress-Archive -Path "$folder/*" -DestinationPath "$folder.zip"
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $iscc)) { throw "Inno Setup compiler not found: $iscc" }
+          & $iscc /DAppArch=${{ matrix.label }} /O. installer/AERO7-GRAM.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed with exit code $LASTEXITCODE" }
+          $setup = "AERO7-GRAM-${{ matrix.label }}-Setup.exe"
+          if (!(Test-Path $setup)) { throw "Installer not found: $setup" }
 
-      - name: Upload test artifact
+      - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: AERO7-GRAM-${{ matrix.label }}-TEST
-          path: AERO7-GRAM-${{ matrix.label }}-TEST.zip
+          name: AERO7-GRAM-${{ matrix.label }}-Setup
+          path: AERO7-GRAM-${{ matrix.label }}-Setup.exe
           if-no-files-found: error
           retention-days: 14
 
@@ -95,9 +101,9 @@ jobs:
           prerelease: true
           make_latest: false
           fail_on_unmatched_files: true
-          files: dist/*.zip
+          files: dist/*.exe
           body: |
-            Автоматически собранные тестовые ZIP-архивы AERO7 GRAM.
+            Автоматически собранные установщики AERO7 GRAM. Запусти Setup.exe и следуй мастеру установки.
 
             Это экспериментальная оболочка без TDLib. Вход в Telegram и сетевые функции недоступны.
             Совместимость с Windows 7 SP1 ещё требует отдельной проверки.
