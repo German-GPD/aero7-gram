@@ -5,7 +5,6 @@
 #include <QInputDialog>
 #include <QLineEdit>
 #include <QLocale>
-#include <QJsonObject>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMessageBox>
