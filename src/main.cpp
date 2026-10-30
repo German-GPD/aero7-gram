@@ -209,6 +209,9 @@ protected:
     void showEvent(QShowEvent *event) override
     {
         QMainWindow::showEvent(event);
+#ifdef Q_OS_WIN
+        enableAeroGlass();
+#endif
     }
 
     void closeEvent(QCloseEvent *event) override
@@ -560,12 +563,10 @@ private:
         QHBoxLayout *themeRow = new QHBoxLayout;
         themeRow->addWidget(makeLabel("Theme color", "settingTitle"));
         m_themeChoice = new QComboBox(page);
-        m_themeChoice->addItem("Aero Blue", "#20a8e4");
-        m_themeChoice->addItem("Sky", "#36a9e1");
-        m_themeChoice->addItem("Emerald", "#159b78");
-        m_themeChoice->addItem("Violet", "#8064c8");
-        m_themeChoice->addItem("Rose", "#d45b78");
-        m_themeChoice->addItem("Graphite", "#607887");
+        m_themeChoice->addItem("Aero Silver", "#8b9ba5");
+        m_themeChoice->addItem("Aero Blue", "#5688a8");
+        m_themeChoice->addItem("Aero Green", "#648b78");
+        m_themeChoice->addItem("Graphite", "#68747c");
         m_themeChoice->addItem("Custom", "custom");
         themeRow->addStretch(); themeRow->addWidget(m_themeChoice);
         QPushButton *customColor = new QPushButton("Custom…", page);
@@ -700,12 +701,12 @@ private:
     {
         setStyleSheet(QString::fromLatin1(R"(
             QWidget {
-                color: #234b64;
+                color: #27343b;
                 font-family: "Segoe UI", Tahoma, sans-serif;
                 font-size: 9pt;
             }
             #surface {
-                background: rgba(221, 241, 249, 246);
+                background: rgba(238, 242, 244, 238);
                 border: 1px solid rgba(255,255,255,245);
             }
             #titleBar {
@@ -714,15 +715,15 @@ private:
                     stop:0.52 rgba(139,197,228,205), stop:1 rgba(67,145,190,195));
                 border-bottom: 1px solid rgba(255,255,255,245);
             }
-            #windowTitle { color: #174d6b; font-size: 9pt; font-weight: 600; }
-            #versionTag { color: #47758d; font-size: 7pt; padding-left: 5px; }
+            #windowTitle { color: #26343b; font-size: 9pt; font-weight: 600; }
+            #versionTag { color: #63737b; font-size: 7pt; padding-left: 5px; }
             QPushButton#windowButton, QPushButton#closeButton {
-                color: #174c6b; border: 1px solid rgba(255,255,255,235);
+                color: #26343b; border: 1px solid rgba(255,255,255,235);
                 background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
-                    stop:0 #faffff, stop:1 #a9d8ed);
+                    stop:0 #faffff, stop:1 #b4c0c6);
                 padding: 0; font-size: 10pt;
             }
-            QPushButton#windowButton:hover { background: #e8fbff; }
+            QPushButton#windowButton:hover { background: #ffffff; }
             QPushButton#closeButton {
                 color: white; font-size: 13pt; font-weight: bold;
                 background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
@@ -737,31 +738,31 @@ private:
                     stop:0 rgba(235,249,253,250), stop:1 rgba(213,239,248,245));
                 border-right: 1px solid #b8d9e8;
             }
-            #brand { color: #155b83; font-size: 14pt; font-weight: 600; }
+            #brand { color: #26343b; font-size: 14pt; font-weight: 600; }
             #subtitle, #sectionLabel {
-                color: #6a8b9d; font-size: 7pt; font-weight: 700;
+                color: #74838a; font-size: 7pt; font-weight: 700;
                 letter-spacing: 1px;
             }
             #connectionState { color: #8a7651; font-size: 8pt; padding: 4px 1px; }
             QLineEdit {
-                min-height: 31px; padding: 0 9px; color: #204e68;
+                min-height: 31px; padding: 0 9px; color: #27343b;
                 border: 1px solid #b5d2df; border-top-color: #91b6c9;
                 background: rgba(255,255,255,220);
-                selection-background-color: #5db9df;
+                selection-background-color: #8b9ba5;
             }
-            QLineEdit:focus { border: 1px solid #66b9dc; background: #fff; }
+            QLineEdit:focus { border: 1px solid #8399a5; background: #fff; }
             #navigationButton {
-                text-align: left; padding-left: 11px; color: #416a80;
+                text-align: left; padding-left: 11px; color: #45545b;
                 border: 1px solid transparent; background: transparent;
                 font-size: 9pt;
             }
             #navigationButton:hover {
-                border: 1px solid #c1e0ee;
+                border: 1px solid #c6d0d4;
                 background: rgba(255,255,255,145);
             }
             #navigationButton:checked {
-                color: #174f70; font-weight: 600;
-                border: 1px solid #a8d0e4;
+                color: #26343b; font-weight: 600;
+                border: 1px solid #aebbc1;
                 background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
                     stop:0 rgba(255,255,255,220), stop:1 rgba(190,225,241,210));
             }
@@ -775,58 +776,58 @@ private:
             }
             QPushButton#connectButton, QPushButton#primaryButton {
                 color: white; font-weight: 600; padding: 8px 16px;
-                border: 1px solid #237eae;
+                border: 1px solid #9eabb1;
                 background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
-                    stop:0 #69c8ec, stop:0.48 #2499cf, stop:1 #1476ad);
+                    stop:0 #ffffff, stop:0.48 #e4e9eb, stop:1 #c4cdd1);
             }
             QPushButton#connectButton:hover, QPushButton#primaryButton:hover {
                 background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
-                    stop:0 #8bdcff, stop:1 #1686bf);
+                    stop:0 #ffffff, stop:1 #d4dde1);
             }
             #contentPage { background: rgba(247,252,254,248); }
-            #pageTitle { color: #1c5c7d; font-size: 20pt; font-weight: 600; }
-            #pageSubtitle { color: #6d8999; font-size: 9pt; }
+            #pageTitle { color: #26343b; font-size: 20pt; font-weight: 600; }
+            #pageSubtitle { color: #78858b; font-size: 9pt; }
             #welcomePanel {
-                border: 1px solid #d2e5ed;
+                border: 1px solid #d1d8db;
                 background: qlineargradient(x1:0,y1:0,x2:1,y2:1,
-                    stop:0 #ffffff, stop:1 #eaf6fb);
+                    stop:0 #ffffff, stop:1 rgba(255,255,255,220));
             }
-            #welcomeTitle { color: #155b83; font-size: 17pt; font-weight: 600; }
+            #welcomeTitle { color: #26343b; font-size: 17pt; font-weight: 600; }
             #welcomeText { color: #527386; font-size: 9pt; }
             QPushButton#secondaryButton {
-                color: #285f7d; padding: 7px 12px;
-                border: 1px solid #b6d3e0;
+                color: #35434a; padding: 7px 12px;
+                border: 1px solid #b9c3c7;
                 background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
-                    stop:0 #fff, stop:1 #e3f1f7);
+                    stop:0 #fff, stop:1 #e2e7e9);
             }
             QPushButton#secondaryButton:hover { background: #f4fcff; }
             QPushButton#linkButton {
-                color: #287ca8; border: 0; background: transparent;
+                color: #526e7c; border: 0; background: transparent;
                 padding: 7px 9px; text-decoration: underline;
             }
-            #footnote { color: #9aafb9; font-size: 7pt; letter-spacing: 1px; }
+            #footnote { color: #929da2; font-size: 7pt; letter-spacing: 1px; }
             #emptyPageText {
                 color: #819aa8; font-size: 11pt; padding: 30px;
-                border: 1px dashed #c8dfe9; background: #f8fcfe;
+                border: 1px dashed #cbd3d6; background: #fafbfb;
             }
             QListWidget {
-                color: #28546b; background: rgba(255,255,255,225);
-                border: 1px solid #c8dfe9; outline: 0; padding: 3px;
+                color: #303d43; background: rgba(255,255,255,225);
+                border: 1px solid #cbd3d6; outline: 0; padding: 3px;
             }
             QListWidget::item { padding: 7px 6px; border-bottom: 1px solid #edf4f7; }
-            QListWidget::item:selected { color: #174f70; background: #d9eef8; border: 1px solid #a8d0e4; }
+            QListWidget::item:selected { color: #26343b; background: #e0e6e8; border: 1px solid #aebbc1; }
             #settingsGroup {
-                border: 1px solid #d2e4ec; background: #fff;
+                border: 1px solid #d1d8db; background: #fff;
             }
-            #settingTitle { color: #315d75; font-weight: 600; }
-            #settingDetail { color: #8299a6; font-size: 8pt; }
+            #settingTitle { color: #35434a; font-weight: 600; }
+            #settingDetail { color: #828e93; font-size: 8pt; }
             #statusBar {
                 background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
                     stop:0 #f7fcfe, stop:1 #e0edf3);
                 border-top: 1px solid #c6dce6;
             }
-            #statusText { color: #7792a1; font-size: 7pt; }
-            QMessageBox { background: #eff8fc; }
+            #statusText { color: #77848a; font-size: 7pt; }
+            QMessageBox { background: #f0f3f4; }
         )"));
     }
 
@@ -854,9 +855,9 @@ private:
         QString css = styleSheet();
         css.replace("#20a8e4", accent.name());
         css.replace("#0873bd", accent.darker(145).name());
-        css.replace("#2499cf", accent.darker(112).name());
-        css.replace("#1476ad", accent.darker(145).name());
-        css.replace("#69c8ec", accent.lighter(155).name());
+        css.replace("#e4e9eb", accent.darker(112).name());
+        css.replace("#c4cdd1", accent.darker(145).name());
+        css.replace("#ffffff", accent.lighter(155).name());
         setStyleSheet(css);
     }
 
@@ -867,9 +868,9 @@ private:
         if (s.value("window/maximized", false).toBool()) showMaximized();
         const QString appName = s.value("appearance/appName", "AERO7 GRAM").toString();
         int ni = m_appNameChoice->findData(appName); if (ni >= 0) m_appNameChoice->setCurrentIndex(ni);
-        const QString theme = s.value("appearance/theme", "#20a8e4").toString();
+        const QString theme = s.value("appearance/theme", "#8b9ba5").toString();
         int ti = m_themeChoice->findData(theme); if (ti >= 0) m_themeChoice->setCurrentIndex(ti);
-        if (theme == "custom") { m_customAccent = QColor(s.value("appearance/customAccent", "#20a8e4").toString()); applyTheme(m_customAccent); }
+        if (theme == "custom") { m_customAccent = QColor(s.value("appearance/customAccent", "#8b9ba5").toString()); applyTheme(m_customAccent); }
         else applyTheme(QColor(theme));
         updateApplicationName();
     }
@@ -878,8 +879,12 @@ private:
     {
         BOOL composition = FALSE;
         if (SUCCEEDED(DwmIsCompositionEnabled(&composition)) && composition) {
-            const MARGINS margins = {0, 0, 0, 0};
+            const MARGINS margins = {-1, -1, -1, -1};
             DwmExtendFrameIntoClientArea(reinterpret_cast<HWND>(winId()), &margins);
+            DWM_BLURBEHIND blur = {};
+            blur.dwFlags = DWM_BB_ENABLE;
+            blur.fEnable = TRUE;
+            DwmEnableBlurBehindWindow(reinterpret_cast<HWND>(winId()), &blur);
         }
     }
 #endif
