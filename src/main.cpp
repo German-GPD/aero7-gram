@@ -165,6 +165,17 @@ public:
         restorePreferences();
 
         m_auth = new TelegramAuth(this);
+        if (!m_auth->isAvailable()) {
+            const QString previewStatus = "Preview build · Telegram engine not bundled";
+            if (m_connectionState) m_connectionState->setText(previewStatus);
+            if (m_statusText) m_statusText->setText(previewStatus);
+            QPushButton *connectButton = findChild<QPushButton *>("connectButton");
+            if (connectButton) {
+                connectButton->setText("Unavailable");
+                connectButton->setEnabled(false);
+                connectButton->setToolTip("This test build was compiled without TDLib. Telegram sign-in is unavailable.");
+            }
+        }
         m_auth->statusChanged = [this](const QString &status) {
             const QString label = QString::fromUtf8("●  ") + status;
             if (m_connectionState) m_connectionState->setText(label);
@@ -449,7 +460,8 @@ private:
         m_connectionState = makeLabel("●  Not connected", "connectionState");
         bottomLayout->addWidget(m_connectionState, 1);
         QPushButton *connectButton = new QPushButton("Connect");
-        connectButton->setObjectName("secondaryButton");
+        connectButton->setObjectName("connectButton");
+        connectButton->setProperty("class", "secondaryButton");
         bottomLayout->addWidget(connectButton);
         layout->addWidget(bottom);
         connect(connectButton, &QPushButton::clicked, this, [this]() { showConnectionNotice(); });
