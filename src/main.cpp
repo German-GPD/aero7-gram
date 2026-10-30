@@ -23,6 +23,7 @@
 #include <QComboBox>
 #include <QPixmap>
 #include <QIcon>
+#include <QSvgRenderer>
 #include <QSizePolicy>
 #include <QPoint>
 #include <QSettings>
@@ -48,50 +49,21 @@ const char *kVersion = "0.2.0";
 
 QIcon createTelegramAeroIcon()
 {
-    QPixmap pixmap(128, 128);
-    pixmap.fill(Qt::transparent);
-    QPainter p(&pixmap);
-    p.setRenderHint(QPainter::Antialiasing, true);
+    QIcon icon;
+    QSvgRenderer renderer(QStringLiteral(":/icons/telegram-aero.svg"));
+    if (!renderer.isValid())
+        return icon;
 
-    QLinearGradient orb(15, 8, 108, 122);
-    orb.setColorAt(0.0, QColor("#58d8ff"));
-    orb.setColorAt(0.48, QColor("#20a8e4"));
-    orb.setColorAt(1.0, QColor("#0873bd"));
-    p.setPen(QPen(QColor(230, 249, 255, 230), 2));
-    p.setBrush(orb);
-    p.drawEllipse(QRectF(2, 2, 124, 124));
-
-    QLinearGradient gloss(0, 3, 0, 68);
-    gloss.setColorAt(0.0, QColor(255, 255, 255, 105));
-    gloss.setColorAt(1.0, QColor(255, 255, 255, 0));
-    p.setPen(Qt::NoPen);
-    p.setBrush(gloss);
-    p.drawEllipse(QRectF(8, 5, 112, 82));
-
-    QPainterPath plane;
-    plane.moveTo(24, 57);
-    plane.lineTo(91, 30);
-    plane.cubicTo(101, 26, 105, 30, 102, 42);
-    plane.lineTo(91, 94);
-    plane.cubicTo(89, 104, 84, 107, 76, 101);
-    plane.lineTo(54, 84);
-    plane.cubicTo(47, 79, 48, 75, 54, 69);
-    plane.lineTo(78, 47);
-    plane.cubicTo(81, 44, 78, 42, 74, 45);
-    plane.lineTo(43, 67);
-    plane.cubicTo(37, 71, 32, 70, 25, 68);
-    plane.lineTo(17, 65);
-    plane.cubicTo(10, 62, 13, 60, 24, 57);
-    plane.closeSubpath();
-
-    p.setPen(QPen(QColor(255, 255, 255, 210), 1.0));
-    QLinearGradient paper(20, 32, 92, 101);
-    paper.setColorAt(0.0, QColor("#ffffff"));
-    paper.setColorAt(0.7, QColor("#f4fbff"));
-    paper.setColorAt(1.0, QColor("#ccecff"));
-    p.setBrush(paper);
-    p.drawPath(plane);
-    return QIcon(pixmap);
+    const int sizes[] = {16, 20, 24, 32, 40, 48, 64, 96, 128, 256};
+    for (int size : sizes) {
+        QPixmap pixmap(size, size);
+        pixmap.fill(Qt::transparent);
+        QPainter painter(&pixmap);
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        renderer.render(&painter, QRectF(0, 0, size, size));
+        icon.addPixmap(pixmap);
+    }
+    return icon;
 }
 
 QLabel *makeLabel(const QString &text, const QString &objectName = QString())
