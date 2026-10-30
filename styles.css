@@ -14,3 +14,23 @@
 @media(max-width:600px){html{scroll-padding-top:70px}.topbar{height:66px;padding:0 17px}.topbar nav{display:none}.top-github{padding:7px 10px}.hero{min-height:auto;grid-template-columns:1fr;padding:65px 22px 62px}.hero h1{font-size:58px}.hero-lead{font-size:13px}.hero-art{height:265px;margin-top:5px;transform:scale(.78)}.hero-bottom{left:22px;right:22px;font-size:7px}.section-shell{padding:65px 21px}.intro-grid,.security-grid{grid-template-columns:1fr;gap:23px;margin-bottom:35px}.intro h2,.preview-heading h2,.security-grid h2,.download-head h2,.roadmap-head h2{font-size:35px}.feature-grid{grid-template-columns:1fr 1fr}.feature-grid article{min-height:160px;padding:19px 15px}.preview-heading{margin-bottom:25px}.preview-secondary{grid-template-columns:1fr;gap:16px}.preview-note{padding:24px}.preview-card figcaption{flex-direction:column;gap:3px}.download-section .section-shell{padding-top:65px;padding-bottom:65px}.download-head{align-items:start;flex-direction:column}.download-os{text-align:left}.download-grid{grid-template-columns:1fr}.download-card{flex-wrap:nowrap;padding:14px;gap:10px}.arch{width:40px;height:40px;flex-basis:40px}.download-info{min-width:0}.download-card>a{margin:0;padding:9px;font-size:10px}.roadmap-head{margin-bottom:25px}.roadmap-item{gap:10px}.roadmap-item label{font-size:7px}.roadmap-item small{max-width:230px;line-height:1.5}.footer{padding:25px 21px;grid-template-columns:1fr auto}.footer>div{gap:10px}}
 @media(max-width:390px){.hero h1{font-size:49px}.hero-actions{flex-direction:column;align-items:stretch}.button{justify-content:center}.feature-grid{grid-template-columns:1fr}.feature-grid article{min-height:0}.download-card{flex-wrap:wrap}.download-card>a{margin-left:50px}.roadmap-item label{display:none}.hero-meta{gap:7px;font-size:9px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
+
+
+/* Final polish: keyboard focus, restrained motion and consistent controls. */
+:focus-visible{outline:2px solid #4c9fbe;outline-offset:3px}
+a{-webkit-tap-highlight-color:transparent}
+.topbar nav a{position:relative}
+.topbar nav a:after{content:"";position:absolute;left:0;right:100%;bottom:-7px;height:1px;background:#65a9c3;transition:right .2s}
+.topbar nav a:hover:after{right:0}
+.preview-card img{background:#edf5f8}
+button,a{-webkit-touch-callout:none}
+@media(max-width:600px){
+  .topbar{gap:10px}
+  .brand{font-size:12px;letter-spacing:.08em}
+  .brand img{width:27px;height:27px}
+  .hero-art{max-width:100%;overflow:visible}
+  .hero-bottom span:last-child{text-align:right}
+}
+@media(prefers-reduced-motion:reduce){
+  .topbar nav a:after{transition:none}
+}
