@@ -1,9 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-<defs><linearGradient id="glass" x2=".8" y2="1"><stop stop-color="#fff"/><stop offset=".42" stop-color="#b7efff"/><stop offset="1" stop-color="#1680bd"/></linearGradient><linearGradient id="blue" x2="1" y2="1"><stop stop-color="#52d5ed"/><stop offset=".55" stop-color="#1689c4"/><stop offset="1" stop-color="#064b91"/></linearGradient><linearGradient id="shine" x2="0" y2="1"><stop stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
-<rect x="7" y="7" width="114" height="114" rx="25" fill="url(#blue)" stroke="#fff" stroke-width="3"/>
-<rect x="12" y="12" width="104" height="104" rx="21" fill="url(#glass)" opacity=".2"/>
-<path d="M27 37Q27 22 43 22H85Q101 22 101 38V89Q101 105 85 105H43Q27 105 27 89Z" fill="#f6fdff" fill-opacity=".88" stroke="#fff" stroke-width="2"/>
-<path d="M38 44Q38 34 49 34H79Q90 34 90 45V78Q90 89 79 89H49Q38 89 38 78Z" fill="url(#blue)"/>
-<path d="M44 52L56 64L44 76M60 76H80" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M10 30Q55 -1 117 28V47Q60 18 10 48Z" fill="url(#shine)" opacity=".8"/>
+  <defs>
+    <linearGradient id="orb" x1="0" y1="0" x2=".82" y2="1">
+      <stop offset="0" stop-color="#58d8ff"/>
+      <stop offset=".48" stop-color="#20a8e4"/>
+      <stop offset="1" stop-color="#0873bd"/>
+    </linearGradient>
+    <linearGradient id="orbGlass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".58"/>
+      <stop offset=".48" stop-color="#fff" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#003d78" stop-opacity=".18"/>
+    </linearGradient>
+    <linearGradient id="plane" x1=".2" y1="0" x2=".72" y2="1">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset=".68" stop-color="#f4fbff"/>
+      <stop offset="1" stop-color="#ccecff"/>
+    </linearGradient>
+    <linearGradient id="planeFold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b9e8ff"/>
+      <stop offset="1" stop-color="#eaf8ff"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".72"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2.2"/>
+      <feOffset dy="2"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".28"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <circle cx="64" cy="64" r="63" fill="url(#orb)" stroke="#dff8ff" stroke-width="1.5"/>
+  <circle cx="64" cy="64" r="61.5" fill="url(#orbGlass)"/>
+  <path d="M5 52C13 20 39 4 69 3c21-.7 39 7 51 22-24-13-52-17-77-8C25 23 12 37 5 52Z" fill="url(#shine)" opacity=".58"/>
+  <path d="M84 12c18 5 30 17 37 34" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="1.2" stroke-linecap="round"/>
+
+  <g filter="url(#shadow)">
+    <path d="M25.2 57.7 88.9 31.4c7.3-3 11.2-1.1 9.3 8.1l-10.9 53c-1.6 7.9-6.1 9.8-12.4 5.8L53.7 82.8c-6.1-4-6.4-8.1-.9-13.2l24.7-22.9c1.8-1.7.4-2.6-1.8-1.2L43.4 67.1c-5.8 3.9-10.1 4-16.6 1.9l-9.1-2.9c-8.2-2.6-7.1-5.7 7.5-8.4Z" fill="url(#plane)"/>
+    <path d="m53.7 82.8 22.9 15.5c6.3 4 10.8 2.1 12.4-5.8l10.9-53c1.9-9.2-2-11.1-9.3-8.1L25.2 57.7c-14.6 2.7-15.7 5.8-7.5 8.4l9.1 2.9c6.5 2.1 10.8 2 16.6-1.9l32.3-21.6c2.2-1.4 3.6-.5 1.8 1.2L52.8 69.6c-5.5 5.1-5.2 9.2.9 13.2Z" fill="none" stroke="#fff" stroke-opacity=".58" stroke-width=".65"/>
+    <path d="m53.7 82.8 22.9 15.5c6.3 4 10.8 2.1 12.4-5.8l10.9-53c1.9-9.2-2-11.1-9.3-8.1L25.2 57.7c-14.6 2.7-15.7 5.8-7.5 8.4l9.1 2.9c6.5 2.1 10.8 2 16.6-1.9l32.3-21.6c2.2-1.4 3.6-.5 1.8 1.2L52.8 69.6c-5.5 5.1-5.2 9.2.9 13.2Z" fill="url(#planeFold)" opacity=".08"/>
+  </g>
 </svg>
