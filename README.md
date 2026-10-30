@@ -39,7 +39,7 @@ AERO7 GRAM — независимый проект нативного Telegram-�
 | Windows 64-bit | **x64** | [Скачать Setup.exe](https://github.com/German-GPD/aero7-gram/releases/download/test-latest/AERO7-GRAM-x64-Setup.exe) |
 | Windows 32-bit | **x86** | [Скачать Setup.exe](https://github.com/German-GPD/aero7-gram/releases/download/test-latest/AERO7-GRAM-x86-Setup.exe) |
 
-Скачай установщик нужной архитектуры, запусти его и следуй мастеру. По умолчанию приложение устанавливается в `C:\\Program Files\\German\\G-Code-Team\\Aero7Gram` (x64). Для установки нужны права администратора.
+Скачай установщик нужной архитектуры, запусти его и следуй мастеру. По умолчанию приложение устанавливается в `C:\\Program Files\\German\\G-Code-Team\\Aero7Gram`. Для установки нужны права администратора.
 
 > **Ограничения тестовой сборки:** это только проверка интерфейса и оболочки. TDLib не включена, поэтому вход в Telegram и обмен сообщениями не работают. Сборка на Windows runner не доказывает совместимость с Windows 7 SP1 — это отдельный этап тестирования. Установщик создаёт ярлык в меню «Пуск» и предлагает ярлык на рабочем столе.
 
