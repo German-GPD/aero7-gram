@@ -1,91 +1,107 @@
-# Building AERO7 GRAM for Windows 7
+# Сборка AERO7 GRAM для Windows 7
 
-AERO7 GRAM targets **Windows 7 SP1 only**. The project is intended to provide separate x86 (32-bit) and x64 (64-bit) builds.
+AERO7 GRAM нацелен на **Windows 7 SP1**. Планируются отдельные сборки x86 (32-bit) и x64 (64-bit).
 
-## Current application state
+## Состояние исходного кода
 
-The repository contains a native Qt Widgets desktop interface with:
+В репозитории находится нативное приложение на Qt Widgets:
 
-- Custom Windows-style title bar, minimize/maximize/close controls and window resizing
-- DWM glass extension when Windows 7 Aero composition is available
-- Chats, Contacts, Calls and Settings navigation
-- A first-run connection screen and honest disconnected/empty states
-- Local persistence of the window geometry
+- окно с собственной Aero-рамкой, системными кнопками и изменением размера;
+- интеграция DWM glass при доступности Aero composition;
+- разделы чатов, контактов, звонков и настроек;
+- экран переписки: список диалогов, история сообщений и поле отправки текста;
+- запрос списка основных чатов, загрузка истории и отправка текстовых сообщений через TDLib;
+- начальная авторизация TDLib: телефон, код, пароль двухэтапной проверки, регистрация и подтверждение email;
+- сохранение геометрии окна и пользовательских настроек.
 
-The native UI now includes a TDLib authorization controller. It supports the phone-number, login-code, two-step password, account registration and email-verification states, and stores the TDLib database under the current Windows user profile. On Windows, the local database key is protected with DPAPI.
+Это начальная реализация, а не готовый Telegram-клиент. Контакты, медиа, поиск, уведомления, звонки и полноценная обработка ошибок ещё не завершены.
 
-**A working login still requires a separately built Windows 7-compatible TDLib library.** The repository does not bundle TDLib binaries. Chat loading and message sending are not implemented yet.
+**Исходный код на текущий момент не собран и не протестирован на Windows 7.** Готовых проверенных установщиков пока нет.
 
-## Supported build environment
+## Требования к окружению
 
-Use a Windows 7-compatible Qt 5.15 kit and matching MSVC compiler/runtime for the target architecture.
+Используйте Qt 5.15 и компилятор/рантайм, совместимые с Windows 7 SP1. Для каждой архитектуры нужны собственные зависимости:
 
-- Windows 7 SP1, fully updated
-- Visual Studio 2019 C++ build tools (v142) with a Windows 7-compatible toolset/runtime
-- Qt 5.15.x built for the same compiler and architecture
-- CMake 3.16 or newer
-- Git
+- Windows 7 SP1 с обновлениями;
+- Visual Studio 2019 C++ Build Tools (v142) и подходящий Windows SDK/toolset;
+- Qt 5.15.x Widgets и Qt SVG, собранные под соответствующий MSVC и архитектуру;
+- CMake 3.16 или новее;
+- Git.
 
-Qt 6 is not supported for this target. Do not mix compiler versions, Qt kits or x86/x64 dependencies.
+Qt 6 не поддерживается. Не смешивайте x86/x64 библиотеки, Qt kits и runtime.
 
-## Build x64
+## Сборка x64
 
-Open an x64 Native Tools Command Prompt for Visual Studio 2019:
+Откройте x64 Native Tools Command Prompt for VS 2019:
 
-    cmake -S . -B build-x64 -A x64 -DCMAKE_PREFIX_PATH="C:/Qt/5.15.x/msvc2019_64"
-    cmake --build build-x64 --config Release
+```bat
+cmake -S . -B build-x64 -A x64 -DCMAKE_PREFIX_PATH="C:/Qt/5.15.x/msvc2019_64"
+cmake --build build-x64 --config Release
+```
 
-## Build x86
+## Сборка x86
 
-Open an x86 Native Tools Command Prompt for Visual Studio 2019:
+Откройте x86 Native Tools Command Prompt for VS 2019:
 
-    cmake -S . -B build-x86 -A Win32 -DCMAKE_PREFIX_PATH="C:/Qt/5.15.x/msvc2019"
-    cmake --build build-x86 --config Release
+```bat
+cmake -S . -B build-x86 -A Win32 -DCMAKE_PREFIX_PATH="C:/Qt/5.15.x/msvc2019"
+cmake --build build-x86 --config Release
+```
 
-Replace the Qt paths with the actual locations of the matching Qt kits. Run each build from the matching compiler environment.
+Замените пути на фактические расположения Qt kits. Используйте командную строку компилятора той же архитектуры, что и целевая сборка.
 
-## Enable Telegram authorization
+## Подключение Telegram через TDLib
 
-Obtain your own Telegram API ID and API hash from https://my.telegram.org. The application asks for these the first time you connect and stores them in the current user's application settings. Do not commit them to the repository.
+Для авторизации нужен собственный API ID и API hash, полученные на https://my.telegram.org. Не публикуйте эти значения в Git, README, скриншотах или сообщениях. Приложение должно получать их локально через предусмотренный интерфейс настроек подключения.
 
-Build a TDLib JSON library that is compatible with Windows 7 SP1, the selected MSVC runtime and the target architecture. Install its header and import library under one prefix, with the matching `tdjson.dll` available beside the application executable.
+TDLib в репозиторий не включена. Нужна отдельно собранная TDLib JSON library, совместимая с Windows 7 SP1, используемым MSVC runtime и архитектурой приложения. Рядом с EXE должна находиться соответствующая `tdjson.dll` и все её runtime-зависимости.
 
-Configure x64:
+Для x64:
 
-    cmake -S . -B build-x64 -A x64 -DAERO7_ENABLE_TDLIB=ON -DTDJSON_ROOT="C:/deps/tdlib-x64" -DCMAKE_PREFIX_PATH="C:/Qt/5.15.x/msvc2019_64"
-    cmake --build build-x64 --config Release
+```bat
+cmake -S . -B build-x64 -A x64 -DAERO7_ENABLE_TDLIB=ON -DTDJSON_ROOT="C:/deps/tdlib-x64" -DCMAKE_PREFIX_PATH="C:/Qt/5.15.x/msvc2019_64"
+cmake --build build-x64 --config Release
+```
 
-Configure x86 using the x86 compiler prompt and x86 Qt/TDLib prefix:
+Для x86 (в x86 Native Tools Command Prompt):
 
-    cmake -S . -B build-x86 -A Win32 -DAERO7_ENABLE_TDLIB=ON -DTDJSON_ROOT="C:/deps/tdlib-x86" -DCMAKE_PREFIX_PATH="C:/Qt/5.15.x/msvc2019"
-    cmake --build build-x86 --config Release
+```bat
+cmake -S . -B build-x86 -A Win32 -DAERO7_ENABLE_TDLIB=ON -DTDJSON_ROOT="C:/deps/tdlib-x86" -DCMAKE_PREFIX_PATH="C:/Qt/5.15.x/msvc2019"
+cmake --build build-x86 --config Release
+```
 
-When TDLib is disabled (the default), the interface still builds but the Connect action explains that authorization support is not present in that binary. Do not distribute a build as login-capable unless it includes the matching TDLib runtime and has been tested on Windows 7.
+Если TDLib отключена (по умолчанию), оболочка может собраться без Telegram-подключения. Не называйте такую сборку рабочим Telegram-клиентом.
 
-## Testing on Windows 10/11 during development
+## Развёртывание Qt
 
-A Windows 11 machine is useful for an early smoke test: launching the executable, checking the Qt interface, window controls, settings persistence and (when the matching TDLib build is present) exercising Telegram authorization. The application is still targeted at Windows 7; a successful Windows 11 run does not prove Windows 7 compatibility.
+Для запуска на целевой машине разместите необходимые Qt DLL и плагины рядом с приложением или выполните корректное развёртывание через `windeployqt`, используя именно тот Qt kit, которым собрано приложение. Проверьте наличие платформенного плагина `platforms/qwindows.dll`, Qt SVG и всех runtime-зависимостей. Не копируйте DLL из другого Qt kit.
 
-The Windows compatibility-mode checkbox is not an emulator. It cannot replace missing Windows 7 APIs, DLLs, TLS behavior or compiler runtimes. You may try Windows 7 compatibility mode if an older dependency behaves differently, but test the actual target on a Windows 7 SP1 virtual machine or physical PC before release.
+Проверьте EXE и все DLL на архитектуру и минимальную версию Windows. Зависимость, собранная с требованием Windows 10+, может не запуститься на Windows 7 даже при успешной компиляции основного приложения.
 
-For a Windows 11 smoke test, build with the same Qt/MSVC target toolchain and all runtime DLLs beside the executable. Start without compatibility mode first. If the application fails, record the exact error and test with Qt's platform plugin and required DLLs deployed correctly. Do not use a Windows 11-only build as the Windows 7 release artifact.
+## Проверка на Windows 10/11
 
-## Aero glass and fallback
+Windows 10/11 можно использовать для предварительной проверки запуска, настроек, навигации и интерфейса. Это **не доказывает** совместимость с Windows 7. Режим совместимости не эмулирует Windows 7 и не добавляет отсутствующие системные API.
 
-When Windows 7 Desktop Window Manager composition is enabled, the application extends the native glass frame into its title area. If DWM composition is unavailable, the regular blue interface remains usable.
+Перед публикацией проверьте обе архитектуры на чистых установках Windows 7 SP1 (виртуальная машина или физический ПК), включая запуск, вход в Telegram, загрузку чатов и отправку сообщения.
 
-## Telegram integration plan
+## Aero Glass
 
-The messaging backend is TDLib through its JSON C interface. Authorization is implemented behind the optional AERO7_ENABLE_TDLIB build flag. The current repository does not include a prebuilt TDLib binary, and Windows 7 compatibility of a TDLib build must be independently verified for x86 and x64.
+Приложение использует DWM для расширения стеклянной области окна, когда композиция рабочего стола доступна. При отключённой композиции должно оставаться рабочее обычное оформление. Наличие красивого стеклянного интерфейса само по себе не подтверждает корректность работы на Windows 7.
 
-Phone numbers, login codes and two-step passwords are passed directly to TDLib and are not written to application settings. TDLib's local database is stored in the user's application-data directory. Its database encryption key is protected using Windows DPAPI for the current Windows user. API ID and API hash are stored in the user's application settings; never put these values in source control.
+## Приватность
 
-## Compatibility and release policy
+Локальная база TDLib хранится в каталоге данных приложения пользователя. На Windows ключ шифрования базы защищается DPAPI. Не сохраняйте телефонные коды и пароль двухэтапной проверки в настройках приложения. API ID и API hash являются пользовательскими секретами и не должны попадать в исходный код.
 
-- Target OS: Windows 7 SP1 only
-- Architectures: x86 and x64
-- No Windows 10/11-only APIs in the application core
-- Third-party runtime dependencies must be compatible with Windows 7 SP1
-- Test both architectures on clean Windows 7 SP1 virtual machines before publishing binaries
+## Перед публикацией релиза
 
-The current source has **not yet been compiled or runtime-tested on Windows 7**. A successful source update is not a release binary.
+- [ ] Собрать x64 с Windows 7-совместимыми Qt и TDLib.
+- [ ] Собрать x86 с отдельными x86-зависимостями.
+- [ ] Проверить все DLL и минимальную версию ОС.
+- [ ] Проверить запуск на чистой Windows 7 SP1 x64.
+- [ ] Проверить запуск на чистой Windows 7 SP1 x86.
+- [ ] Проверить авторизацию и отправку текстового сообщения.
+- [ ] Проверить отсутствие секретов в логах и пакетах.
+- [ ] Подготовить архивы с EXE, Qt runtime, TDLib runtime и инструкцией.
+- [ ] Опубликовать оба пакета в GitHub Releases с контрольными SHA-256.
+
+До прохождения этих проверок сборки не должны маркироваться как готовые или поддерживаемые.
