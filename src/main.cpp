@@ -18,6 +18,7 @@
 #include <QPixmap>
 #include <QIcon>
 #include <QSizePolicy>
+#include <QPoint>
 
 #ifdef Q_OS_WIN
 #  include <windows.h>
@@ -228,7 +229,7 @@ private:
     void applyFallbackStyle() {
         setStyleSheet(QStringLiteral(R"(
             QWidget { color: #173e59; font-family: "Segoe UI", Tahoma, sans-serif; font-size: 9pt; }
-            #surface { background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 rgba(222,246,255,246), stop:0.55 rgba(194,229,244,242), stop:1 rgba(207,244,226,245)); border: 1px solid rgba(255,255,255,245); }
+            #surface { background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 rgba(220,246,255,72), stop:0.55 rgba(174,222,244,58), stop:1 rgba(190,244,220,68)); border: 1px solid rgba(255,255,255,245); }
             #titleBar { background: qlineargradient(x1:0,y1:0,x2:0,y2:1, stop:0 rgba(255,255,255,220), stop:0.48 rgba(196,230,246,175), stop:1 rgba(132,193,224,120)); border-bottom: 1px solid rgba(255,255,255,220); }
             #appMark { color: white; font-size: 14pt; font-weight: bold; border: 1px solid white; background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 #8ce8dc, stop:1 #1688bd); }
             #windowTitle { font-weight: 600; color: #174f70; }
