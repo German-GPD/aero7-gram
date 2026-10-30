@@ -556,11 +556,38 @@ private:
         QVBoxLayout *textLayout = new QVBoxLayout;
         textLayout->setContentsMargins(0, 1, 0, 1);
         textLayout->setSpacing(4);
+
+        QHBoxLayout *topLine = new QHBoxLayout;
+        topLine->setSpacing(6);
         QLabel *name = makeLabel(title.isEmpty() ? "Telegram chat" : title, "chatName");
+        name->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        const int messageTimestamp = item->data(Qt::UserRole + 4).toInt();
+        const QDateTime messageDate = messageTimestamp > 0
+            ? QDateTime::fromTime_t(static_cast<uint>(messageTimestamp)) : QDateTime();
+        QLabel *time = makeLabel(QString(), "chatTime");
+        if (messageDate.isValid()) {
+            time->setText(messageDate.date() == QDate::currentDate()
+                ? messageDate.toString("hh:mm") : messageDate.toString("dd.MM"));
+        }
+        topLine->addWidget(name, 1);
+        topLine->addWidget(time, 0, Qt::AlignRight);
+        textLayout->addLayout(topLine);
+
+        QHBoxLayout *bottomLine = new QHBoxLayout;
+        bottomLine->setSpacing(6);
         QLabel *message = makeLabel(preview.isEmpty() ? " " : preview, "chatPreview");
         message->setMaximumHeight(18);
-        textLayout->addWidget(name);
-        textLayout->addWidget(message);
+        message->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        bottomLine->addWidget(message, 1);
+        const int unreadCount = item->data(Qt::UserRole + 3).toInt();
+        if (unreadCount > 0) {
+            QLabel *unread = makeLabel(unreadCount > 99 ? "99+" : QString::number(unreadCount), "unreadBadge");
+            unread->setAlignment(Qt::AlignCenter);
+            unread->setMinimumWidth(20);
+            unread->setFixedHeight(19);
+            bottomLine->addWidget(unread, 0, Qt::AlignRight);
+        }
+        textLayout->addLayout(bottomLine);
         layout->addWidget(avatar);
         layout->addLayout(textLayout, 1);
         item->setSizeHint(QSize(300, 66));
