@@ -361,70 +361,65 @@ private:
     {
         QFrame *sidebar = new QFrame;
         sidebar->setObjectName("sidebar");
-        sidebar->setFixedWidth(292);
-
+        sidebar->setFixedWidth(318);
         QVBoxLayout *layout = new QVBoxLayout(sidebar);
-        layout->setContentsMargins(13, 15, 13, 13);
-        layout->setSpacing(8);
+        layout->setContentsMargins(0, 0, 0, 0);
+        layout->setSpacing(0);
 
-        QHBoxLayout *brandRow = new QHBoxLayout;
-        QLabel *brandIcon = new QLabel(sidebar);
-        brandIcon->setPixmap(createTelegramAeroIcon().pixmap(38, 38));
-        brandIcon->setFixedSize(38, 38);
-        QVBoxLayout *brandText = new QVBoxLayout;
-        brandText->setSpacing(1);
-        m_brandLabel = makeLabel("AERO7 GRAM", "brand");
-        brandText->addWidget(m_brandLabel);
-        brandText->addWidget(makeLabel("TELEGRAM DESKTOP", "subtitle"));
-        brandRow->addWidget(brandIcon);
-        brandRow->addLayout(brandText, 1);
-        layout->addLayout(brandRow);
-        layout->addSpacing(9);
-
-        m_connectionState = makeLabel("●  Not connected", "connectionState");
-        layout->addWidget(m_connectionState);
+        QWidget *top = new QWidget(sidebar);
+        QVBoxLayout *topLayout = new QVBoxLayout(top);
+        topLayout->setContentsMargins(12, 12, 12, 10);
+        topLayout->setSpacing(9);
+        QHBoxLayout *toolbar = new QHBoxLayout;
+        QLabel *brand = makeLabel("Telegram", "brand");
+        toolbar->addWidget(brand);
+        toolbar->addStretch();
+        QPushButton *newMessage = new QPushButton("+");
+        newMessage->setObjectName("secondaryButton");
+        newMessage->setFixedSize(30, 28);
+        newMessage->setToolTip("New message");
+        toolbar->addWidget(newMessage);
+        topLayout->addLayout(toolbar);
 
         m_search = new QLineEdit(sidebar);
         m_search->setPlaceholderText("Search");
         m_search->setClearButtonEnabled(true);
         m_search->setObjectName("searchField");
-        layout->addWidget(m_search);
-        layout->addSpacing(4);
+        topLayout->addWidget(m_search);
+        layout->addWidget(top);
 
-        m_chatsNav = makeNavButton("▤", "All chats", sidebar);
-        m_contactsNav = makeNavButton("♙", "Contacts", sidebar);
-        m_callsNav = makeNavButton("☎", "Calls", sidebar);
-        m_settingsNav = makeNavButton("⚙", "Settings", sidebar);
-        layout->addWidget(m_chatsNav);
-        layout->addWidget(m_contactsNav);
-        layout->addWidget(m_callsNav);
-        layout->addWidget(m_settingsNav);
-        layout->addSpacing(9);
+        m_chatList = new QListWidget(sidebar);
+        m_chatList->setObjectName("chatList");
+        m_chatList->setSpacing(0);
+        m_chatList->setFrameShape(QFrame::NoFrame);
+        layout->addWidget(m_chatList, 1);
 
-        QFrame *line = new QFrame(sidebar);
-        line->setFrameShape(QFrame::HLine);
-        line->setObjectName("sidebarLine");
-        layout->addWidget(line);
-
-        QHBoxLayout *listHeader = new QHBoxLayout;
-        listHeader->addWidget(makeLabel("CONVERSATIONS", "sectionLabel"));
-        listHeader->addStretch();
-        QLabel *count = makeLabel("0", "countBadge");
-        listHeader->addWidget(count);
-        layout->addLayout(listHeader);
-
-        QLabel *empty = makeLabel("Your chats will appear here after you connect Telegram.", "sidebarEmpty");
-        empty->setWordWrap(true);
-        empty->setAlignment(Qt::AlignLeft | Qt::AlignTop);
-        layout->addWidget(empty);
-        layout->addStretch();
-
-        QPushButton *connectButton = new QPushButton("Connect Telegram");
-        connectButton->setObjectName("connectButton");
-        connectButton->setCursor(Qt::PointingHandCursor);
-        layout->addWidget(connectButton);
+        QWidget *bottom = new QWidget(sidebar);
+        QHBoxLayout *bottomLayout = new QHBoxLayout(bottom);
+        bottomLayout->setContentsMargins(12, 7, 12, 8);
+        m_connectionState = makeLabel("●  Not connected", "connectionState");
+        bottomLayout->addWidget(m_connectionState, 1);
+        QPushButton *connectButton = new QPushButton("Connect");
+        connectButton->setObjectName("secondaryButton");
+        bottomLayout->addWidget(connectButton);
+        layout->addWidget(bottom);
         connect(connectButton, &QPushButton::clicked, this, [this]() { showConnectionNotice(); });
 
+        connect(m_chatList, &QListWidget::currentItemChanged, this,
+            [this](QListWidgetItem *current, QListWidgetItem *) {
+                if (!current || !m_auth) return;
+                m_selectedChatId = current->data(Qt::UserRole).toLongLong();
+                if (m_messageList) m_messageList->clear();
+                m_auth->requestHistory(m_selectedChatId, 50);
+            });
+        connect(m_search, &QLineEdit::textChanged, this, [this](const QString &query) {
+            if (!m_chatList) return;
+            for (int i = 0; i < m_chatList->count(); ++i)
+                m_chatList->item(i)->setHidden(!m_chatList->item(i)->text().contains(query, Qt::CaseInsensitive));
+        });
+        connect(newMessage, &QPushButton::clicked, this, [this]() {
+            if (m_search) { m_search->clear(); m_search->setFocus(); }
+        });
         return sidebar;
     }
 
@@ -433,69 +428,50 @@ private:
         QWidget *page = new QWidget;
         page->setObjectName("contentPage");
         QVBoxLayout *layout = new QVBoxLayout(page);
-        layout->setContentsMargins(24, 20, 24, 18);
-        layout->setSpacing(10);
+        layout->setContentsMargins(0, 0, 0, 0);
+        layout->setSpacing(0);
 
-        QHBoxLayout *header = new QHBoxLayout;
-        QVBoxLayout *heading = new QVBoxLayout;
-        heading->setSpacing(2);
-        heading->addWidget(makeLabel("Messages", "pageTitle"));
-        heading->addWidget(makeLabel("Your Telegram conversations", "pageSubtitle"));
-        header->addLayout(heading);
-        header->addStretch();
-        QPushButton *refresh = new QPushButton("Refresh chats");
+        QWidget *header = new QWidget(page);
+        header->setObjectName("conversationHeader");
+        QHBoxLayout *headerLayout = new QHBoxLayout(header);
+        headerLayout->setContentsMargins(18, 10, 18, 10);
+        QVBoxLayout *titles = new QVBoxLayout;
+        titles->setSpacing(1);
+        titles->addWidget(makeLabel("Telegram", "conversationTitle"));
+        titles->addWidget(makeLabel("Select a chat to start messaging", "pageSubtitle"));
+        headerLayout->addLayout(titles);
+        headerLayout->addStretch();
+        QPushButton *refresh = new QPushButton("Refresh");
         refresh->setObjectName("secondaryButton");
-        header->addWidget(refresh);
-        layout->addLayout(header);
+        headerLayout->addWidget(refresh);
+        layout->addWidget(header);
 
-        QFrame *workspace = new QFrame(page);
-        workspace->setObjectName("welcomePanel");
-        QHBoxLayout *split = new QHBoxLayout(workspace);
-        split->setContentsMargins(8, 8, 8, 8);
-        split->setSpacing(8);
-
-        QWidget *chatPane = new QWidget(workspace);
-        chatPane->setMinimumWidth(190);
-        QVBoxLayout *chatLayout = new QVBoxLayout(chatPane);
-        chatLayout->setContentsMargins(0, 0, 0, 0);
-        chatLayout->addWidget(makeLabel("CHATS", "sectionLabel"));
-        m_chatList = new QListWidget(chatPane);
-        m_chatList->setObjectName("chatList");
-        m_chatList->setSpacing(1);
-        chatLayout->addWidget(m_chatList, 1);
-
-        QWidget *conversation = new QWidget(workspace);
-        QVBoxLayout *conversationLayout = new QVBoxLayout(conversation);
-        conversationLayout->setContentsMargins(0, 0, 0, 0);
-        conversationLayout->addWidget(makeLabel("CONVERSATION", "sectionLabel"));
-        m_messageList = new QListWidget(conversation);
+        m_messageList = new QListWidget(page);
         m_messageList->setObjectName("messageList");
-        conversationLayout->addWidget(m_messageList, 1);
-        QHBoxLayout *composer = new QHBoxLayout;
-        m_messageInput = new QLineEdit(conversation);
-        m_messageInput->setPlaceholderText("Write a message…");
+        m_messageList->setFrameShape(QFrame::NoFrame);
+        m_messageList->setSpacing(5);
+        m_messageList->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+        layout->addWidget(m_messageList, 1);
+
+        QWidget *composer = new QWidget(page);
+        QHBoxLayout *composerLayout = new QHBoxLayout(composer);
+        composerLayout->setContentsMargins(14, 9, 14, 12);
+        composerLayout->setSpacing(8);
+        m_messageInput = new QLineEdit(composer);
+        m_messageInput->setPlaceholderText("Message");
+        QPushButton *attach = new QPushButton("＋");
+        attach->setObjectName("secondaryButton");
+        attach->setToolTip("Attach file (not implemented yet)");
         QPushButton *send = new QPushButton("Send");
         send->setObjectName("primaryButton");
-        composer->addWidget(m_messageInput, 1);
-        composer->addWidget(send);
-        conversationLayout->addLayout(composer);
-
-        split->addWidget(chatPane, 1);
-        split->addWidget(conversation, 2);
-        layout->addWidget(workspace, 1);
-        QLabel *hint = makeLabel("Connect an account to load chats. Messages are sent through TDLib.", "footnote");
-        layout->addWidget(hint);
+        composerLayout->addWidget(attach);
+        composerLayout->addWidget(m_messageInput, 1);
+        composerLayout->addWidget(send);
+        layout->addWidget(composer);
 
         connect(refresh, &QPushButton::clicked, this, [this]() {
             if (m_auth) m_auth->requestChats(100);
         });
-        connect(m_chatList, &QListWidget::currentItemChanged, this,
-            [this](QListWidgetItem *current, QListWidgetItem *) {
-                if (!current || !m_auth) return;
-                m_selectedChatId = current->data(Qt::UserRole).toLongLong();
-                m_messageList->clear();
-                m_auth->requestHistory(m_selectedChatId, 50);
-            });
         const auto sendMessage = [this]() {
             if (!m_auth || !m_selectedChatId || !m_messageInput) return;
             const QString value = m_messageInput->text().trimmed();
