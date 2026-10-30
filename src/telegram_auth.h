@@ -21,10 +21,16 @@ public:
     bool isAvailable() const;
     void start();
     void logOut();
+    void requestChats(int limit = 100);
+    void requestHistory(qint64 chatId, int limit = 50);
+    void sendTextMessage(qint64 chatId, const QString &text);
 
     std::function<void(const QString &)> statusChanged;
     std::function<void(const QString &)> authorized;
     std::function<void(const QString &)> errorOccurred;
+    std::function<void(const QString &)> chatReceived;
+    std::function<void(const QString &)> messageReceived;
+    std::function<void()> chatsLoaded;
 
 private:
 #ifdef AERO7_WITH_TDLIB
