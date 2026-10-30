@@ -88,7 +88,9 @@ void TelegramAuth::requestChats(int limit)
     if (!m_client || !m_authorized) return;
     QJsonObject request;
     request["@type"] = "getChats";
-    request["chat_list"] = QJsonObject{{"@type", "chatListMain"}};
+    QJsonObject chatList;
+    chatList["@type"] = "chatListMain";
+    request["chat_list"] = chatList;
     request["limit"] = qBound(1, limit, 200);
     send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
 #endif
