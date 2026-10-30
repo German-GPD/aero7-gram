@@ -219,6 +219,7 @@ public:
             item->setData(Qt::UserRole + 2, preview);
             item->setText(title + "\n" + preview);
             item->setToolTip(title + (preview.isEmpty() ? QString() : "\n" + preview));
+            refreshChatItem(item);
         };
         m_auth->historyLoaded = [this]() {
             if (m_conversationSubtitle && m_selectedChatId)
@@ -411,6 +412,45 @@ private:
         return button;
     }
 
+    void refreshChatItem(QListWidgetItem *item)
+    {
+        if (!item || !m_chatList) return;
+        const QString title = item->data(Qt::UserRole + 1).toString();
+        const QString preview = item->data(Qt::UserRole + 2).toString();
+        const QString initials = title.trimmed().left(2).toUpper();
+        const uint hash = qHash(title);
+        const QColor tones[] = {
+            QColor("#547f9f"), QColor("#668b79"), QColor("#987b62"),
+            QColor("#737f9d"), QColor("#8b718d"), QColor("#668b91")
+        };
+        const QColor tone = tones[hash % (sizeof(tones) / sizeof(tones[0]))];
+
+        QWidget *row = new QWidget(m_chatList);
+        row->setObjectName("chatRow");
+        QHBoxLayout *layout = new QHBoxLayout(row);
+        layout->setContentsMargins(11, 8, 12, 8);
+        layout->setSpacing(10);
+
+        QLabel *avatar = new QLabel(initials.isEmpty() ? "?" : initials, row);
+        avatar->setObjectName("chatAvatar");
+        avatar->setAlignment(Qt::AlignCenter);
+        avatar->setFixedSize(44, 44);
+        avatar->setStyleSheet(QString("QLabel#chatAvatar { background: %1; color: white; border: 1px solid rgba(255,255,255,110); border-radius: 22px; font-size: 13px; font-weight: 600; }").arg(tone.name()));
+
+        QVBoxLayout *textLayout = new QVBoxLayout;
+        textLayout->setContentsMargins(0, 1, 0, 1);
+        textLayout->setSpacing(4);
+        QLabel *name = makeLabel(title.isEmpty() ? "Telegram chat" : title, "chatName");
+        QLabel *message = makeLabel(preview.isEmpty() ? " " : preview, "chatPreview");
+        message->setMaximumHeight(18);
+        textLayout->addWidget(name);
+        textLayout->addWidget(message);
+        layout->addWidget(avatar);
+        layout->addLayout(textLayout, 1);
+        item->setSizeHint(QSize(300, 66));
+        m_chatList->setItemWidget(item, row);
+    }
+
     QWidget *createSidebar()
     {
         QFrame *sidebar = new QFrame;
@@ -474,7 +514,7 @@ private:
             [this](QListWidgetItem *current, QListWidgetItem *) {
                 if (!current || !m_auth) return;
                 m_selectedChatId = current->data(Qt::UserRole).toLongLong();
-                const QString chatTitle = current->text().section('\n', 0, 0);
+                const QString chatTitle = current->data(Qt::UserRole + 1).toString();
                 if (m_conversationTitle) m_conversationTitle->setText(chatTitle);
                 if (m_conversationSubtitle) m_conversationSubtitle->setText("Loading recent messages…");
                 if (m_messageList) m_messageList->clear();
@@ -483,8 +523,13 @@ private:
             });
         connect(m_search, &QLineEdit::textChanged, this, [this](const QString &query) {
             if (!m_chatList) return;
-            for (int i = 0; i < m_chatList->count(); ++i)
-                m_chatList->item(i)->setHidden(!m_chatList->item(i)->text().contains(query, Qt::CaseInsensitive));
+            for (int i = 0; i < m_chatList->count(); ++i) {
+                QListWidgetItem *item = m_chatList->item(i);
+                const QString title = item->data(Qt::UserRole + 1).toString();
+                const QString preview = item->data(Qt::UserRole + 2).toString();
+                item->setHidden(!title.contains(query, Qt::CaseInsensitive)
+                    && !preview.contains(query, Qt::CaseInsensitive));
+            }
         });
         connect(newMessage, &QPushButton::clicked, this, [this]() {
             if (m_search) { m_search->clear(); m_search->setFocus(); }
