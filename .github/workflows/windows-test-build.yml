@@ -111,9 +111,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "TDLib build failed" }
           $lib = Get-ChildItem td-build -Filter tdjson.lib -Recurse | Select-Object -First 1
           $dll = Get-ChildItem td-build -Filter tdjson.dll -Recurse | Select-Object -First 1
-          if (!$lib -or !$dll) { throw "TDLib outputs were not found" }
+          $exportHeader = Get-ChildItem td-build -Filter tdjson_export.h -Recurse | Select-Object -First 1
+          if (!$lib -or !$dll -or !$exportHeader) { throw "TDLib outputs or generated export header were not found" }
           "TDJSON_LIBRARY=$($lib.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
           "TDJSON_DLL=$($dll.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "TDJSON_GENERATED_INCLUDE_DIR=$($exportHeader.Directory.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Configure application
         shell: pwsh
