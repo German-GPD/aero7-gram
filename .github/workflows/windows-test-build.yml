@@ -120,7 +120,7 @@ jobs:
       - name: Configure application
         shell: pwsh
         run: |
-          cmake -S . -B build -A ${{ matrix.cmake_arch }} -DCMAKE_BUILD_TYPE=Release -DAERO7_ENABLE_TDLIB=ON -DTDJSON_INCLUDE_DIR="$env:GITHUB_WORKSPACE\td" -DTDJSON_LIBRARY="$env:TDJSON_LIBRARY"
+          cmake -S . -B build -A ${{ matrix.cmake_arch }} -DCMAKE_BUILD_TYPE=Release -DAERO7_ENABLE_TDLIB=ON -DTDJSON_INCLUDE_DIR="$env:GITHUB_WORKSPACE\td" -DTDJSON_GENERATED_INCLUDE_DIR="$env:TDJSON_GENERATED_INCLUDE_DIR" -DTDJSON_LIBRARY="$env:TDJSON_LIBRARY"
 
       - name: Build
         run: cmake --build build --config Release --parallel
