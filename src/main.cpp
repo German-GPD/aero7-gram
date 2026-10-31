@@ -286,6 +286,11 @@ public:
                 else body = QString("[%1]").arg(contentType.isEmpty() ? "Message" : contentType);
             }
             const bool outgoing = message.value("is_outgoing").toBool();
+            // Clear the composer only after TDLib confirms that our outgoing
+            // message appeared in the selected chat. On send errors the draft
+            // remains available instead of being silently discarded.
+            if (outgoing && m_messageInput && m_messageInput->text().trimmed() == body)
+                m_messageInput->clear();
             const QDateTime sentAt = QDateTime::fromTime_t(static_cast<uint>(message.value("date").toInt()));
             if (m_messageList->count() == 1
                 && m_messageList->item(0)->data(Qt::UserRole).toString() == "empty-state")
@@ -760,8 +765,9 @@ private:
                 QMessageBox::warning(this, "Message too long", "Telegram text messages are limited to 4096 characters.");
                 return;
             }
+            // Keep the draft until TDLib reports updateNewMessage for the
+            // outgoing message. This also preserves text if Telegram rejects it.
             m_auth->sendTextMessage(m_selectedChatId, value);
-            m_messageInput->clear();
         };
         connect(m_sendButton, &QPushButton::clicked, this, sendMessage);
         connect(m_messageInput, &QLineEdit::returnPressed, this, sendMessage);
