@@ -6,6 +6,7 @@
 #include <QString>
 
 class QWidget;
+class QUrl;
 class QNetworkReply;
 class QProgressDialog;
 class QFile;
