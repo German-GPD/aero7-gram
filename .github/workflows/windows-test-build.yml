@@ -15,7 +15,7 @@ on:
       - "resources/**"
       - "tools/**"
       - "assets/telegram-aero.svg"
-      - ".github/workflows/windows-test-build.yml"
+      - "index.html"\n      - "styles.css"\n      - "app.js"\n      - ".github/workflows/windows-test-build.yml"
 
 permissions:
   contents: write
@@ -159,12 +159,16 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed with exit code $LASTEXITCODE" }
           $setup = "AERO7-GRAM-${{ matrix.label }}-Setup.exe"
           if (!(Test-Path $setup)) { throw "Installer not found: $setup" }
+          $hash = (Get-FileHash $setup -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $setup" | Set-Content "$setup.sha256" -Encoding ascii
 
-      - name: Upload installer
+      - name: Upload installer and checksum
         uses: actions/upload-artifact@v4
         with:
           name: AERO7-GRAM-${{ matrix.label }}-Setup
-          path: AERO7-GRAM-${{ matrix.label }}-Setup.exe
+          path: |
+            AERO7-GRAM-${{ matrix.label }}-Setup.exe
+            AERO7-GRAM-${{ matrix.label }}-Setup.exe.sha256
           if-no-files-found: error
           retention-days: 14
 
@@ -199,11 +203,11 @@ jobs:
           prerelease: true
           make_latest: false
           fail_on_unmatched_files: true
-          files: dist/*.exe
+          files: |\n            dist/*.exe\n            dist/*.sha256
           body: |
-            Автоматически собранные установщики AERO7 GRAM. Запусти Setup.exe и следуй мастеру установки.
+            Автоматически собранные установщики AERO7 GRAM для Windows x86 и x64. SHA-256 для каждого файла приложен отдельно.
             Version: ${{ env.AERO7_VERSION }}
 
             В пакет включена TDLib, собранная из официального исходного кода. Это тестовая сборка: проверьте вход и сетевые функции самостоятельно.
             Совместимость с Windows 7 SP1 не подтверждена; сборка выполняется на Windows Server 2022.
-            Установщики обновляются после каждого успешного запуска Windows test builds.
+            Сайт проекта автоматически показывает доступные архитектуры и ведёт на эти файлы. Установщики обновляются после каждого успешного запуска Windows test builds.
