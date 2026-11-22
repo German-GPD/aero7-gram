@@ -17,6 +17,10 @@
 #include <QDir>
 #include <QRegularExpression>
 
+namespace {
+const qint64 kMaximumUpdateSize = 256LL * 1024LL * 1024LL;
+}
+
 UpdateManager::UpdateManager(QWidget *owner)
     : QObject(owner), m_owner(owner)
 {
@@ -140,6 +144,8 @@ void UpdateManager::downloadInstaller(const QUrl &url, const QString &digest, co
     }
 
     m_expectedDigest = digest.mid(QStringLiteral("sha256:").size()).toLower();
+    m_downloadedBytes = 0;
+    m_downloadTooLarge = false;
 
     QNetworkRequest request(url);
     request.setRawHeader("User-Agent", "AERO7-GRAM-Updater");
@@ -169,8 +175,16 @@ void UpdateManager::downloadInstaller(const QUrl &url, const QString &digest, co
     connect(m_reply, &QIODevice::readyRead, this, [this]() {
         if (!m_reply || !m_downloadFile) return;
         const QByteArray chunk = m_reply->readAll();
-        if (m_downloadFile->write(chunk) != chunk.size())
+        if (m_downloadedBytes + chunk.size() > kMaximumUpdateSize) {
+            m_downloadTooLarge = true;
             m_reply->abort();
+            return;
+        }
+        if (m_downloadFile->write(chunk) != chunk.size()) {
+            m_reply->abort();
+            return;
+        }
+        m_downloadedBytes += chunk.size();
     });
     connect(m_reply, &QNetworkReply::finished, this, [this, version]() {
         m_timeout.stop();
@@ -181,8 +195,14 @@ void UpdateManager::downloadInstaller(const QUrl &url, const QString &digest, co
         if (!reply) return;
         const QNetworkReply::NetworkError networkError = reply->error();
         const QString errorText = reply->errorString();
-        if (m_downloadFile && reply->bytesAvailable() > 0)
-            m_downloadFile->write(reply->readAll());
+        if (m_downloadFile && reply->bytesAvailable() > 0) {
+            const QByteArray tail = reply->readAll();
+            if (m_downloadedBytes + tail.size() > kMaximumUpdateSize) {
+                m_downloadTooLarge = true;
+            } else if (m_downloadFile->write(tail) == tail.size()) {
+                m_downloadedBytes += tail.size();
+            }
+        }
         reply->deleteLater();
         if (m_progress) {
             m_progress->close();
@@ -197,8 +217,13 @@ void UpdateManager::downloadInstaller(const QUrl &url, const QString &digest, co
 
         if (networkError != QNetworkReply::NoError) {
             QFile::remove(m_downloadPath);
-            if (networkError == QNetworkReply::OperationCanceledError && !timedOut)
+            if (networkError == QNetworkReply::OperationCanceledError && !timedOut && !m_downloadTooLarge)
                 return;
+            if (m_downloadTooLarge) {
+                m_downloadTooLarge = false;
+                fail("The update package is larger than the 256 MB safety limit.");
+                return;
+            }
             fail(timedOut ? "The update download timed out. Please try again." :
                 QString("The update download failed: %1").arg(errorText));
             return;
@@ -246,7 +271,7 @@ void UpdateManager::finishDownload(const QString &version)
 
     const QStringList arguments = QStringList()
         << "/VERYSILENT" << "/SUPPRESSMSGBOXES" << "/NORESTART"
-        << "/CLOSEAPPLICATIONS" << "/RESTARTAPPLICATIONS";
+        << "/CLOSEAPPLICATIONS";
     if (!QProcess::startDetached(m_downloadPath, arguments)) {
         fail("Windows could not start the verified update installer.");
         return;
