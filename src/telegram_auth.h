@@ -23,14 +23,21 @@ public:
     void start();
     void logOut();
     void requestChats(int limit = 100);
+    void requestContacts();
+    void openPrivateChat(qint64 userId);
+    void searchChats(const QString &query, int limit = 50);
     void requestHistory(qint64 chatId, int limit = 50);
     void sendTextMessage(qint64 chatId, const QString &text);
+    void sendFile(qint64 chatId, const QString &filePath);
 
     std::function<void(const QString &)> statusChanged;
     std::function<void(const QString &)> authorized;
     std::function<void(const QString &)> errorOccurred;
     std::function<void(const QString &)> chatReceived;
+    std::function<void(const QString &)> contactReceived;
+    std::function<void(qint64, qint64)> privateChatCreated;
     std::function<void(const QString &)> messageReceived;
+    std::function<void(const QString &)> newMessageReceived;
     std::function<void()> chatsLoaded;
     std::function<void(qint64)> historyLoaded;
 

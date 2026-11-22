@@ -14,6 +14,9 @@
 #include <QUrl>
 #include <QDesktopServices>
 #include <QByteArray>
+#include <QFileInfo>
+#include <QMimeDatabase>
+#include <QImageReader>
 
 #ifdef AERO7_WITH_TDLIB
 #include <td/telegram/td_json_client.h>
@@ -105,6 +108,48 @@ void TelegramAuth::requestChats(int limit)
 #endif
 }
 
+void TelegramAuth::searchChats(const QString &query, int limit)
+{
+#ifdef AERO7_WITH_TDLIB
+    const QString clean = query.trimmed();
+    if (!m_client || !m_authorized || clean.size() < 2)
+        return;
+    QJsonObject request;
+    request["@type"] = "searchChatsOnServer";
+    request["query"] = clean;
+    request["limit"] = qBound(1, limit, 100);
+    send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
+#else
+    Q_UNUSED(query);
+    Q_UNUSED(limit);
+#endif
+}
+
+void TelegramAuth::requestContacts()
+{
+#ifdef AERO7_WITH_TDLIB
+    if (!m_client || !m_authorized) return;
+    QJsonObject request;
+    request["@type"] = "getContacts";
+    send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
+#endif
+}
+
+void TelegramAuth::openPrivateChat(qint64 userId)
+{
+#ifdef AERO7_WITH_TDLIB
+    if (!m_client || !m_authorized || userId == 0) return;
+    QJsonObject request;
+    request["@type"] = "createPrivateChat";
+    request["user_id"] = static_cast<double>(userId);
+    request["force"] = false;
+    request["@extra"] = QString::number(userId);
+    send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
+#else
+    Q_UNUSED(userId);
+#endif
+}
+
 void TelegramAuth::requestHistory(qint64 chatId, int limit)
 {
 #ifdef AERO7_WITH_TDLIB
@@ -129,17 +174,93 @@ void TelegramAuth::sendTextMessage(qint64 chatId, const QString &textValue)
     QJsonObject formattedText;
     formattedText["@type"] = "formattedText";
     formattedText["text"] = clean;
+    formattedText["entities"] = QJsonArray();
     QJsonObject inputContent;
     inputContent["@type"] = "inputMessageText";
     inputContent["text"] = formattedText;
+    inputContent["link_preview_options"] = QJsonValue::Null;
+    inputContent["clear_draft"] = true;
     QJsonObject request;
     request["@type"] = "sendMessage";
     request["chat_id"] = static_cast<double>(chatId);
+    request["message_thread_id"] = 0;
+    request["reply_to"] = QJsonValue::Null;
+    request["options"] = QJsonValue::Null;
+    request["reply_markup"] = QJsonValue::Null;
     request["input_message_content"] = inputContent;
     send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
 #else
     Q_UNUSED(chatId);
     Q_UNUSED(textValue);
+#endif
+}
+
+void TelegramAuth::sendFile(qint64 chatId, const QString &filePath)
+{
+#ifdef AERO7_WITH_TDLIB
+    if (!m_client || !m_authorized || chatId == 0 || filePath.trimmed().isEmpty())
+        return;
+    const QFileInfo fileInfo(filePath);
+    if (!fileInfo.exists() || !fileInfo.isFile() || !fileInfo.isReadable()) {
+        if (errorOccurred) errorOccurred("The selected file is unavailable or cannot be read.");
+        return;
+    }
+
+    QJsonObject localFile;
+    localFile["@type"] = "inputFileLocal";
+    localFile["path"] = fileInfo.absoluteFilePath();
+
+    QJsonObject caption;
+    caption["@type"] = "formattedText";
+    caption["text"] = "";
+    caption["entities"] = QJsonArray();
+
+    QMimeDatabase mimeDatabase;
+    const QString mimeType = mimeDatabase.mimeTypeForFile(fileInfo).name();
+    QImageReader imageReader(fileInfo.absoluteFilePath());
+    const QSize imageSize = imageReader.size();
+    const bool validPhotoSize = imageSize.isValid()
+        && imageSize.width() > 0 && imageSize.height() > 0
+        && imageSize.width() + imageSize.height() <= 10000
+        && qMax(imageSize.width(), imageSize.height())
+            <= 20 * qMin(imageSize.width(), imageSize.height());
+    const bool photo = (mimeType == "image/jpeg" || mimeType == "image/png"
+        || mimeType == "image/webp")
+        && fileInfo.size() <= 10LL * 1024LL * 1024LL
+        && validPhotoSize;
+
+    QJsonObject content;
+    if (photo) {
+        content["@type"] = "inputMessagePhoto";
+        content["photo"] = localFile;
+        content["thumbnail"] = QJsonValue::Null;
+        content["added_sticker_file_ids"] = QJsonArray();
+        content["width"] = 0;
+        content["height"] = 0;
+        content["caption"] = caption;
+        content["show_caption_above_media"] = false;
+        content["self_destruct_type"] = QJsonValue::Null;
+        content["has_spoiler"] = false;
+    } else {
+        content["@type"] = "inputMessageDocument";
+        content["document"] = localFile;
+        content["thumbnail"] = QJsonValue::Null;
+        content["caption"] = caption;
+        content["disable_content_type_detection"] = false;
+    }
+
+    QJsonObject request;
+    request["@type"] = "sendMessage";
+    request["chat_id"] = static_cast<double>(chatId);
+    request["message_thread_id"] = 0;
+    request["reply_to"] = QJsonValue::Null;
+    request["options"] = QJsonValue::Null;
+    request["reply_markup"] = QJsonValue::Null;
+    request["input_message_content"] = content;
+    send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
+#else
+    Q_UNUSED(chatId);
+    Q_UNUSED(filePath);
 #endif
 }
 
@@ -323,11 +444,30 @@ void TelegramAuth::handleUpdate(const QString &json)
         handleAuthorizationState(object.value("authorization_state").toObject());
     } else if (type == "error") {
         const QString message = object.value("message").toString("Unknown TDLib error");
+        if (object.value("@extra").toString() == "contact") {
+            if (statusChanged) statusChanged("Some contact details could not be loaded.");
+            return;
+        }
         if (errorOccurred) errorOccurred(message);
     } else if (type == "updateNewChat" || type == "updateChatLastMessage" || type == "updateChatTitle" || type == "updateChatReadInbox") {
         if (chatReceived) chatReceived(QString::fromUtf8(QJsonDocument(object).toJson(QJsonDocument::Compact)));
     } else if (type == "updateNewMessage") {
-        if (messageReceived) messageReceived(QString::fromUtf8(QJsonDocument(object.value("message").toObject()).toJson(QJsonDocument::Compact)));
+        const QString messageJson = QString::fromUtf8(
+            QJsonDocument(object.value("message").toObject()).toJson(QJsonDocument::Compact));
+        if (messageReceived) messageReceived(messageJson);
+        if (newMessageReceived) newMessageReceived(messageJson);
+    } else if (type == "users") {
+        const QJsonArray users = object.value("user_ids").toArray();
+        for (const QJsonValue &id : users) {
+            QJsonObject request;
+            request["@type"] = "getUser";
+            request["user_id"] = id;
+            request["@extra"] = "contact";
+            send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
+        }
+    } else if (type == "user") {
+        if (object.value("@extra").toString() == "contact" && contactReceived)
+            contactReceived(QString::fromUtf8(QJsonDocument(object).toJson(QJsonDocument::Compact)));
     } else if (type == "chats") {
         const QJsonArray chats = object.value("chat_ids").toArray();
         for (const QJsonValue &id : chats) {
@@ -337,6 +477,10 @@ void TelegramAuth::handleUpdate(const QString &json)
         if (chatsLoaded) chatsLoaded();
     } else if (type == "chat") {
         if (chatReceived) chatReceived(QString::fromUtf8(QJsonDocument(object).toJson(QJsonDocument::Compact)));
+        const qint64 userId = object.value("@extra").toString().toLongLong();
+        const qint64 chatId = static_cast<qint64>(object.value("id").toDouble());
+        if (userId && chatId && privateChatCreated)
+            privateChatCreated(userId, chatId);
     } else if (type == "messages") {
         const QJsonArray messages = object.value("messages").toArray();
         // TDLib returns history newest-first; emit oldest-first for a natural timeline.
@@ -364,6 +508,7 @@ void TelegramAuth::handleAuthorizationState(const QJsonObject &state)
         }
         QJsonObject parameters;
         parameters["@type"] = "setTdlibParameters";
+        parameters["use_test_dc"] = false;
         parameters["database_directory"] = m_databasePath;
         parameters["files_directory"] = m_filesPath;
         parameters["use_file_database"] = true;
@@ -375,8 +520,7 @@ void TelegramAuth::handleAuthorizationState(const QJsonObject &state)
         parameters["system_language_code"] = QLocale::system().name().left(2);
         parameters["device_model"] = "AERO7 GRAM";
         parameters["system_version"] = "Windows 7 SP1";
-        parameters["application_version"] = "0.2.0";
-        parameters["enable_storage_optimizer"] = true;
+        parameters["application_version"] = QString::fromLatin1(AERO7_VERSION);
         parameters["database_encryption_key"] = QString::fromLatin1(key.toBase64());
         send(QString::fromUtf8(QJsonDocument(parameters).toJson(QJsonDocument::Compact)));
         if (statusChanged) statusChanged("Preparing encrypted local Telegram storage…");
@@ -429,6 +573,7 @@ void TelegramAuth::askPhoneNumber()
     QJsonObject request;
     request["@type"] = "setAuthenticationPhoneNumber";
     request["phone_number"] = phone.trimmed();
+    request["settings"] = QJsonValue::Null;
     send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
     if (statusChanged) statusChanged("Requesting Telegram login code…");
 }
@@ -470,6 +615,7 @@ void TelegramAuth::askRegistration()
     request["@type"] = "registerUser";
     request["first_name"] = first.trimmed();
     request["last_name"] = last.trimmed();
+    request["disable_notification"] = false;
     send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
 }
 

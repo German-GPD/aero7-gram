@@ -1,0 +1,39 @@
+#pragma once
+
+#include <QObject>
+#include <QNetworkAccessManager>
+#include <QPointer>
+#include <QString>
+#include <QTimer>
+
+class QWidget;
+class QUrl;
+class QNetworkReply;
+class QProgressDialog;
+class QFile;
+
+class UpdateManager final : public QObject
+{
+public:
+    explicit UpdateManager(QWidget *owner);
+
+    void checkForUpdates(const QString &currentVersion, const QString &architecture);
+
+private:
+    QWidget *m_owner = nullptr;
+    QNetworkAccessManager m_network;
+    QTimer m_timeout;
+    bool m_requestTimedOut = false;
+    QPointer<QProgressDialog> m_progress;
+    QPointer<QNetworkReply> m_reply;
+    QFile *m_downloadFile = nullptr;
+    QString m_downloadPath;
+    QString m_expectedDigest;
+    qint64 m_downloadedBytes = 0;
+    bool m_downloadTooLarge = false;
+    bool m_downloadWriteFailed = false;
+
+    void downloadInstaller(const QUrl &url, const QString &digest, const QString &version);
+    void finishDownload(const QString &version);
+    void fail(const QString &message);
+};

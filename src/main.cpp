@@ -4,6 +4,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QToolButton>
+#include <QToolBar>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QGridLayout>
@@ -28,6 +29,13 @@
 #include <QSizePolicy>
 #include <QPoint>
 #include <QSettings>
+#include <QMenuBar>
+#include <QMenu>
+#include <QAction>
+#include <QKeySequence>
+#include <QDesktopServices>
+#include <QUrl>
+#include "update_manager.h"
 #include <QMessageBox>
 #include <QCloseEvent>
 #include <QResizeEvent>
@@ -37,6 +45,8 @@
 #include <QDate>
 #include <QSet>
 #include <QFileInfo>
+#include <QFileDialog>
+#include <QSystemTrayIcon>
 #include <QDir>
 #include <QJsonArray>
 #include <QJsonObject>
@@ -52,7 +62,10 @@
 namespace {
 const char *kAppName = "AERO7 GRAM";
 const char *kOrganization = "German-GPD";
-const char *kVersion = "0.2.0";
+#ifndef AERO7_VERSION
+#define AERO7_VERSION "0.3.0"
+#endif
+const char *kVersion = AERO7_VERSION;
 
 QIcon createTelegramAeroIcon()
 {
@@ -164,7 +177,9 @@ public:
 
         buildInterface();
         applyStyle();
+        setupTrayIcon();
         restorePreferences();
+        m_updater = new UpdateManager(this);
 
         m_auth = new TelegramAuth(this);
         if (!m_auth->isAvailable()) {
@@ -204,6 +219,7 @@ public:
             if (m_connectionState) m_connectionState->setText("●  Telegram account connected");
             if (m_messageInput) { m_messageInput->setEnabled(true); m_messageInput->setPlaceholderText("Message"); }
             if (m_sendButton) m_sendButton->setEnabled(true);
+            if (m_attachButton) m_attachButton->setEnabled(m_selectedChatId != 0);
         };
         m_auth->chatReceived = [this](const QString &json) {
             const QJsonObject object = QJsonDocument::fromJson(json.toUtf8()).object();
@@ -255,6 +271,56 @@ public:
             item->setToolTip(title + (preview.isEmpty() ? QString() : "\n" + preview));
             refreshChatItem(item);
         };
+        m_auth->contactReceived = [this](const QString &json) {
+            if (!m_contactsList) return;
+            const QJsonObject user = QJsonDocument::fromJson(json.toUtf8()).object();
+            const qint64 userId = static_cast<qint64>(user.value("id").toDouble());
+            if (!userId) return;
+            QListWidgetItem *item = nullptr;
+            for (int i = 0; i < m_contactsList->count(); ++i) {
+                if (m_contactsList->item(i)->data(Qt::UserRole).toLongLong() == userId) {
+                    item = m_contactsList->item(i);
+                    break;
+                }
+            }
+            if (!item) item = new QListWidgetItem(m_contactsList);
+            const QString first = user.value("first_name").toString();
+            const QString last = user.value("last_name").toString();
+            QString username = user.value("usernames").toObject()
+                .value("active_usernames").toArray().value(0).toString();
+            if (username.isEmpty()) username = user.value("username").toString();
+            const QString fullName = (first + " " + last).trimmed();
+            item->setData(Qt::UserRole, QVariant::fromValue<qlonglong>(userId));
+            item->setData(Qt::UserRole + 1, fullName);
+            item->setData(Qt::UserRole + 2, username);
+            item->setText((fullName.isEmpty() ? "Telegram user" : fullName)
+                + (username.isEmpty() ? QString() : QString("\n@") + username));
+            m_contactsList->sortItems(Qt::AscendingOrder);
+        };
+        m_auth->privateChatCreated = [this](qint64 userId, qint64 chatId) {
+            Q_UNUSED(userId);
+            if (!m_chatList || !m_pages) return;
+            for (int i = 0; i < m_chatList->count(); ++i) {
+                QListWidgetItem *item = m_chatList->item(i);
+                if (item->data(Qt::UserRole).toLongLong() == chatId) {
+                    setPage(0);
+                    m_chatList->setCurrentItem(item);
+                    return;
+                }
+            }
+            if (m_auth) m_auth->requestChats(100);
+            QTimer::singleShot(300, this, [this, chatId]() {
+                if (!m_chatList) return;
+                for (int i = 0; i < m_chatList->count(); ++i) {
+                    QListWidgetItem *item = m_chatList->item(i);
+                    if (item->data(Qt::UserRole).toLongLong() == chatId) {
+                        setPage(0);
+                        m_chatList->setCurrentItem(item);
+                        return;
+                    }
+                }
+            });
+        };
         m_auth->historyLoaded = [this](qint64 loadedChatId) {
             if (loadedChatId != m_selectedChatId) return;
             if (m_conversationSubtitle && m_selectedChatId)
@@ -262,6 +328,24 @@ public:
             if (m_messageList && m_messageList->count() == 1
                 && m_messageList->item(0)->data(Qt::UserRole).toString() == "empty-state")
                 showMessagePlaceholder("No messages here yet");
+        };
+        m_auth->newMessageReceived = [this](const QString &json) {
+            if (!m_trayIcon || !m_trayIcon->isVisible() || isActiveWindow()) return;
+            const QJsonObject message = QJsonDocument::fromJson(json.toUtf8()).object();
+            if (message.value("is_outgoing").toBool()) return;
+            const qint64 chatId = static_cast<qint64>(message.value("chat_id").toDouble());
+            QString chatTitle = "Telegram";
+            if (m_chatList) {
+                for (int i = 0; i < m_chatList->count(); ++i) {
+                    QListWidgetItem *item = m_chatList->item(i);
+                    if (item->data(Qt::UserRole).toLongLong() == chatId) {
+                        chatTitle = item->data(Qt::UserRole + 1).toString();
+                        break;
+                    }
+                }
+            }
+            m_trayIcon->showMessage(chatTitle, "New Telegram message",
+                QSystemTrayIcon::Information, 4500);
         };
         m_auth->messageReceived = [this](const QString &json) {
             if (!m_messageList) return;
@@ -273,9 +357,15 @@ public:
             const QJsonObject content = message.value("content").toObject();
             const QString contentType = content.value("@type").toString();
             QString body = content.value("text").toObject().value("text").toString();
+            if (body.isEmpty())
+                body = content.value("caption").toObject().value("text").toString();
             if (body.isEmpty()) {
                 if (contentType == "messagePhoto") body = "[Photo]";
-                else if (contentType == "messageDocument") body = "[File]";
+                else if (contentType == "messageDocument") {
+                    const QString fileName = content.value("document").toObject()
+                        .value("file_name").toString();
+                    body = fileName.isEmpty() ? "[File]" : QString("[File] %1").arg(fileName);
+                }
                 else if (contentType == "messageVideo") body = "[Video]";
                 else if (contentType == "messageAudio" || contentType == "messageVoiceNote") body = "[Audio]";
                 else if (contentType == "messageSticker") body = "[Sticker]";
@@ -369,10 +459,14 @@ private:
     QComboBox *m_themeChoice = nullptr;
     QColor m_customAccent;
     TelegramAuth *m_auth = nullptr;
+    UpdateManager *m_updater = nullptr;
     QListWidget *m_chatList = nullptr;
+    QListWidget *m_contactsList = nullptr;
     QListWidget *m_messageList = nullptr;
     QLineEdit *m_messageInput = nullptr;
     QPushButton *m_sendButton = nullptr;
+    QPushButton *m_attachButton = nullptr;
+    QSystemTrayIcon *m_trayIcon = nullptr;
     qint64 m_selectedChatId = 0;
     QSet<qint64> m_seenMessageIds;
     QDate m_lastMessageDate;
@@ -382,6 +476,57 @@ private:
         m_surface = new QWidget(this);
         m_surface->setObjectName("surface");
         setCentralWidget(m_surface);
+        setMenuBar(createApplicationMenuBar());
+
+        QToolBar *commandBar = addToolBar("Main");
+        commandBar->setObjectName("commandBar");
+        commandBar->setMovable(false);
+        commandBar->setFloatable(false);
+        commandBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        commandBar->setIconSize(QSize(16, 16));
+
+        QAction *newChatAction = commandBar->addAction(style()->standardIcon(QStyle::SP_FileDialogNewFolder), "New chat");
+        commandBar->addSeparator();
+        QAction *chatsAction = commandBar->addAction(style()->standardIcon(QStyle::SP_FileDialogDetailedView), "Chats");
+        QAction *contactsAction = commandBar->addAction(style()->standardIcon(QStyle::SP_DirIcon), "Contacts");
+        QAction *callsAction = commandBar->addAction(style()->standardIcon(QStyle::SP_MediaPlay), "Calls");
+        commandBar->addSeparator();
+        QAction *refreshAction = commandBar->addAction(style()->standardIcon(QStyle::SP_BrowserReload), "Refresh");
+        QAction *settingsAction = commandBar->addAction(style()->standardIcon(QStyle::SP_FileDialogContentsView), "Settings");
+        commandBar->addSeparator();
+        QAction *updatesAction = commandBar->addAction(style()->standardIcon(QStyle::SP_MessageBoxInformation), "Updates");
+        QAction *focusSearchAction = new QAction(this);
+        focusSearchAction->setShortcut(QKeySequence("Ctrl+F"));
+        addAction(focusSearchAction);
+        connect(focusSearchAction, &QAction::triggered, this, [this]() {
+            if (m_pages && m_pages->currentIndex() == 1) {
+                QWidget *search = m_pages->currentWidget()->findChild<QLineEdit *>("searchField");
+                if (search) search->setFocus();
+            } else if (m_search) {
+                m_search->setFocus();
+                m_search->selectAll();
+            }
+        });
+
+        connect(newChatAction, &QAction::triggered, this, [this]() {
+            setPage(0);
+            if (m_search) { m_search->clear(); m_search->setFocus(); }
+        });
+        connect(chatsAction, &QAction::triggered, this, [this]() { setPage(0); });
+        connect(contactsAction, &QAction::triggered, this, [this]() { setPage(1); });
+        connect(callsAction, &QAction::triggered, this, [this]() { setPage(2); });
+        connect(refreshAction, &QAction::triggered, this, [this]() {
+            if (m_auth && m_auth->isAuthorized()) {
+                if (m_pages && m_pages->currentIndex() == 1) m_auth->requestContacts();
+                else m_auth->requestChats(100);
+            }
+        });
+        connect(settingsAction, &QAction::triggered, this, [this]() { setPage(3); });
+        connect(updatesAction, &QAction::triggered, this, [this]() {
+            if (!m_updater) return;
+            const QString architecture = sizeof(void *) == 8 ? "x64" : "x86";
+            m_updater->checkForUpdates(QString::fromLatin1(kVersion), architecture);
+        });
 
         QVBoxLayout *root = new QVBoxLayout(m_surface);
         root->setContentsMargins(1, 1, 1, 1);
@@ -405,6 +550,62 @@ private:
         connectNavigation();
     }
 
+    QMenuBar *createApplicationMenuBar()
+    {
+        QMenuBar *bar = new QMenuBar(this);
+        bar->setNativeMenuBar(false);
+        bar->setObjectName("applicationMenuBar");
+
+        QMenu *fileMenu = bar->addMenu("&File");
+        QAction *newMessage = fileMenu->addAction("New message");
+        QAction *settings = fileMenu->addAction("Settings");
+        fileMenu->addSeparator();
+        QAction *exit = fileMenu->addAction("Exit");
+        newMessage->setShortcut(QKeySequence("Ctrl+N"));
+        connect(newMessage, &QAction::triggered, this, [this]() {
+            setPage(0);
+            if (m_search) { m_search->clear(); m_search->setFocus(); }
+        });
+        settings->setShortcut(QKeySequence("Ctrl+,"));
+        connect(settings, &QAction::triggered, this, [this]() { setPage(3); });
+        connect(exit, &QAction::triggered, this, &QWidget::close);
+
+        QMenu *viewMenu = bar->addMenu("&View");
+        const QStringList pageNames = QStringList() << "Chats" << "Contacts" << "Calls" << "Settings";
+        for (int i = 0; i < pageNames.size(); ++i) {
+            QAction *action = viewMenu->addAction(pageNames.at(i));
+            action->setShortcut(QKeySequence(QString("Ctrl+%1").arg(i + 1)));
+            connect(action, &QAction::triggered, this, [this, i]() { setPage(i); });
+        }
+        viewMenu->addSeparator();
+        QAction *refresh = viewMenu->addAction("Refresh chats");
+        refresh->setShortcut(QKeySequence("F5"));
+        connect(refresh, &QAction::triggered, this, [this]() {
+            if (m_auth && m_auth->isAuthorized()) {
+                if (m_pages && m_pages->currentIndex() == 1) m_auth->requestContacts();
+                else m_auth->requestChats(100);
+            }
+        });
+
+        QMenu *toolsMenu = bar->addMenu("&Tools");
+        QAction *checkUpdates = toolsMenu->addAction("Check for updates…");
+        checkUpdates->setShortcut(QKeySequence("Ctrl+U"));
+        connect(checkUpdates, &QAction::triggered, this, [this]() {
+            if (!m_updater) return;
+            const QString architecture = sizeof(void *) == 8 ? "x64" : "x86";
+            m_updater->checkForUpdates(QString::fromLatin1(kVersion), architecture);
+        });
+
+        QMenu *helpMenu = bar->addMenu("&Help");
+        QAction *about = helpMenu->addAction("About AERO7 GRAM");
+        QAction *project = helpMenu->addAction("Project website");
+        connect(about, &QAction::triggered, this, [this]() { showAbout(); });
+        connect(project, &QAction::triggered, this, []() {
+            QDesktopServices::openUrl(QUrl(QStringLiteral("https://github.com/German-GPD/aero7-gram")));
+        });
+        return bar;
+    }
+
     QWidget *createTitleBar()
     {
         DragTitleBar *bar = new DragTitleBar(this);
@@ -423,7 +624,7 @@ private:
         m_windowTitleLabel = makeLabel(QString::fromLatin1(kAppName), "windowTitle");
         QLabel *title = m_windowTitleLabel;
         title->setAttribute(Qt::WA_TransparentForMouseEvents, true);
-        QLabel *version = makeLabel("PREVIEW 0.2", "versionTag");
+        QLabel *version = makeLabel(QString("PREVIEW %1").arg(QString::fromLatin1(kVersion)), "versionTag");
         version->setAttribute(Qt::WA_TransparentForMouseEvents, true);
 
         QWidget *stretch = new QWidget(bar);
@@ -636,9 +837,7 @@ private:
         settingsButton->setToolTip("Settings");
         toolbar->addWidget(settingsButton);
         topLayout->addLayout(toolbar);
-        connect(settingsButton, &QPushButton::clicked, this, [this]() {
-            if (m_pages) m_pages->setCurrentIndex(3);
-        });
+        connect(settingsButton, &QPushButton::clicked, this, [this]() { setPage(3); });
 
         m_search = new QLineEdit(sidebar);
         m_search->setPlaceholderText("Search");
@@ -671,6 +870,7 @@ private:
             [this](QListWidgetItem *current, QListWidgetItem *) {
                 if (!current || !m_auth) return;
                 m_selectedChatId = current->data(Qt::UserRole).toLongLong();
+                if (m_attachButton) m_attachButton->setEnabled(m_auth->isAuthorized() && m_selectedChatId != 0);
                 const QString chatTitle = current->data(Qt::UserRole + 1).toString();
                 if (m_conversationTitle) m_conversationTitle->setText(chatTitle);
                 if (m_conversationSubtitle) m_conversationSubtitle->setText("Loading recent messages…");
@@ -690,6 +890,14 @@ private:
                 const QString preview = item->data(Qt::UserRole + 2).toString();
                 item->setHidden(!title.contains(query, Qt::CaseInsensitive)
                     && !preview.contains(query, Qt::CaseInsensitive));
+            }
+            const QString remoteQuery = query.trimmed();
+            if (remoteQuery.size() >= 2) {
+                QTimer::singleShot(350, this, [this, remoteQuery]() {
+                    if (m_search && m_search->text().trimmed() == remoteQuery
+                        && m_auth && m_auth->isAuthorized())
+                        m_auth->searchChats(remoteQuery, 50);
+                });
             }
         });
         connect(newMessage, &QPushButton::clicked, this, [this]() {
@@ -737,21 +945,30 @@ private:
         composerLayout->setSpacing(8);
         m_messageInput = new QLineEdit(composer);
         m_messageInput->setPlaceholderText("Message");
-        QPushButton *attach = new QPushButton("＋");
-        attach->setObjectName("secondaryButton");
-        attach->setToolTip("File attachments are not available in this preview build");
-        attach->setEnabled(false);
+        m_attachButton = new QPushButton("＋");
+        m_attachButton->setObjectName("secondaryButton");
+        m_attachButton->setToolTip("Attach a photo or file (Ctrl+O)");
+        m_attachButton->setShortcut(QKeySequence("Ctrl+O"));
+        m_attachButton->setEnabled(false);
         m_sendButton = new QPushButton("Send");
         m_sendButton->setObjectName("primaryButton");
         m_sendButton->setEnabled(false);
         m_sendButton->setToolTip("Connect your Telegram account first.");
-        composerLayout->addWidget(attach);
+        composerLayout->addWidget(m_attachButton);
         composerLayout->addWidget(m_messageInput, 1);
         composerLayout->addWidget(m_sendButton);
         layout->addWidget(composer);
 
         connect(refresh, &QPushButton::clicked, this, [this]() {
             if (m_auth) m_auth->requestChats(100);
+        });
+        connect(m_attachButton, &QPushButton::clicked, this, [this]() {
+            if (!m_auth || !m_auth->isAuthorized() || !m_selectedChatId) {
+                showConnectionNotice();
+                return;
+            }
+            const QString path = QFileDialog::getOpenFileName(this, "Attach to Telegram chat");
+            if (!path.isEmpty()) m_auth->sendFile(m_selectedChatId, path);
         });
         const auto sendMessage = [this]() {
             if (!m_auth || !m_selectedChatId || !m_messageInput) return;
@@ -776,8 +993,58 @@ private:
 
     QWidget *createContactsPage()
     {
-        return createEmptyPage("Contacts", "Your contacts will appear here after Telegram is connected.",
-                               "Contacts are not loaded in this preview build.");
+        QWidget *page = new QWidget;
+        page->setObjectName("contentPage");
+        QVBoxLayout *layout = new QVBoxLayout(page);
+        layout->setContentsMargins(20, 18, 20, 18);
+        layout->setSpacing(10);
+        QHBoxLayout *header = new QHBoxLayout;
+        QVBoxLayout *titles = new QVBoxLayout;
+        titles->setSpacing(2);
+        titles->addWidget(makeLabel("Contacts", "pageTitle"));
+        titles->addWidget(makeLabel("Your Telegram contacts", "pageSubtitle"));
+        header->addLayout(titles, 1);
+        QPushButton *refresh = new QPushButton("Refresh");
+        refresh->setObjectName("secondaryButton");
+        header->addWidget(refresh);
+        layout->addLayout(header);
+        QLineEdit *contactSearch = new QLineEdit(page);
+        contactSearch->setObjectName("searchField");
+        contactSearch->setPlaceholderText("Find a contact");
+        contactSearch->setClearButtonEnabled(true);
+        layout->addWidget(contactSearch);
+        m_contactsList = new QListWidget(page);
+        m_contactsList->setObjectName("contactsList");
+        m_contactsList->setFrameShape(QFrame::NoFrame);
+        m_contactsList->setSpacing(2);
+        m_contactsList->setSortingEnabled(true);
+        m_contactsList->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+        layout->addWidget(m_contactsList, 1);
+        connect(contactSearch, &QLineEdit::textChanged, this, [this](const QString &query) {
+            if (!m_contactsList) return;
+            for (int i = 0; i < m_contactsList->count(); ++i) {
+                QListWidgetItem *item = m_contactsList->item(i);
+                const QString name = item->data(Qt::UserRole + 1).toString();
+                const QString username = item->data(Qt::UserRole + 2).toString();
+                item->setHidden(!name.contains(query, Qt::CaseInsensitive)
+                    && !username.contains(query, Qt::CaseInsensitive));
+            }
+        });
+        layout->addWidget(makeLabel("Double-click a contact to open a conversation", "pageSubtitle"));
+        connect(refresh, &QPushButton::clicked, this, [this]() {
+            if (m_auth && m_auth->isAuthorized()) m_auth->requestContacts();
+            else showConnectionNotice();
+        });
+        connect(m_contactsList, &QListWidget::itemActivated, this,
+            [this](QListWidgetItem *item) {
+                if (!item || !m_auth || !m_auth->isAuthorized()) {
+                    showConnectionNotice();
+                    return;
+                }
+                const qint64 userId = item->data(Qt::UserRole).toLongLong();
+                if (userId) m_auth->openPrivateChat(userId);
+            });
+        return page;
     }
 
     QWidget *createCallsPage()
@@ -929,19 +1196,51 @@ private:
         return bar;
     }
 
+    void setupTrayIcon()
+    {
+        if (!QSystemTrayIcon::isSystemTrayAvailable())
+            return;
+        m_trayIcon = new QSystemTrayIcon(windowIcon(), this);
+        m_trayIcon->setToolTip("AERO7 GRAM — Telegram");
+        QMenu *trayMenu = new QMenu(this);
+        QAction *openAction = trayMenu->addAction("Open AERO7 GRAM");
+        QAction *exitAction = trayMenu->addAction("Exit");
+        connect(openAction, &QAction::triggered, this, [this]() {
+            showNormal();
+            raise();
+            activateWindow();
+        });
+        connect(exitAction, &QAction::triggered, qApp, &QApplication::quit);
+        connect(m_trayIcon, &QSystemTrayIcon::activated, this,
+            [this](QSystemTrayIcon::ActivationReason reason) {
+                if (reason == QSystemTrayIcon::Trigger
+                    || reason == QSystemTrayIcon::DoubleClick) {
+                    showNormal();
+                    raise();
+                    activateWindow();
+                }
+            });
+        m_trayIcon->setContextMenu(trayMenu);
+        m_trayIcon->show();
+    }
+
     void connectNavigation()
     {
-        // The primary screen is now the Telegram-style two-pane chat view.
-        // Secondary pages will be exposed through the native application menu.
+        if (!m_pages) return;
+        connect(m_pages, &QStackedWidget::currentChanged, this, [this](int index) {
+            if (index == 1 && m_auth && m_auth->isAuthorized())
+                m_auth->requestContacts();
+        });
     }
 
     void setPage(int index)
     {
+        if (!m_pages || index < 0 || index >= m_pages->count()) return;
         m_pages->setCurrentIndex(index);
-        m_chatsNav->setChecked(index == 0);
-        m_contactsNav->setChecked(index == 1);
-        m_callsNav->setChecked(index == 2);
-        m_settingsNav->setChecked(index == 3);
+        if (m_chatsNav) m_chatsNav->setChecked(index == 0);
+        if (m_contactsNav) m_contactsNav->setChecked(index == 1);
+        if (m_callsNav) m_callsNav->setChecked(index == 2);
+        if (m_settingsNav) m_settingsNav->setChecked(index == 3);
     }
 
     void showConnectionNotice()
@@ -1011,10 +1310,10 @@ private:
                 border-right: 1px solid #b8c2c7;
             }
             #brand { color: #243d4d; font-size: 15pt; font-weight: 600; letter-spacing: -0.3px; }
-            #chatList { background: rgba(245,247,248,245); border: none; outline: none; }
-            #chatList::item { border: 1px solid transparent; padding: 0; }
-            #chatList::item:hover { background: rgba(255,255,255,165); border-color: #d5dde0; }
-            #chatList::item:selected {
+            #chatList, #contactsList { background: rgba(245,247,248,245); border: none; outline: none; }
+            #chatList::item, #contactsList::item { border: 1px solid transparent; padding: 5px 8px; }
+            #chatList::item:hover, #contactsList::item:hover { background: rgba(255,255,255,165); border-color: #d5dde0; }
+            #chatList::item:selected, #contactsList::item:selected {
                 background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
                     stop:0 rgba(225,237,244,245), stop:1 rgba(202,220,231,245));
                 border: 1px solid #a8bdc9;
@@ -1112,7 +1411,8 @@ private:
             QListWidget::item { padding: 10px 9px; border-bottom: 1px solid rgba(190,201,207,150); }
             QListWidget#chatList { background: #f7f9fa; border: 0; padding: 3px; }
             QListWidget#chatList::item { min-height: 58px; }
-            QListWidget#chatList::item:selected { color: #26343b; background: qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #edf5f8,stop:1 #d4e2e8); border: 1px solid #9db3be; }
+            QListWidget#contactsList::item { min-height: 42px; }
+            QListWidget#chatList::item:selected, QListWidget#contactsList::item:selected { color: #26343b; background: qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #edf5f8,stop:1 #d4e2e8); border: 1px solid #9db3be; }
             QListWidget#messageList { background: #e9eef1; border: 0; padding: 12px; }
             QListWidget#messageList::item { padding: 0; margin: 2px 0; border: 0; background: transparent; }
             QListWidget#messageList::item:selected { background: #e6f0f3; color: #26343b; }
@@ -1127,6 +1427,43 @@ private:
                 border-top: 1px solid #c6cfd3;
             }
             #statusText { color: #77848a; font-size: 7pt; }
+            QToolBar#commandBar {
+                spacing: 3px; padding: 4px 7px;
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+                    stop:0 #f9fbfc, stop:1 #e3e9eb);
+                border-top: 1px solid #ffffff;
+                border-bottom: 1px solid #b8c5cb;
+            }
+            QToolBar#commandBar QToolButton {
+                color: #26343b; padding: 5px 9px; border: 1px solid transparent;
+                background: transparent; spacing: 5px;
+            }
+            QToolBar#commandBar QToolButton:hover {
+                border: 1px solid #a9c0cd;
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+                    stop:0 #ffffff, stop:1 #d9e8ef);
+            }
+            QToolBar#commandBar QToolButton:pressed {
+                border: 1px solid #8ea9b7; background: #cbdde6;
+            }
+            QMenuBar#applicationMenuBar {
+                color: #26343b; background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+                    stop:0 #fbfcfc, stop:1 #e4e9eb);
+                border-bottom: 1px solid #c4cdd1; padding: 2px 5px;
+            }
+            QMenuBar#applicationMenuBar::item {
+                padding: 4px 10px; background: transparent; border: 1px solid transparent;
+            }
+            QMenuBar#applicationMenuBar::item:selected {
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1, stop:0 #ffffff, stop:1 #dce8ee);
+                border: 1px solid #9eb4c0;
+            }
+            QMenu {
+                color: #26343b; background: #f4f7f8; border: 1px solid #9eafb8;
+                padding: 3px;
+            }
+            QMenu::item { padding: 6px 28px 6px 24px; }
+            QMenu::item:selected { background: #d9e9f1; border: 1px solid #a8c0ce; }
             QMessageBox { background: #f0f3f4; }
         )"));
     }
