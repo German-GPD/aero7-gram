@@ -28,6 +28,7 @@ public:
     void searchChats(const QString &query, int limit = 50);
     void requestHistory(qint64 chatId, int limit = 50);
     void sendTextMessage(qint64 chatId, const QString &text);
+    void sendFile(qint64 chatId, const QString &filePath);
 
     std::function<void(const QString &)> statusChanged;
     std::function<void(const QString &)> authorized;
