@@ -138,6 +138,14 @@ jobs:
           $runtime = "vcpkg/installed/${{ matrix.vcpkg_triplet }}/bin"
           Get-ChildItem $runtime -Filter "*.dll" | Copy-Item -Destination "build/Release" -Force
 
+      - name: Read application version
+        shell: pwsh
+        run: |
+          $match = Select-String -Path CMakeLists.txt -Pattern '^project\(AERO7GRAM VERSION ([0-9]+\.[0-9]+\.[0-9]+)'
+          if (!$match) { throw "Could not read AERO7GRAM version from CMakeLists.txt" }
+          $version = $match.Matches[0].Groups[1].Value
+          "AERO7_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+
       - name: Install Inno Setup
         shell: pwsh
         run: choco install innosetup --no-progress -y
@@ -147,7 +155,7 @@ jobs:
         run: |
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (!(Test-Path $iscc)) { throw "Inno Setup compiler not found: $iscc" }
-          & $iscc /DAppArch=${{ matrix.label }} /O. installer/AERO7-GRAM.iss
+          & $iscc /DAppArch=${{ matrix.label }} /DAppVersion=$env:AERO7_VERSION /O. installer/AERO7-GRAM.iss
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed with exit code $LASTEXITCODE" }
           $setup = "AERO7-GRAM-${{ matrix.label }}-Setup.exe"
           if (!(Test-Path $setup)) { throw "Installer not found: $setup" }
@@ -166,6 +174,16 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read application version
+        shell: bash
+        run: |
+          VERSION=$(sed -nE 's/^project\(AERO7GRAM VERSION ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' CMakeLists.txt)
+          test -n "$VERSION"
+          echo "AERO7_VERSION=$VERSION" >> "$GITHUB_ENV"
+
       - name: Download x86 and x64 packages
         uses: actions/download-artifact@v4
         with:
@@ -184,7 +202,7 @@ jobs:
           files: dist/*.exe
           body: |
             Автоматически собранные установщики AERO7 GRAM. Запусти Setup.exe и следуй мастеру установки.
-            Version: 0.3.0
+            Version: ${{ env.AERO7_VERSION }}
 
             В пакет включена TDLib, собранная из официального исходного кода. Это тестовая сборка: проверьте вход и сетевые функции самостоятельно.
             Совместимость с Windows 7 SP1 не подтверждена; сборка выполняется на Windows Server 2022.
