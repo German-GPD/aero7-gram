@@ -28,6 +28,12 @@
 #include <QSizePolicy>
 #include <QPoint>
 #include <QSettings>
+#include <QMenuBar>
+#include <QMenu>
+#include <QAction>
+#include <QDesktopServices>
+#include <QUrl>
+#include "update_manager.h"
 #include <QMessageBox>
 #include <QCloseEvent>
 #include <QResizeEvent>
@@ -52,7 +58,7 @@
 namespace {
 const char *kAppName = "AERO7 GRAM";
 const char *kOrganization = "German-GPD";
-const char *kVersion = "0.2.0";
+const char *kVersion = "0.3.0";
 
 QIcon createTelegramAeroIcon()
 {
@@ -165,6 +171,7 @@ public:
         buildInterface();
         applyStyle();
         restorePreferences();
+        m_updater = new UpdateManager(this);
 
         m_auth = new TelegramAuth(this);
         if (!m_auth->isAvailable()) {
@@ -369,6 +376,7 @@ private:
     QComboBox *m_themeChoice = nullptr;
     QColor m_customAccent;
     TelegramAuth *m_auth = nullptr;
+    UpdateManager *m_updater = nullptr;
     QListWidget *m_chatList = nullptr;
     QListWidget *m_messageList = nullptr;
     QLineEdit *m_messageInput = nullptr;
@@ -382,6 +390,7 @@ private:
         m_surface = new QWidget(this);
         m_surface->setObjectName("surface");
         setCentralWidget(m_surface);
+        setMenuBar(createApplicationMenuBar());
 
         QVBoxLayout *root = new QVBoxLayout(m_surface);
         root->setContentsMargins(1, 1, 1, 1);
@@ -403,6 +412,58 @@ private:
         root->addWidget(body, 1);
         root->addWidget(createStatusBar());
         connectNavigation();
+    }
+
+    QMenuBar *createApplicationMenuBar()
+    {
+        QMenuBar *bar = new QMenuBar(this);
+        bar->setNativeMenuBar(false);
+        bar->setObjectName("applicationMenuBar");
+
+        QMenu *fileMenu = bar->addMenu("&File");
+        QAction *newMessage = fileMenu->addAction("New message");
+        QAction *settings = fileMenu->addAction("Settings");
+        fileMenu->addSeparator();
+        QAction *exit = fileMenu->addAction("Exit");
+        connect(newMessage, &QAction::triggered, this, [this]() {
+            if (m_pages) m_pages->setCurrentIndex(0);
+            if (m_search) { m_search->clear(); m_search->setFocus(); }
+        });
+        connect(settings, &QAction::triggered, this, [this]() {
+            if (m_pages) m_pages->setCurrentIndex(3);
+        });
+        connect(exit, &QAction::triggered, this, &QWidget::close);
+
+        QMenu *viewMenu = bar->addMenu("&View");
+        const QStringList pageNames = QStringList() << "Chats" << "Contacts" << "Calls" << "Settings";
+        for (int i = 0; i < pageNames.size(); ++i) {
+            QAction *action = viewMenu->addAction(pageNames.at(i));
+            connect(action, &QAction::triggered, this, [this, i]() {
+                if (m_pages) m_pages->setCurrentIndex(i);
+            });
+        }
+        viewMenu->addSeparator();
+        QAction *refresh = viewMenu->addAction("Refresh chats");
+        connect(refresh, &QAction::triggered, this, [this]() {
+            if (m_auth && m_auth->isAuthorized()) m_auth->requestChats(100);
+        });
+
+        QMenu *toolsMenu = bar->addMenu("&Tools");
+        QAction *checkUpdates = toolsMenu->addAction("Check for updates…");
+        connect(checkUpdates, &QAction::triggered, this, [this]() {
+            if (!m_updater) return;
+            const QString architecture = sizeof(void *) == 8 ? "x64" : "x86";
+            m_updater->checkForUpdates(QString::fromLatin1(kVersion), architecture);
+        });
+
+        QMenu *helpMenu = bar->addMenu("&Help");
+        QAction *about = helpMenu->addAction("About AERO7 GRAM");
+        QAction *project = helpMenu->addAction("Project website");
+        connect(about, &QAction::triggered, this, [this]() { showAbout(); });
+        connect(project, &QAction::triggered, this, []() {
+            QDesktopServices::openUrl(QUrl(QStringLiteral("https://github.com/German-GPD/aero7-gram")));
+        });
+        return bar;
     }
 
     QWidget *createTitleBar()
@@ -1127,6 +1188,24 @@ private:
                 border-top: 1px solid #c6cfd3;
             }
             #statusText { color: #77848a; font-size: 7pt; }
+            QMenuBar#applicationMenuBar {
+                color: #26343b; background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+                    stop:0 #fbfcfc, stop:1 #e4e9eb);
+                border-bottom: 1px solid #c4cdd1; padding: 2px 5px;
+            }
+            QMenuBar#applicationMenuBar::item {
+                padding: 4px 10px; background: transparent; border: 1px solid transparent;
+            }
+            QMenuBar#applicationMenuBar::item:selected {
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1, stop:0 #ffffff, stop:1 #dce8ee);
+                border: 1px solid #9eb4c0;
+            }
+            QMenu {
+                color: #26343b; background: #f4f7f8; border: 1px solid #9eafb8;
+                padding: 3px;
+            }
+            QMenu::item { padding: 6px 28px 6px 24px; }
+            QMenu::item:selected { background: #d9e9f1; border: 1px solid #a8c0ce; }
             QMessageBox { background: #f0f3f4; }
         )"));
     }
