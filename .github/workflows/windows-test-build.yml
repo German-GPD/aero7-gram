@@ -15,7 +15,10 @@ on:
       - "resources/**"
       - "tools/**"
       - "assets/telegram-aero.svg"
-      - "index.html"\n      - "styles.css"\n      - "app.js"\n      - ".github/workflows/windows-test-build.yml"
+      - "index.html"
+      - "styles.css"
+      - "app.js"
+      - ".github/workflows/windows-test-build.yml"
 
 permissions:
   contents: write
@@ -203,7 +206,9 @@ jobs:
           prerelease: true
           make_latest: false
           fail_on_unmatched_files: true
-          files: |\n            dist/*.exe\n            dist/*.sha256
+          files: |
+            dist/*.exe
+            dist/*.sha256
           body: |
             Автоматически собранные установщики AERO7 GRAM для Windows x86 и x64. SHA-256 для каждого файла приложен отдельно.
             Version: ${{ env.AERO7_VERSION }}
