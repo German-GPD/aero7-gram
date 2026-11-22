@@ -4,6 +4,7 @@
 #include <QNetworkAccessManager>
 #include <QPointer>
 #include <QString>
+#include <QTimer>
 
 class QWidget;
 class QUrl;
@@ -21,6 +22,8 @@ public:
 private:
     QWidget *m_owner = nullptr;
     QNetworkAccessManager m_network;
+    QTimer m_timeout;
+    bool m_requestTimedOut = false;
     QPointer<QProgressDialog> m_progress;
     QPointer<QNetworkReply> m_reply;
     QFile *m_downloadFile = nullptr;
