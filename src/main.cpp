@@ -4,6 +4,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QToolButton>
+#include <QToolBar>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QGridLayout>
@@ -391,6 +392,41 @@ private:
         m_surface->setObjectName("surface");
         setCentralWidget(m_surface);
         setMenuBar(createApplicationMenuBar());
+
+        QToolBar *commandBar = addToolBar("Main");
+        commandBar->setObjectName("commandBar");
+        commandBar->setMovable(false);
+        commandBar->setFloatable(false);
+        commandBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        commandBar->setIconSize(QSize(16, 16));
+
+        QAction *newChatAction = commandBar->addAction(style()->standardIcon(QStyle::SP_FileDialogNewFolder), "New chat");
+        commandBar->addSeparator();
+        QAction *chatsAction = commandBar->addAction(style()->standardIcon(QStyle::SP_FileDialogDetailedView), "Chats");
+        QAction *contactsAction = commandBar->addAction(style()->standardIcon(QStyle::SP_DirIcon), "Contacts");
+        QAction *callsAction = commandBar->addAction(style()->standardIcon(QStyle::SP_MediaPlay), "Calls");
+        commandBar->addSeparator();
+        QAction *refreshAction = commandBar->addAction(style()->standardIcon(QStyle::SP_BrowserReload), "Refresh");
+        QAction *settingsAction = commandBar->addAction(style()->standardIcon(QStyle::SP_FileDialogContentsView), "Settings");
+        commandBar->addSeparator();
+        QAction *updatesAction = commandBar->addAction(style()->standardIcon(QStyle::SP_MessageBoxInformation), "Updates");
+
+        connect(newChatAction, &QAction::triggered, this, [this]() {
+            if (m_pages) m_pages->setCurrentIndex(0);
+            if (m_search) { m_search->clear(); m_search->setFocus(); }
+        });
+        connect(chatsAction, &QAction::triggered, this, [this]() { if (m_pages) m_pages->setCurrentIndex(0); });
+        connect(contactsAction, &QAction::triggered, this, [this]() { if (m_pages) m_pages->setCurrentIndex(1); });
+        connect(callsAction, &QAction::triggered, this, [this]() { if (m_pages) m_pages->setCurrentIndex(2); });
+        connect(refreshAction, &QAction::triggered, this, [this]() {
+            if (m_auth && m_auth->isAuthorized()) m_auth->requestChats(100);
+        });
+        connect(settingsAction, &QAction::triggered, this, [this]() { if (m_pages) m_pages->setCurrentIndex(3); });
+        connect(updatesAction, &QAction::triggered, this, [this]() {
+            if (!m_updater) return;
+            const QString architecture = sizeof(void *) == 8 ? "x64" : "x86";
+            m_updater->checkForUpdates(QString::fromLatin1(kVersion), architecture);
+        });
 
         QVBoxLayout *root = new QVBoxLayout(m_surface);
         root->setContentsMargins(1, 1, 1, 1);
@@ -1188,6 +1224,25 @@ private:
                 border-top: 1px solid #c6cfd3;
             }
             #statusText { color: #77848a; font-size: 7pt; }
+            QToolBar#commandBar {
+                spacing: 3px; padding: 4px 7px;
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+                    stop:0 #f9fbfc, stop:1 #e3e9eb);
+                border-top: 1px solid #ffffff;
+                border-bottom: 1px solid #b8c5cb;
+            }
+            QToolBar#commandBar QToolButton {
+                color: #26343b; padding: 5px 9px; border: 1px solid transparent;
+                background: transparent; spacing: 5px;
+            }
+            QToolBar#commandBar QToolButton:hover {
+                border: 1px solid #a9c0cd;
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+                    stop:0 #ffffff, stop:1 #d9e8ef);
+            }
+            QToolBar#commandBar QToolButton:pressed {
+                border: 1px solid #8ea9b7; background: #cbdde6;
+            }
             QMenuBar#applicationMenuBar {
                 color: #26343b; background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
                     stop:0 #fbfcfc, stop:1 #e4e9eb);
