@@ -31,6 +31,7 @@ private:
     QString m_expectedDigest;
     qint64 m_downloadedBytes = 0;
     bool m_downloadTooLarge = false;
+    bool m_downloadWriteFailed = false;
 
     void downloadInstaller(const QUrl &url, const QString &digest, const QString &version);
     void finishDownload(const QString &version);
