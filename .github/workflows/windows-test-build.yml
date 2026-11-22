@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
     paths:
       - "CMakeLists.txt"
       - "src/**"
@@ -159,6 +161,7 @@ jobs:
           retention-days: 14
 
   publish-test-release:
+    if: github.event_name != 'pull_request'
     name: Publish downloadable Setup installers
     needs: build
     runs-on: ubuntu-latest
