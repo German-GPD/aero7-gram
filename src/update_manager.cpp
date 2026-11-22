@@ -215,15 +215,16 @@ void UpdateManager::downloadInstaller(const QUrl &url, const QString &digest, co
             m_downloadFile = nullptr;
         }
 
+        if (m_downloadTooLarge) {
+            m_downloadTooLarge = false;
+            QFile::remove(m_downloadPath);
+            fail("The update package is larger than the 256 MB safety limit.");
+            return;
+        }
         if (networkError != QNetworkReply::NoError) {
             QFile::remove(m_downloadPath);
-            if (networkError == QNetworkReply::OperationCanceledError && !timedOut && !m_downloadTooLarge)
+            if (networkError == QNetworkReply::OperationCanceledError && !timedOut)
                 return;
-            if (m_downloadTooLarge) {
-                m_downloadTooLarge = false;
-                fail("The update package is larger than the 256 MB safety limit.");
-                return;
-            }
             fail(timedOut ? "The update download timed out. Please try again." :
                 QString("The update download failed: %1").arg(errorText));
             return;
