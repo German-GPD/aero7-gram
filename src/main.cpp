@@ -292,6 +292,7 @@ public:
             item->setData(Qt::UserRole + 2, username);
             item->setText((fullName.isEmpty() ? "Telegram user" : fullName)
                 + (username.isEmpty() ? QString() : QString("\n@") + username));
+            m_contactsList->sortItems(Qt::AscendingOrder);
         };
         m_auth->privateChatCreated = [this](qint64 userId, qint64 chatId) {
             Q_UNUSED(userId);
@@ -845,6 +846,7 @@ private:
             [this](QListWidgetItem *current, QListWidgetItem *) {
                 if (!current || !m_auth) return;
                 m_selectedChatId = current->data(Qt::UserRole).toLongLong();
+                if (m_attachButton) m_attachButton->setEnabled(m_auth->isAuthorized() && m_selectedChatId != 0);
                 const QString chatTitle = current->data(Qt::UserRole + 1).toString();
                 if (m_conversationTitle) m_conversationTitle->setText(chatTitle);
                 if (m_conversationSubtitle) m_conversationSubtitle->setText("Loading recent messages…");
@@ -921,7 +923,8 @@ private:
         m_messageInput->setPlaceholderText("Message");
         m_attachButton = new QPushButton("＋");
         m_attachButton->setObjectName("secondaryButton");
-        m_attachButton->setToolTip("Attach a photo or file");
+        m_attachButton->setToolTip("Attach a photo or file (Ctrl+O)");
+        m_attachButton->setShortcut(QKeySequence("Ctrl+O"));
         m_attachButton->setEnabled(false);
         m_sendButton = new QPushButton("Send");
         m_sendButton->setObjectName("primaryButton");
