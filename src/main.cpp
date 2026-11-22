@@ -523,31 +523,35 @@ private:
         QAction *settings = fileMenu->addAction("Settings");
         fileMenu->addSeparator();
         QAction *exit = fileMenu->addAction("Exit");
+        newMessage->setShortcut(QKeySequence("Ctrl+N"));
         connect(newMessage, &QAction::triggered, this, [this]() {
-            if (m_pages) m_pages->setCurrentIndex(0);
+            setPage(0);
             if (m_search) { m_search->clear(); m_search->setFocus(); }
         });
-        connect(settings, &QAction::triggered, this, [this]() {
-            if (m_pages) m_pages->setCurrentIndex(3);
-        });
+        settings->setShortcut(QKeySequence("Ctrl+,"));
+        connect(settings, &QAction::triggered, this, [this]() { setPage(3); });
         connect(exit, &QAction::triggered, this, &QWidget::close);
 
         QMenu *viewMenu = bar->addMenu("&View");
         const QStringList pageNames = QStringList() << "Chats" << "Contacts" << "Calls" << "Settings";
         for (int i = 0; i < pageNames.size(); ++i) {
             QAction *action = viewMenu->addAction(pageNames.at(i));
-            connect(action, &QAction::triggered, this, [this, i]() {
-                if (m_pages) m_pages->setCurrentIndex(i);
-            });
+            action->setShortcut(QKeySequence(QString("Ctrl+%1").arg(i + 1)));
+            connect(action, &QAction::triggered, this, [this, i]() { setPage(i); });
         }
         viewMenu->addSeparator();
         QAction *refresh = viewMenu->addAction("Refresh chats");
+        refresh->setShortcut(QKeySequence("F5"));
         connect(refresh, &QAction::triggered, this, [this]() {
-            if (m_auth && m_auth->isAuthorized()) m_auth->requestChats(100);
+            if (m_auth && m_auth->isAuthorized()) {
+                if (m_pages && m_pages->currentIndex() == 1) m_auth->requestContacts();
+                else m_auth->requestChats(100);
+            }
         });
 
         QMenu *toolsMenu = bar->addMenu("&Tools");
         QAction *checkUpdates = toolsMenu->addAction("Check for updates…");
+        checkUpdates->setShortcut(QKeySequence("Ctrl+U"));
         connect(checkUpdates, &QAction::triggered, this, [this]() {
             if (!m_updater) return;
             const QString architecture = sizeof(void *) == 8 ? "x64" : "x86";
@@ -1214,10 +1218,10 @@ private:
                 border-right: 1px solid #b8c2c7;
             }
             #brand { color: #243d4d; font-size: 15pt; font-weight: 600; letter-spacing: -0.3px; }
-            #chatList { background: rgba(245,247,248,245); border: none; outline: none; }
-            #chatList::item { border: 1px solid transparent; padding: 0; }
-            #chatList::item:hover { background: rgba(255,255,255,165); border-color: #d5dde0; }
-            #chatList::item:selected {
+            #chatList, #contactsList { background: rgba(245,247,248,245); border: none; outline: none; }
+            #chatList::item, #contactsList::item { border: 1px solid transparent; padding: 5px 8px; }
+            #chatList::item:hover, #contactsList::item:hover { background: rgba(255,255,255,165); border-color: #d5dde0; }
+            #chatList::item:selected, #contactsList::item:selected {
                 background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
                     stop:0 rgba(225,237,244,245), stop:1 rgba(202,220,231,245));
                 border: 1px solid #a8bdc9;
@@ -1315,7 +1319,8 @@ private:
             QListWidget::item { padding: 10px 9px; border-bottom: 1px solid rgba(190,201,207,150); }
             QListWidget#chatList { background: #f7f9fa; border: 0; padding: 3px; }
             QListWidget#chatList::item { min-height: 58px; }
-            QListWidget#chatList::item:selected { color: #26343b; background: qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #edf5f8,stop:1 #d4e2e8); border: 1px solid #9db3be; }
+            QListWidget#contactsList::item { min-height: 42px; }
+            QListWidget#chatList::item:selected, QListWidget#contactsList::item:selected { color: #26343b; background: qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #edf5f8,stop:1 #d4e2e8); border: 1px solid #9db3be; }
             QListWidget#messageList { background: #e9eef1; border: 0; padding: 12px; }
             QListWidget#messageList::item { padding: 0; margin: 2px 0; border: 0; background: transparent; }
             QListWidget#messageList::item:selected { background: #e6f0f3; color: #26343b; }
