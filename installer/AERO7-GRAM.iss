@@ -1,5 +1,8 @@
 #define MyAppName "AERO7 GRAM"
-#define MyAppVersion "0.3.0"
+#ifndef AppVersion
+  #define AppVersion "0.3.0"
+#endif
+#define MyAppVersion AppVersion
 #define MyAppPublisher "German'$ G-Code Team"
 #define MyAppURL "https://german-gpd.github.io/aero7-gram/"
 #define MyAppExeName "AERO7 GRAM.exe"
@@ -46,4 +49,4 @@ Name: "{autoprograms}\AERO7 GRAM"; Filename: "{app}\{#MyAppExeName}"; WorkingDir
 Name: "{autodesktop}\AERO7 GRAM"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Запустить AERO7 GRAM"; Flags: postinstall nowait skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "Запустить AERO7 GRAM"; Flags: nowait runasoriginaluser
