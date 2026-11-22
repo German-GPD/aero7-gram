@@ -444,6 +444,10 @@ void TelegramAuth::handleUpdate(const QString &json)
         handleAuthorizationState(object.value("authorization_state").toObject());
     } else if (type == "error") {
         const QString message = object.value("message").toString("Unknown TDLib error");
+        if (object.value("@extra").toString() == "contact") {
+            if (statusChanged) statusChanged("Some contact details could not be loaded.");
+            return;
+        }
         if (errorOccurred) errorOccurred(message);
     } else if (type == "updateNewChat" || type == "updateChatLastMessage" || type == "updateChatTitle" || type == "updateChatReadInbox") {
         if (chatReceived) chatReceived(QString::fromUtf8(QJsonDocument(object).toJson(QJsonDocument::Compact)));
