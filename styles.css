@@ -37,3 +37,12 @@
 .download-test-button{display:flex;align-items:center;justify-content:center;gap:12px;max-width:1092px;margin:18px auto 0;padding:15px 20px;border:1px solid rgba(183,224,238,.42);background:linear-gradient(180deg,#477f99,#28566f);box-shadow:inset 0 1px rgba(255,255,255,.24),0 8px 24px rgba(18,57,76,.18);color:#fff;font-size:11px;letter-spacing:.02em;transition:filter .2s,transform .2s}
 .download-test-button:hover{filter:brightness(1.1);transform:translateY(-1px)}
 .download-test-button span{font-size:16px;color:#bce8f3}
+
+.release-status{max-width:1092px;margin:0 auto 8px;display:flex;align-items:center;gap:10px;color:#d8e8ee;font-size:11px}
+.release-status .status-dot{width:7px;height:7px;border-radius:50%;background:#c7a86a;box-shadow:0 0 0 4px #c7a86a22}
+.release-status[data-state="ready"] .status-dot{background:#77c59a;box-shadow:0 0 0 4px #77c59a22}
+.release-meta{max-width:1092px;margin:0 auto 20px;color:#8eabb9;font-size:8px;letter-spacing:.16em}
+.download-options>a.is-unavailable{opacity:.58}
+.download-options>a.is-unavailable .arrow{color:#d2b77e}
+.release-checksums{max-width:1092px;margin:14px auto 0;display:flex;gap:10px;flex-wrap:wrap;color:#9db6c2;font-size:9px}
+.release-checksums a{color:#b5dfec;text-decoration:underline;text-underline-offset:3px}
