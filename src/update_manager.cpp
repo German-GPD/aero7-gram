@@ -16,6 +16,7 @@
 #include <QUrl>
 #include <QVersionNumber>
 #include <QDir>
+#include <QRegularExpression>
 
 UpdateManager::UpdateManager(QWidget *owner)
     : QObject(owner), m_owner(owner)
@@ -89,7 +90,7 @@ void UpdateManager::checkForUpdates(const QString &currentVersion, const QString
             const QUrl downloadUrl(asset.value("browser_download_url").toString());
             const QString digest = asset.value("digest").toString();
             if (downloadUrl.scheme() != "https" || downloadUrl.host() != "github.com"
-                || !digest.startsWith("sha256:")) {
+                || !QRegularExpression(QStringLiteral("^sha256:[0-9a-fA-F]{64}$")).match(digest).hasMatch()) {
                 fail("The update package is missing a trusted HTTPS URL or SHA-256 digest.");
                 return;
             }
@@ -179,7 +180,7 @@ void UpdateManager::downloadInstaller(const QUrl &url, const QString &digest, co
         }
 
         if (networkError != QNetworkReply::NoError) {
-            if (m_downloadFile) QFile::remove(m_downloadPath);
+            QFile::remove(m_downloadPath);
             if (networkError == QNetworkReply::OperationCanceledError)
                 return;
             fail(QString("The update download failed: %1").arg(errorText));
