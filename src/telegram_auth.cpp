@@ -105,6 +105,23 @@ void TelegramAuth::requestChats(int limit)
 #endif
 }
 
+void TelegramAuth::searchChats(const QString &query, int limit)
+{
+#ifdef AERO7_WITH_TDLIB
+    const QString clean = query.trimmed();
+    if (!m_client || !m_authorized || clean.size() < 2)
+        return;
+    QJsonObject request;
+    request["\u0040type"] = "searchChats";
+    request["query"] = clean;
+    request["limit"] = qBound(1, limit, 100);
+    send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
+#else
+    Q_UNUSED(query);
+    Q_UNUSED(limit);
+#endif
+}
+
 void TelegramAuth::requestHistory(qint64 chatId, int limit)
 {
 #ifdef AERO7_WITH_TDLIB
