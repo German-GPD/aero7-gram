@@ -45,6 +45,7 @@
 #include <QDate>
 #include <QSet>
 #include <QFileInfo>
+#include <QFileDialog>
 #include <QDir>
 #include <QJsonArray>
 #include <QJsonObject>
@@ -216,6 +217,7 @@ public:
             if (m_connectionState) m_connectionState->setText("●  Telegram account connected");
             if (m_messageInput) { m_messageInput->setEnabled(true); m_messageInput->setPlaceholderText("Message"); }
             if (m_sendButton) m_sendButton->setEnabled(true);
+            if (m_attachButton) m_attachButton->setEnabled(m_selectedChatId != 0);
         };
         m_auth->chatReceived = [this](const QString &json) {
             const QJsonObject object = QJsonDocument::fromJson(json.toUtf8()).object();
@@ -335,7 +337,11 @@ public:
             QString body = content.value("text").toObject().value("text").toString();
             if (body.isEmpty()) {
                 if (contentType == "messagePhoto") body = "[Photo]";
-                else if (contentType == "messageDocument") body = "[File]";
+                else if (contentType == "messageDocument") {
+                    const QString fileName = content.value("document").toObject()
+                        .value("file_name").toString();
+                    body = fileName.isEmpty() ? "[File]" : QString("[File] %1").arg(fileName);
+                }
                 else if (contentType == "messageVideo") body = "[Video]";
                 else if (contentType == "messageAudio" || contentType == "messageVoiceNote") body = "[Audio]";
                 else if (contentType == "messageSticker") body = "[Sticker]";
@@ -435,6 +441,7 @@ private:
     QListWidget *m_messageList = nullptr;
     QLineEdit *m_messageInput = nullptr;
     QPushButton *m_sendButton = nullptr;
+    QPushButton *m_attachButton = nullptr;
     qint64 m_selectedChatId = 0;
     QSet<qint64> m_seenMessageIds;
     QDate m_lastMessageDate;
@@ -912,21 +919,29 @@ private:
         composerLayout->setSpacing(8);
         m_messageInput = new QLineEdit(composer);
         m_messageInput->setPlaceholderText("Message");
-        QPushButton *attach = new QPushButton("＋");
-        attach->setObjectName("secondaryButton");
-        attach->setToolTip("File attachments are not available in this preview build");
-        attach->setEnabled(false);
+        m_attachButton = new QPushButton("＋");
+        m_attachButton->setObjectName("secondaryButton");
+        m_attachButton->setToolTip("Attach a photo or file");
+        m_attachButton->setEnabled(false);
         m_sendButton = new QPushButton("Send");
         m_sendButton->setObjectName("primaryButton");
         m_sendButton->setEnabled(false);
         m_sendButton->setToolTip("Connect your Telegram account first.");
-        composerLayout->addWidget(attach);
+        composerLayout->addWidget(m_attachButton);
         composerLayout->addWidget(m_messageInput, 1);
         composerLayout->addWidget(m_sendButton);
         layout->addWidget(composer);
 
         connect(refresh, &QPushButton::clicked, this, [this]() {
             if (m_auth) m_auth->requestChats(100);
+        });
+        connect(m_attachButton, &QPushButton::clicked, this, [this]() {
+            if (!m_auth || !m_auth->isAuthorized() || !m_selectedChatId) {
+                showConnectionNotice();
+                return;
+            }
+            const QString path = QFileDialog::getOpenFileName(this, "Attach to Telegram chat");
+            if (!path.isEmpty()) m_auth->sendFile(m_selectedChatId, path);
         });
         const auto sendMessage = [this]() {
             if (!m_auth || !m_selectedChatId || !m_messageInput) return;
