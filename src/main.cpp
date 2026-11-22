@@ -284,8 +284,9 @@ public:
             if (!item) item = new QListWidgetItem(m_contactsList);
             const QString first = user.value("first_name").toString();
             const QString last = user.value("last_name").toString();
-            const QString username = user.value("usernames").toObject()
+            QString username = user.value("usernames").toObject()
                 .value("active_usernames").toArray().value(0).toString();
+            if (username.isEmpty()) username = user.value("username").toString();
             const QString fullName = (first + " " + last).trimmed();
             item->setData(Qt::UserRole, QVariant::fromValue<qlonglong>(userId));
             item->setData(Qt::UserRole + 1, fullName);
