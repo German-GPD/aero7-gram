@@ -476,12 +476,6 @@ private:
             }
         });
 
-        newChatAction->setShortcut(QKeySequence("Ctrl+N"));
-        chatsAction->setShortcut(QKeySequence("Ctrl+1"));
-        contactsAction->setShortcut(QKeySequence("Ctrl+2"));
-        callsAction->setShortcut(QKeySequence("Ctrl+3"));
-        settingsAction->setShortcut(QKeySequence("Ctrl+,"));
-        refreshAction->setShortcut(QKeySequence("F5"));
         connect(newChatAction, &QAction::triggered, this, [this]() {
             setPage(0);
             if (m_search) { m_search->clear(); m_search->setFocus(); }
