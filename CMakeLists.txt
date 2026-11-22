@@ -25,7 +25,7 @@ if(NOT EXISTS "${AERO7_ICON_PATH}")
 endif()
 configure_file(resources/app_icon.rc.in "${CMAKE_CURRENT_BINARY_DIR}/app_icon.rc" @ONLY)
 
-find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets Svg)
+find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets Svg Network)
 
 option(AERO7_ENABLE_TDLIB "Enable real Telegram authorization through TDLib" ON)
 set(TDJSON_ROOT "" CACHE PATH "TDLib JSON installation prefix")
@@ -49,6 +49,8 @@ add_executable(AERO7GRAM WIN32
     src/main.cpp
     src/telegram_auth.cpp
     src/telegram_auth.h
+    src/update_manager.cpp
+    src/update_manager.h
     resources.qrc
     "${CMAKE_CURRENT_BINARY_DIR}/app_icon.rc"
 )
@@ -56,6 +58,7 @@ add_executable(AERO7GRAM WIN32
 target_link_libraries(AERO7GRAM PRIVATE
     Qt5::Widgets
     Qt5::Svg
+    Qt5::Network
     dwmapi
     crypt32
     bcrypt
