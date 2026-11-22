@@ -569,6 +569,7 @@ void TelegramAuth::askPhoneNumber()
     QJsonObject request;
     request["@type"] = "setAuthenticationPhoneNumber";
     request["phone_number"] = phone.trimmed();
+    request["settings"] = QJsonValue::Null;
     send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
     if (statusChanged) statusChanged("Requesting Telegram login code…");
 }
@@ -610,6 +611,7 @@ void TelegramAuth::askRegistration()
     request["@type"] = "registerUser";
     request["first_name"] = first.trimmed();
     request["last_name"] = last.trimmed();
+    request["disable_notification"] = false;
     send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
 }
 
