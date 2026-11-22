@@ -122,6 +122,31 @@ void TelegramAuth::searchChats(const QString &query, int limit)
 #endif
 }
 
+void TelegramAuth::requestContacts()
+{
+#ifdef AERO7_WITH_TDLIB
+    if (!m_client || !m_authorized) return;
+    QJsonObject request;
+    request["@type"] = "getContacts";
+    send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
+#endif
+}
+
+void TelegramAuth::openPrivateChat(qint64 userId)
+{
+#ifdef AERO7_WITH_TDLIB
+    if (!m_client || !m_authorized || userId == 0) return;
+    QJsonObject request;
+    request["@type"] = "createPrivateChat";
+    request["user_id"] = static_cast<double>(userId);
+    request["force"] = false;
+    request["@extra"] = QString::number(userId);
+    send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
+#else
+    Q_UNUSED(userId);
+#endif
+}
+
 void TelegramAuth::requestHistory(qint64 chatId, int limit)
 {
 #ifdef AERO7_WITH_TDLIB
@@ -345,6 +370,17 @@ void TelegramAuth::handleUpdate(const QString &json)
         if (chatReceived) chatReceived(QString::fromUtf8(QJsonDocument(object).toJson(QJsonDocument::Compact)));
     } else if (type == "updateNewMessage") {
         if (messageReceived) messageReceived(QString::fromUtf8(QJsonDocument(object.value("message").toObject()).toJson(QJsonDocument::Compact)));
+    } else if (type == "users") {
+        const QJsonArray users = object.value("user_ids").toArray();
+        for (const QJsonValue &id : users) {
+            QJsonObject request;
+            request["@type"] = "getUser";
+            request["user_id"] = id;
+            send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
+        }
+    } else if (type == "user") {
+        if (contactReceived)
+            contactReceived(QString::fromUtf8(QJsonDocument(object).toJson(QJsonDocument::Compact)));
     } else if (type == "chats") {
         const QJsonArray chats = object.value("chat_ids").toArray();
         for (const QJsonValue &id : chats) {
@@ -354,6 +390,10 @@ void TelegramAuth::handleUpdate(const QString &json)
         if (chatsLoaded) chatsLoaded();
     } else if (type == "chat") {
         if (chatReceived) chatReceived(QString::fromUtf8(QJsonDocument(object).toJson(QJsonDocument::Compact)));
+        const qint64 userId = object.value("@extra").toString().toLongLong();
+        const qint64 chatId = static_cast<qint64>(object.value("id").toDouble());
+        if (userId && chatId && privateChatCreated)
+            privateChatCreated(userId, chatId);
     } else if (type == "messages") {
         const QJsonArray messages = object.value("messages").toArray();
         // TDLib returns history newest-first; emit oldest-first for a natural timeline.
