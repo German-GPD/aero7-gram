@@ -115,7 +115,7 @@ void TelegramAuth::searchChats(const QString &query, int limit)
     if (!m_client || !m_authorized || clean.size() < 2)
         return;
     QJsonObject request;
-    request["\u0040type"] = "searchChats";
+    request["@type"] = "searchChatsOnServer";
     request["query"] = clean;
     request["limit"] = qBound(1, limit, 100);
     send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
