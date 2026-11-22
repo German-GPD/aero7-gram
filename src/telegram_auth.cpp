@@ -210,11 +210,17 @@ void TelegramAuth::sendFile(qint64 chatId, const QString &filePath)
     if (photo) {
         content["@type"] = "inputMessagePhoto";
         content["photo"] = localFile;
-        content["caption"] = QJsonObject{{"@type", "formattedText"}, {"text", ""}};
+        QJsonObject caption;
+        caption["@type"] = "formattedText";
+        caption["text"] = "";
+        content["caption"] = caption;
     } else {
         content["@type"] = "inputMessageDocument";
         content["document"] = localFile;
-        content["caption"] = QJsonObject{{"@type", "formattedText"}, {"text", ""}};
+        QJsonObject caption;
+        caption["@type"] = "formattedText";
+        caption["text"] = "";
+        content["caption"] = caption;
         content["disable_content_type_detection"] = false;
     }
 
