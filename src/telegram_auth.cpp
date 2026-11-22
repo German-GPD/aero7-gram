@@ -375,7 +375,7 @@ void TelegramAuth::handleAuthorizationState(const QJsonObject &state)
         parameters["system_language_code"] = QLocale::system().name().left(2);
         parameters["device_model"] = "AERO7 GRAM";
         parameters["system_version"] = "Windows 7 SP1";
-        parameters["application_version"] = "0.3.0";
+        parameters["application_version"] = QString::fromLatin1(AERO7_VERSION);
         parameters["enable_storage_optimizer"] = true;
         parameters["database_encryption_key"] = QString::fromLatin1(key.toBase64());
         send(QString::fromUtf8(QJsonDocument(parameters).toJson(QJsonDocument::Compact)));
