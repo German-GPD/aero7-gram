@@ -15,7 +15,6 @@
 #include <QStandardPaths>
 #include <QUrl>
 #include <QVersionNumber>
-#include <QTimer>
 #include <QDir>
 
 UpdateManager::UpdateManager(QWidget *owner)
@@ -235,9 +234,8 @@ void UpdateManager::finishDownload(const QString &version)
         return;
     }
 
-    QTimer::singleShot(700, m_owner, [owner = QPointer<QWidget>(m_owner)]() {
-        if (owner) owner->close();
-    });
+    QMessageBox::information(m_owner, "AERO7 GRAM update",
+        "The installer has started. Approve the Windows prompt if it appears; Setup will close the client, update the existing files and restart it.");
 }
 
 void UpdateManager::fail(const QString &message)
