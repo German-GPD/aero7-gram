@@ -74,6 +74,7 @@ if(AERO7_ENABLE_TDLIB)
 endif()
 
 target_compile_definitions(AERO7GRAM PRIVATE
+    AERO7_VERSION=\"${PROJECT_VERSION}\"
     UNICODE
     _UNICODE
     WIN32_LEAN_AND_MEAN
