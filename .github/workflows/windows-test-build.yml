@@ -206,6 +206,7 @@ jobs:
           prerelease: true
           make_latest: false
           fail_on_unmatched_files: true
+          overwrite_files: true
           files: |
             dist/*.exe
             dist/*.sha256
