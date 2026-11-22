@@ -46,6 +46,7 @@
 #include <QSet>
 #include <QFileInfo>
 #include <QFileDialog>
+#include <QSystemTrayIcon>
 #include <QDir>
 #include <QJsonArray>
 #include <QJsonObject>
@@ -176,6 +177,7 @@ public:
 
         buildInterface();
         applyStyle();
+        setupTrayIcon();
         restorePreferences();
         m_updater = new UpdateManager(this);
 
@@ -327,6 +329,24 @@ public:
                 && m_messageList->item(0)->data(Qt::UserRole).toString() == "empty-state")
                 showMessagePlaceholder("No messages here yet");
         };
+        m_auth->newMessageReceived = [this](const QString &json) {
+            if (!m_trayIcon || !m_trayIcon->isVisible() || isActiveWindow()) return;
+            const QJsonObject message = QJsonDocument::fromJson(json.toUtf8()).object();
+            if (message.value("is_outgoing").toBool()) return;
+            const qint64 chatId = static_cast<qint64>(message.value("chat_id").toDouble());
+            QString chatTitle = "Telegram";
+            if (m_chatList) {
+                for (int i = 0; i < m_chatList->count(); ++i) {
+                    QListWidgetItem *item = m_chatList->item(i);
+                    if (item->data(Qt::UserRole).toLongLong() == chatId) {
+                        chatTitle = item->data(Qt::UserRole + 1).toString();
+                        break;
+                    }
+                }
+            }
+            m_trayIcon->showMessage(chatTitle, "New Telegram message",
+                QSystemTrayIcon::Information, 4500);
+        };
         m_auth->messageReceived = [this](const QString &json) {
             if (!m_messageList) return;
             const QJsonObject message = QJsonDocument::fromJson(json.toUtf8()).object();
@@ -446,6 +466,7 @@ private:
     QLineEdit *m_messageInput = nullptr;
     QPushButton *m_sendButton = nullptr;
     QPushButton *m_attachButton = nullptr;
+    QSystemTrayIcon *m_trayIcon = nullptr;
     qint64 m_selectedChatId = 0;
     QSet<qint64> m_seenMessageIds;
     QDate m_lastMessageDate;
@@ -1173,6 +1194,34 @@ private:
         layout->addStretch();
         layout->addWidget(right);
         return bar;
+    }
+
+    void setupTrayIcon()
+    {
+        if (!QSystemTrayIcon::isSystemTrayAvailable())
+            return;
+        m_trayIcon = new QSystemTrayIcon(windowIcon(), this);
+        m_trayIcon->setToolTip("AERO7 GRAM — Telegram");
+        QMenu *trayMenu = new QMenu(this);
+        QAction *openAction = trayMenu->addAction("Open AERO7 GRAM");
+        QAction *exitAction = trayMenu->addAction("Exit");
+        connect(openAction, &QAction::triggered, this, [this]() {
+            showNormal();
+            raise();
+            activateWindow();
+        });
+        connect(exitAction, &QAction::triggered, qApp, &QApplication::quit);
+        connect(m_trayIcon, &QSystemTrayIcon::activated, this,
+            [this](QSystemTrayIcon::ActivationReason reason) {
+                if (reason == QSystemTrayIcon::Trigger
+                    || reason == QSystemTrayIcon::DoubleClick) {
+                    showNormal();
+                    raise();
+                    activateWindow();
+                }
+            });
+        m_trayIcon->setContextMenu(trayMenu);
+        m_trayIcon->show();
     }
 
     void connectNavigation()
