@@ -146,6 +146,7 @@ void UpdateManager::downloadInstaller(const QUrl &url, const QString &digest, co
     m_expectedDigest = digest.mid(QStringLiteral("sha256:").size()).toLower();
     m_downloadedBytes = 0;
     m_downloadTooLarge = false;
+    m_downloadWriteFailed = false;
 
     QNetworkRequest request(url);
     request.setRawHeader("User-Agent", "AERO7-GRAM-Updater");
@@ -181,6 +182,7 @@ void UpdateManager::downloadInstaller(const QUrl &url, const QString &digest, co
             return;
         }
         if (m_downloadFile->write(chunk) != chunk.size()) {
+            m_downloadWriteFailed = true;
             m_reply->abort();
             return;
         }
@@ -201,6 +203,8 @@ void UpdateManager::downloadInstaller(const QUrl &url, const QString &digest, co
                 m_downloadTooLarge = true;
             } else if (m_downloadFile->write(tail) == tail.size()) {
                 m_downloadedBytes += tail.size();
+            } else {
+                m_downloadWriteFailed = true;
             }
         }
         reply->deleteLater();
@@ -219,6 +223,12 @@ void UpdateManager::downloadInstaller(const QUrl &url, const QString &digest, co
             m_downloadTooLarge = false;
             QFile::remove(m_downloadPath);
             fail("The update package is larger than the 256 MB safety limit.");
+            return;
+        }
+        if (m_downloadWriteFailed) {
+            m_downloadWriteFailed = false;
+            QFile::remove(m_downloadPath);
+            fail("Windows could not write the update package to the temporary folder. Check free disk space and permissions.");
             return;
         }
         if (networkError != QNetworkReply::NoError) {
@@ -271,7 +281,7 @@ void UpdateManager::finishDownload(const QString &version)
     }
 
     const QStringList arguments = QStringList()
-        << "/VERYSILENT" << "/SUPPRESSMSGBOXES" << "/NORESTART"
+        << "/VERYSILENT" << "/SP-" << "/NORESTART"
         << "/CLOSEAPPLICATIONS";
     if (!QProcess::startDetached(m_downloadPath, arguments)) {
         fail("Windows could not start the verified update installer.");
