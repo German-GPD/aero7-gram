@@ -791,6 +791,14 @@ private:
                 item->setHidden(!title.contains(query, Qt::CaseInsensitive)
                     && !preview.contains(query, Qt::CaseInsensitive));
             }
+            const QString remoteQuery = query.trimmed();
+            if (remoteQuery.size() >= 2) {
+                QTimer::singleShot(350, this, [this, remoteQuery]() {
+                    if (m_search && m_search->text().trimmed() == remoteQuery
+                        && m_auth && m_auth->isAuthorized())
+                        m_auth->searchChats(remoteQuery, 50);
+                });
+            }
         });
         connect(newMessage, &QPushButton::clicked, this, [this]() {
             if (m_search) { m_search->clear(); m_search->setFocus(); }
