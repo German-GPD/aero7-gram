@@ -37,6 +37,7 @@ public:
     std::function<void(const QString &)> contactReceived;
     std::function<void(qint64, qint64)> privateChatCreated;
     std::function<void(const QString &)> messageReceived;
+    std::function<void(const QString &)> newMessageReceived;
     std::function<void()> chatsLoaded;
     std::function<void(qint64)> historyLoaded;
 
