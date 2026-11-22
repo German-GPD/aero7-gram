@@ -463,6 +463,18 @@ private:
         QAction *settingsAction = commandBar->addAction(style()->standardIcon(QStyle::SP_FileDialogContentsView), "Settings");
         commandBar->addSeparator();
         QAction *updatesAction = commandBar->addAction(style()->standardIcon(QStyle::SP_MessageBoxInformation), "Updates");
+        QAction *focusSearchAction = new QAction(this);
+        focusSearchAction->setShortcut(QKeySequence("Ctrl+F"));
+        addAction(focusSearchAction);
+        connect(focusSearchAction, &QAction::triggered, this, [this]() {
+            if (m_pages && m_pages->currentIndex() == 1) {
+                QWidget *search = m_pages->currentWidget()->findChild<QLineEdit *>("searchField");
+                if (search) search->setFocus();
+            } else if (m_search) {
+                m_search->setFocus();
+                m_search->selectAll();
+            }
+        });
 
         newChatAction->setShortcut(QKeySequence("Ctrl+N"));
         chatsAction->setShortcut(QKeySequence("Ctrl+1"));
@@ -960,18 +972,34 @@ private:
         refresh->setObjectName("secondaryButton");
         header->addWidget(refresh);
         layout->addLayout(header);
+        QLineEdit *contactSearch = new QLineEdit(page);
+        contactSearch->setObjectName("searchField");
+        contactSearch->setPlaceholderText("Find a contact");
+        contactSearch->setClearButtonEnabled(true);
+        layout->addWidget(contactSearch);
         m_contactsList = new QListWidget(page);
         m_contactsList->setObjectName("contactsList");
         m_contactsList->setFrameShape(QFrame::NoFrame);
         m_contactsList->setSpacing(2);
+        m_contactsList->setSortingEnabled(true);
         m_contactsList->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
         layout->addWidget(m_contactsList, 1);
+        connect(contactSearch, &QLineEdit::textChanged, this, [this](const QString &query) {
+            if (!m_contactsList) return;
+            for (int i = 0; i < m_contactsList->count(); ++i) {
+                QListWidgetItem *item = m_contactsList->item(i);
+                const QString name = item->data(Qt::UserRole + 1).toString();
+                const QString username = item->data(Qt::UserRole + 2).toString();
+                item->setHidden(!name.contains(query, Qt::CaseInsensitive)
+                    && !username.contains(query, Qt::CaseInsensitive));
+            }
+        });
         layout->addWidget(makeLabel("Double-click a contact to open a conversation", "pageSubtitle"));
         connect(refresh, &QPushButton::clicked, this, [this]() {
             if (m_auth && m_auth->isAuthorized()) m_auth->requestContacts();
             else showConnectionNotice();
         });
-        connect(m_contactsList, &QListWidget::itemDoubleClicked, this,
+        connect(m_contactsList, &QListWidget::itemActivated, this,
             [this](QListWidgetItem *item) {
                 if (!item || !m_auth || !m_auth->isAuthorized()) {
                     showConnectionNotice();
