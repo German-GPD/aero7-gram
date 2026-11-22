@@ -376,10 +376,11 @@ void TelegramAuth::handleUpdate(const QString &json)
             QJsonObject request;
             request["@type"] = "getUser";
             request["user_id"] = id;
+            request["@extra"] = "contact";
             send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
         }
     } else if (type == "user") {
-        if (contactReceived)
+        if (object.value("@extra").toString() == "contact" && contactReceived)
             contactReceived(QString::fromUtf8(QJsonDocument(object).toJson(QJsonDocument::Compact)));
     } else if (type == "chats") {
         const QJsonArray chats = object.value("chat_ids").toArray();
