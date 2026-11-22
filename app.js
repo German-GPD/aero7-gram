@@ -41,8 +41,9 @@
         const link = document.querySelector(`[data-release-asset="${name}"]`);
         if (!link) return;
         const asset = byName.get(name);
+        const checksum = byName.get(`${name}.sha256`);
         const small = link.querySelector("small");
-        if (asset && asset.browser_download_url) {
+        if (asset && checksum && asset.browser_download_url) {
           link.href = asset.browser_download_url;
           link.setAttribute("download", "");
           link.setAttribute("aria-label", `Download ${name}`);
@@ -53,14 +54,16 @@
           link.href = releasePage;
           link.classList.add("is-unavailable");
           link.setAttribute("aria-label", `${name} is not published yet; open release page`);
-          if (small) small.textContent = "Сборка пока не опубликована";
+          if (small) small.textContent = "Ожидает актуальной сборки с SHA-256";
         }
       });
 
       const date = release.published_at
         ? new Date(release.published_at).toLocaleDateString("ru-RU", { year: "numeric", month: "long", day: "numeric" })
         : "дата не указана";
-      meta.textContent = `VERSION ${release.tag_name || "TEST"} · ${date.toUpperCase()} · ${available}/2 INSTALLERS AVAILABLE`;
+      const versionMatch = (release.body || "").match(/Version:\\s*([0-9.]+)/i);
+      const version = versionMatch ? versionMatch[1] : "TEST";
+      meta.textContent = `VERSION ${version} · ${date.toUpperCase()} · ${available}/2 INSTALLERS VERIFIED`;
       setStatus(
         available === 2 ? "Обе сборки готовы к загрузке" :
         available === 1 ? "Опубликована одна архитектура; вторая ещё собирается" :
