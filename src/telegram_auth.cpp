@@ -419,7 +419,10 @@ void TelegramAuth::handleUpdate(const QString &json)
     } else if (type == "updateNewChat" || type == "updateChatLastMessage" || type == "updateChatTitle" || type == "updateChatReadInbox") {
         if (chatReceived) chatReceived(QString::fromUtf8(QJsonDocument(object).toJson(QJsonDocument::Compact)));
     } else if (type == "updateNewMessage") {
-        if (messageReceived) messageReceived(QString::fromUtf8(QJsonDocument(object.value("message").toObject()).toJson(QJsonDocument::Compact)));
+        const QString messageJson = QString::fromUtf8(
+            QJsonDocument(object.value("message").toObject()).toJson(QJsonDocument::Compact));
+        if (messageReceived) messageReceived(messageJson);
+        if (newMessageReceived) newMessageReceived(messageJson);
     } else if (type == "users") {
         const QJsonArray users = object.value("user_ids").toArray();
         for (const QJsonValue &id : users) {
