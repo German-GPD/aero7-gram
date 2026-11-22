@@ -58,12 +58,12 @@
         }
       });
 
-      const date = release.published_at
+      const date = release.updated_at || release.published_at
         ? new Date(release.published_at).toLocaleDateString("ru-RU", { year: "numeric", month: "long", day: "numeric" })
         : "дата не указана";
       const versionMatch = (release.body || "").match(/Version:\s*([0-9.]+)/i);
       const version = versionMatch ? versionMatch[1] : "TEST";
-      meta.textContent = `VERSION ${version} · ${date.toUpperCase()} · ${available}/2 INSTALLERS VERIFIED`;
+      meta.textContent = `VERSION ${version} · ${date.toUpperCase()} · ${available}/2 INSTALLERS READY`;
       setStatus(
         available === 2 ? "Обе сборки готовы к загрузке" :
         available === 1 ? "Опубликована одна архитектура; вторая ещё собирается" :
