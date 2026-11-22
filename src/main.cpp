@@ -336,6 +336,8 @@ public:
             const QJsonObject content = message.value("content").toObject();
             const QString contentType = content.value("@type").toString();
             QString body = content.value("text").toObject().value("text").toString();
+            if (body.isEmpty())
+                body = content.value("caption").toObject().value("text").toString();
             if (body.isEmpty()) {
                 if (contentType == "messagePhoto") body = "[Photo]";
                 else if (contentType == "messageDocument") {
