@@ -181,6 +181,8 @@ void UpdateManager::downloadInstaller(const QUrl &url, const QString &digest, co
 
         if (networkError != QNetworkReply::NoError) {
             if (m_downloadFile) QFile::remove(m_downloadPath);
+            if (networkError == QNetworkReply::OperationCanceledError)
+                return;
             fail(QString("The update download failed: %1").arg(errorText));
             return;
         }
