@@ -70,23 +70,16 @@
 
       if (checksums) {
         const checksumNames = assetNames.map(name => `${name}.sha256`);
-        const links = checksumNames.map(name => {
-          const asset = byName.get(name);
-          return asset
-            ? `<a href="${asset.browser_download_url}" target="_blank" rel="noopener">${name}</a>`
-            : "";
-        }).filter(Boolean);
+        const checksumAssets = checksumNames.map(name => byName.get(name)).filter(Boolean);
         checksums.replaceChildren();
-        if (links.length) {
+        if (checksumAssets.length) {
           const label = document.createElement("span");
           label.textContent = "SHA-256: ";
           checksums.append(label);
-          links.forEach((url, index) => {
-            const asset = byName.get(checksumNames[index]);
-            if (!asset) return;
+          checksumAssets.forEach(asset => {
             const a = document.createElement("a");
             a.href = asset.browser_download_url;
-            a.textContent = checksumNames[index];
+            a.textContent = asset.name;
             a.target = "_blank";
             a.rel = "noopener";
             checksums.append(a);
