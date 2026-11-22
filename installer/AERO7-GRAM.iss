@@ -1,5 +1,5 @@
 #define MyAppName "AERO7 GRAM"
-#define MyAppVersion "0.2.0-test"
+#define MyAppVersion "0.3.0"
 #define MyAppPublisher "German'$ G-Code Team"
 #define MyAppURL "https://german-gpd.github.io/aero7-gram/"
 #define MyAppExeName "AERO7 GRAM.exe"
@@ -27,7 +27,7 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 CloseApplications=yes
 RestartApplications=no
 Uninstallable=yes
-VersionInfoVersion=0.2.0.0
+VersionInfoVersion=0.3.0.0
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription=AERO7 GRAM test installer
 
