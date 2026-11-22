@@ -14,6 +14,8 @@
 #include <QUrl>
 #include <QDesktopServices>
 #include <QByteArray>
+#include <QFileInfo>
+#include <QMimeDatabase>
 
 #ifdef AERO7_WITH_TDLIB
 #include <td/telegram/td_json_client.h>
@@ -182,6 +184,48 @@ void TelegramAuth::sendTextMessage(qint64 chatId, const QString &textValue)
 #else
     Q_UNUSED(chatId);
     Q_UNUSED(textValue);
+#endif
+}
+
+void TelegramAuth::sendFile(qint64 chatId, const QString &filePath)
+{
+#ifdef AERO7_WITH_TDLIB
+    if (!m_client || !m_authorized || chatId == 0 || filePath.trimmed().isEmpty())
+        return;
+    const QFileInfo fileInfo(filePath);
+    if (!fileInfo.exists() || !fileInfo.isFile() || !fileInfo.isReadable()) {
+        if (errorOccurred) errorOccurred("The selected file is unavailable or cannot be read.");
+        return;
+    }
+
+    QJsonObject localFile;
+    localFile["@type"] = "inputFileLocal";
+    localFile["path"] = fileInfo.absoluteFilePath();
+
+    QJsonObject content;
+    QMimeDatabase mimeDatabase;
+    const QString mimeType = mimeDatabase.mimeTypeForFile(fileInfo).name();
+    const bool photo = mimeType.startsWith("image/")
+        && mimeType != "image/gif" && mimeType != "image/svg+xml";
+    if (photo) {
+        content["@type"] = "inputMessagePhoto";
+        content["photo"] = localFile;
+        content["caption"] = QJsonObject{{"@type", "formattedText"}, {"text", ""}};
+    } else {
+        content["@type"] = "inputMessageDocument";
+        content["document"] = localFile;
+        content["caption"] = QJsonObject{{"@type", "formattedText"}, {"text", ""}};
+        content["disable_content_type_detection"] = false;
+    }
+
+    QJsonObject request;
+    request["@type"] = "sendMessage";
+    request["chat_id"] = static_cast<double>(chatId);
+    request["input_message_content"] = content;
+    send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
+#else
+    Q_UNUSED(chatId);
+    Q_UNUSED(filePath);
 #endif
 }
 
