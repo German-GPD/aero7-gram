@@ -59,7 +59,10 @@
 namespace {
 const char *kAppName = "AERO7 GRAM";
 const char *kOrganization = "German-GPD";
-const char *kVersion = "0.3.0";
+#ifndef AERO7_VERSION
+#define AERO7_VERSION "0.3.0"
+#endif
+const char *kVersion = AERO7_VERSION;
 
 QIcon createTelegramAeroIcon()
 {
@@ -520,7 +523,7 @@ private:
         m_windowTitleLabel = makeLabel(QString::fromLatin1(kAppName), "windowTitle");
         QLabel *title = m_windowTitleLabel;
         title->setAttribute(Qt::WA_TransparentForMouseEvents, true);
-        QLabel *version = makeLabel("PREVIEW 0.2", "versionTag");
+        QLabel *version = makeLabel(QString("PREVIEW %1").arg(QString::fromLatin1(kVersion)), "versionTag");
         version->setAttribute(Qt::WA_TransparentForMouseEvents, true);
 
         QWidget *stretch = new QWidget(bar);
