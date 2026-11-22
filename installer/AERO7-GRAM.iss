@@ -30,7 +30,7 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 CloseApplications=yes
 RestartApplications=yes
 Uninstallable=yes
-VersionInfoVersion=0.3.0.0
+VersionInfoVersion={#MyAppVersion}.0
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription=AERO7 GRAM test installer
 
