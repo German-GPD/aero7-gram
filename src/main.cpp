@@ -32,6 +32,7 @@
 #include <QMenuBar>
 #include <QMenu>
 #include <QAction>
+#include <QKeySequence>
 #include <QDesktopServices>
 #include <QUrl>
 #include "update_manager.h"
@@ -266,6 +267,54 @@ public:
             item->setToolTip(title + (preview.isEmpty() ? QString() : "\n" + preview));
             refreshChatItem(item);
         };
+        m_auth->contactReceived = [this](const QString &json) {
+            if (!m_contactsList) return;
+            const QJsonObject user = QJsonDocument::fromJson(json.toUtf8()).object();
+            const qint64 userId = static_cast<qint64>(user.value("id").toDouble());
+            if (!userId) return;
+            QListWidgetItem *item = nullptr;
+            for (int i = 0; i < m_contactsList->count(); ++i) {
+                if (m_contactsList->item(i)->data(Qt::UserRole).toLongLong() == userId) {
+                    item = m_contactsList->item(i);
+                    break;
+                }
+            }
+            if (!item) item = new QListWidgetItem(m_contactsList);
+            const QString first = user.value("first_name").toString();
+            const QString last = user.value("last_name").toString();
+            const QString username = user.value("usernames").toObject()
+                .value("active_usernames").toArray().value(0).toString();
+            const QString fullName = (first + " " + last).trimmed();
+            item->setData(Qt::UserRole, QVariant::fromValue<qlonglong>(userId));
+            item->setData(Qt::UserRole + 1, fullName);
+            item->setData(Qt::UserRole + 2, username);
+            item->setText((fullName.isEmpty() ? "Telegram user" : fullName)
+                + (username.isEmpty() ? QString() : QString("\n@") + username));
+        };
+        m_auth->privateChatCreated = [this](qint64 userId, qint64 chatId) {
+            Q_UNUSED(userId);
+            if (!m_chatList || !m_pages) return;
+            for (int i = 0; i < m_chatList->count(); ++i) {
+                QListWidgetItem *item = m_chatList->item(i);
+                if (item->data(Qt::UserRole).toLongLong() == chatId) {
+                    setPage(0);
+                    m_chatList->setCurrentItem(item);
+                    return;
+                }
+            }
+            if (m_auth) m_auth->requestChats(100);
+            QTimer::singleShot(300, this, [this, chatId]() {
+                if (!m_chatList) return;
+                for (int i = 0; i < m_chatList->count(); ++i) {
+                    QListWidgetItem *item = m_chatList->item(i);
+                    if (item->data(Qt::UserRole).toLongLong() == chatId) {
+                        setPage(0);
+                        m_chatList->setCurrentItem(item);
+                        return;
+                    }
+                }
+            });
+        };
         m_auth->historyLoaded = [this](qint64 loadedChatId) {
             if (loadedChatId != m_selectedChatId) return;
             if (m_conversationSubtitle && m_selectedChatId)
@@ -382,6 +431,7 @@ private:
     TelegramAuth *m_auth = nullptr;
     UpdateManager *m_updater = nullptr;
     QListWidget *m_chatList = nullptr;
+    QListWidget *m_contactsList = nullptr;
     QListWidget *m_messageList = nullptr;
     QLineEdit *m_messageInput = nullptr;
     QPushButton *m_sendButton = nullptr;
@@ -414,17 +464,26 @@ private:
         commandBar->addSeparator();
         QAction *updatesAction = commandBar->addAction(style()->standardIcon(QStyle::SP_MessageBoxInformation), "Updates");
 
+        newChatAction->setShortcut(QKeySequence("Ctrl+N"));
+        chatsAction->setShortcut(QKeySequence("Ctrl+1"));
+        contactsAction->setShortcut(QKeySequence("Ctrl+2"));
+        callsAction->setShortcut(QKeySequence("Ctrl+3"));
+        settingsAction->setShortcut(QKeySequence("Ctrl+,"));
+        refreshAction->setShortcut(QKeySequence("F5"));
         connect(newChatAction, &QAction::triggered, this, [this]() {
-            if (m_pages) m_pages->setCurrentIndex(0);
+            setPage(0);
             if (m_search) { m_search->clear(); m_search->setFocus(); }
         });
-        connect(chatsAction, &QAction::triggered, this, [this]() { if (m_pages) m_pages->setCurrentIndex(0); });
-        connect(contactsAction, &QAction::triggered, this, [this]() { if (m_pages) m_pages->setCurrentIndex(1); });
-        connect(callsAction, &QAction::triggered, this, [this]() { if (m_pages) m_pages->setCurrentIndex(2); });
+        connect(chatsAction, &QAction::triggered, this, [this]() { setPage(0); });
+        connect(contactsAction, &QAction::triggered, this, [this]() { setPage(1); });
+        connect(callsAction, &QAction::triggered, this, [this]() { setPage(2); });
         connect(refreshAction, &QAction::triggered, this, [this]() {
-            if (m_auth && m_auth->isAuthorized()) m_auth->requestChats(100);
+            if (m_auth && m_auth->isAuthorized()) {
+                if (m_pages && m_pages->currentIndex() == 1) m_auth->requestContacts();
+                else m_auth->requestChats(100);
+            }
         });
-        connect(settingsAction, &QAction::triggered, this, [this]() { if (m_pages) m_pages->setCurrentIndex(3); });
+        connect(settingsAction, &QAction::triggered, this, [this]() { setPage(3); });
         connect(updatesAction, &QAction::triggered, this, [this]() {
             if (!m_updater) return;
             const QString architecture = sizeof(void *) == 8 ? "x64" : "x86";
@@ -736,9 +795,7 @@ private:
         settingsButton->setToolTip("Settings");
         toolbar->addWidget(settingsButton);
         topLayout->addLayout(toolbar);
-        connect(settingsButton, &QPushButton::clicked, this, [this]() {
-            if (m_pages) m_pages->setCurrentIndex(3);
-        });
+        connect(settingsButton, &QPushButton::clicked, this, [this]() { setPage(3); });
 
         m_search = new QLineEdit(sidebar);
         m_search->setPlaceholderText("Search");
@@ -884,8 +941,42 @@ private:
 
     QWidget *createContactsPage()
     {
-        return createEmptyPage("Contacts", "Your contacts will appear here after Telegram is connected.",
-                               "Contacts are not loaded in this preview build.");
+        QWidget *page = new QWidget;
+        page->setObjectName("contentPage");
+        QVBoxLayout *layout = new QVBoxLayout(page);
+        layout->setContentsMargins(20, 18, 20, 18);
+        layout->setSpacing(10);
+        QHBoxLayout *header = new QHBoxLayout;
+        QVBoxLayout *titles = new QVBoxLayout;
+        titles->setSpacing(2);
+        titles->addWidget(makeLabel("Contacts", "pageTitle"));
+        titles->addWidget(makeLabel("Your Telegram contacts", "pageSubtitle"));
+        header->addLayout(titles, 1);
+        QPushButton *refresh = new QPushButton("Refresh");
+        refresh->setObjectName("secondaryButton");
+        header->addWidget(refresh);
+        layout->addLayout(header);
+        m_contactsList = new QListWidget(page);
+        m_contactsList->setObjectName("contactsList");
+        m_contactsList->setFrameShape(QFrame::NoFrame);
+        m_contactsList->setSpacing(2);
+        m_contactsList->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+        layout->addWidget(m_contactsList, 1);
+        layout->addWidget(makeLabel("Double-click a contact to open a conversation", "pageSubtitle"));
+        connect(refresh, &QPushButton::clicked, this, [this]() {
+            if (m_auth && m_auth->isAuthorized()) m_auth->requestContacts();
+            else showConnectionNotice();
+        });
+        connect(m_contactsList, &QListWidget::itemDoubleClicked, this,
+            [this](QListWidgetItem *item) {
+                if (!item || !m_auth || !m_auth->isAuthorized()) {
+                    showConnectionNotice();
+                    return;
+                }
+                const qint64 userId = item->data(Qt::UserRole).toLongLong();
+                if (userId) m_auth->openPrivateChat(userId);
+            });
+        return page;
     }
 
     QWidget *createCallsPage()
@@ -1039,17 +1130,21 @@ private:
 
     void connectNavigation()
     {
-        // The primary screen is now the Telegram-style two-pane chat view.
-        // Secondary pages will be exposed through the native application menu.
+        if (!m_pages) return;
+        connect(m_pages, &QStackedWidget::currentChanged, this, [this](int index) {
+            if (index == 1 && m_auth && m_auth->isAuthorized())
+                m_auth->requestContacts();
+        });
     }
 
     void setPage(int index)
     {
+        if (!m_pages || index < 0 || index >= m_pages->count()) return;
         m_pages->setCurrentIndex(index);
-        m_chatsNav->setChecked(index == 0);
-        m_contactsNav->setChecked(index == 1);
-        m_callsNav->setChecked(index == 2);
-        m_settingsNav->setChecked(index == 3);
+        if (m_chatsNav) m_chatsNav->setChecked(index == 0);
+        if (m_contactsNav) m_contactsNav->setChecked(index == 1);
+        if (m_callsNav) m_callsNav->setChecked(index == 2);
+        if (m_settingsNav) m_settingsNav->setChecked(index == 3);
     }
 
     void showConnectionNotice()
