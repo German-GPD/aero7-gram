@@ -11,7 +11,6 @@
 #include <QNetworkRequest>
 #include <QProgressDialog>
 #include <QProcess>
-#include <QRegularExpression>
 #include <QStandardPaths>
 #include <QUrl>
 #include <QVersionNumber>
@@ -21,6 +20,12 @@
 UpdateManager::UpdateManager(QWidget *owner)
     : QObject(owner), m_owner(owner)
 {
+    m_timeout.setSingleShot(true);
+    connect(&m_timeout, &QTimer::timeout, this, [this]() {
+        if (!m_reply) return;
+        m_requestTimedOut = true;
+        m_reply->abort();
+    });
 }
 
 void UpdateManager::checkForUpdates(const QString &currentVersion, const QString &architecture)
@@ -36,8 +41,13 @@ void UpdateManager::checkForUpdates(const QString &currentVersion, const QString
     request.setRawHeader("Accept", "application/vnd.github+json");
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
 
+    m_requestTimedOut = false;
     m_reply = m_network.get(request);
+    m_timeout.start(30000);
     connect(m_reply, &QNetworkReply::finished, this, [this, currentVersion, architecture]() {
+        m_timeout.stop();
+        const bool timedOut = m_requestTimedOut;
+        m_requestTimedOut = false;
         QNetworkReply *reply = m_reply;
         m_reply = nullptr;
         if (!reply) return;
@@ -48,7 +58,8 @@ void UpdateManager::checkForUpdates(const QString &currentVersion, const QString
         reply->deleteLater();
 
         if (networkError != QNetworkReply::NoError) {
-            fail(QString("Could not check for updates: %1").arg(errorText));
+            fail(timedOut ? "The update check timed out. Please try again." :
+                QString("Could not check for updates: %1").arg(errorText));
             return;
         }
 
@@ -133,7 +144,9 @@ void UpdateManager::downloadInstaller(const QUrl &url, const QString &digest, co
     QNetworkRequest request(url);
     request.setRawHeader("User-Agent", "AERO7-GRAM-Updater");
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+    m_requestTimedOut = false;
     m_reply = m_network.get(request);
+    m_timeout.start(10 * 60 * 1000);
 
     m_progress = new QProgressDialog("Downloading AERO7 GRAM update…", "Cancel", 0, 100, m_owner);
     m_progress->setWindowTitle("AERO7 GRAM update");
@@ -160,6 +173,9 @@ void UpdateManager::downloadInstaller(const QUrl &url, const QString &digest, co
             m_reply->abort();
     });
     connect(m_reply, &QNetworkReply::finished, this, [this, version]() {
+        m_timeout.stop();
+        const bool timedOut = m_requestTimedOut;
+        m_requestTimedOut = false;
         QNetworkReply *reply = m_reply;
         m_reply = nullptr;
         if (!reply) return;
@@ -181,9 +197,10 @@ void UpdateManager::downloadInstaller(const QUrl &url, const QString &digest, co
 
         if (networkError != QNetworkReply::NoError) {
             QFile::remove(m_downloadPath);
-            if (networkError == QNetworkReply::OperationCanceledError)
+            if (networkError == QNetworkReply::OperationCanceledError && !timedOut)
                 return;
-            fail(QString("The update download failed: %1").arg(errorText));
+            fail(timedOut ? "The update download timed out. Please try again." :
+                QString("The update download failed: %1").arg(errorText));
             return;
         }
         finishDownload(version);
@@ -241,6 +258,7 @@ void UpdateManager::finishDownload(const QString &version)
 
 void UpdateManager::fail(const QString &message)
 {
+    m_timeout.stop();
     if (m_progress) {
         m_progress->close();
         m_progress->deleteLater();
