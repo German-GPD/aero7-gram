@@ -173,7 +173,11 @@ void UpdateManager::downloadInstaller(const QUrl &url, const QString &digest, co
             m_progress->deleteLater();
             m_progress = nullptr;
         }
-        if (m_downloadFile) m_downloadFile->close();
+        if (m_downloadFile) {
+            m_downloadFile->close();
+            delete m_downloadFile;
+            m_downloadFile = nullptr;
+        }
 
         if (networkError != QNetworkReply::NoError) {
             if (m_downloadFile) QFile::remove(m_downloadPath);
