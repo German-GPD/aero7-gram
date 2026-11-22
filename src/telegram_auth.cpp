@@ -16,6 +16,7 @@
 #include <QByteArray>
 #include <QFileInfo>
 #include <QMimeDatabase>
+#include <QImageReader>
 
 #ifdef AERO7_WITH_TDLIB
 #include <td/telegram/td_json_client.h>
@@ -173,12 +174,19 @@ void TelegramAuth::sendTextMessage(qint64 chatId, const QString &textValue)
     QJsonObject formattedText;
     formattedText["@type"] = "formattedText";
     formattedText["text"] = clean;
+    formattedText["entities"] = QJsonArray();
     QJsonObject inputContent;
     inputContent["@type"] = "inputMessageText";
     inputContent["text"] = formattedText;
+    inputContent["link_preview_options"] = QJsonValue::Null;
+    inputContent["clear_draft"] = true;
     QJsonObject request;
     request["@type"] = "sendMessage";
     request["chat_id"] = static_cast<double>(chatId);
+    request["message_thread_id"] = 0;
+    request["reply_to"] = QJsonValue::Null;
+    request["options"] = QJsonValue::Null;
+    request["reply_markup"] = QJsonValue::Null;
     request["input_message_content"] = inputContent;
     send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
 #else
@@ -202,24 +210,41 @@ void TelegramAuth::sendFile(qint64 chatId, const QString &filePath)
     localFile["@type"] = "inputFileLocal";
     localFile["path"] = fileInfo.absoluteFilePath();
 
-    QJsonObject content;
+    QJsonObject caption;
+    caption["@type"] = "formattedText";
+    caption["text"] = "";
+    caption["entities"] = QJsonArray();
+
     QMimeDatabase mimeDatabase;
     const QString mimeType = mimeDatabase.mimeTypeForFile(fileInfo).name();
-    const bool photo = mimeType.startsWith("image/")
-        && mimeType != "image/gif" && mimeType != "image/svg+xml";
+    QImageReader imageReader(fileInfo.absoluteFilePath());
+    const QSize imageSize = imageReader.size();
+    const bool validPhotoSize = imageSize.isValid()
+        && imageSize.width() > 0 && imageSize.height() > 0
+        && imageSize.width() + imageSize.height() <= 10000
+        && qMax(imageSize.width(), imageSize.height())
+            <= 20 * qMin(imageSize.width(), imageSize.height());
+    const bool photo = (mimeType == "image/jpeg" || mimeType == "image/png"
+        || mimeType == "image/webp")
+        && fileInfo.size() <= 10LL * 1024LL * 1024LL
+        && validPhotoSize;
+
+    QJsonObject content;
     if (photo) {
         content["@type"] = "inputMessagePhoto";
         content["photo"] = localFile;
-        QJsonObject caption;
-        caption["@type"] = "formattedText";
-        caption["text"] = "";
+        content["thumbnail"] = QJsonValue::Null;
+        content["added_sticker_file_ids"] = QJsonArray();
+        content["width"] = 0;
+        content["height"] = 0;
         content["caption"] = caption;
+        content["show_caption_above_media"] = false;
+        content["self_destruct_type"] = QJsonValue::Null;
+        content["has_spoiler"] = false;
     } else {
         content["@type"] = "inputMessageDocument";
         content["document"] = localFile;
-        QJsonObject caption;
-        caption["@type"] = "formattedText";
-        caption["text"] = "";
+        content["thumbnail"] = QJsonValue::Null;
         content["caption"] = caption;
         content["disable_content_type_detection"] = false;
     }
@@ -227,6 +252,10 @@ void TelegramAuth::sendFile(qint64 chatId, const QString &filePath)
     QJsonObject request;
     request["@type"] = "sendMessage";
     request["chat_id"] = static_cast<double>(chatId);
+    request["message_thread_id"] = 0;
+    request["reply_to"] = QJsonValue::Null;
+    request["options"] = QJsonValue::Null;
+    request["reply_markup"] = QJsonValue::Null;
     request["input_message_content"] = content;
     send(QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact)));
 #else
